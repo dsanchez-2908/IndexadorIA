@@ -19,6 +19,8 @@ namespace IndexadorIA.Pantallas
             menuPlanosGCBA = new ToolStripMenuItem();
             menuIngresoArchivos = new ToolStripMenuItem();
             menuSeparacionImagenes = new ToolStripMenuItem();
+            menuPreparacionLotes = new ToolStripMenuItem();
+            menuPreparacionImagenes = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -48,7 +50,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuPlanosGCBA
             // 
-            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes });
+            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes });
             menuPlanosGCBA.Font = new Font("Segoe UI", 10F);
             menuPlanosGCBA.ForeColor = Color.White;
             menuPlanosGCBA.Name = "menuPlanosGCBA";
@@ -72,6 +74,26 @@ namespace IndexadorIA.Pantallas
             menuSeparacionImagenes.Size = new Size(240, 28);
             menuSeparacionImagenes.Text = "Separación de Imágenes";
             menuSeparacionImagenes.Click += menuSeparacionImagenes_Click;
+            // 
+            // menuPreparacionLotes
+            // 
+            menuPreparacionLotes.BackColor = Color.FromArgb(45, 45, 48);
+            menuPreparacionLotes.ForeColor = Color.White;
+            menuPreparacionLotes.Name = "menuPreparacionLotes";
+            menuPreparacionLotes.Size = new Size(240, 28);
+            menuPreparacionLotes.Text = "Preparación de Lotes";
+            menuPreparacionLotes.Click += menuPreparacionLotes_Click;
+
+            // 
+            // menuPreparacionImagenes
+            // 
+            menuPreparacionImagenes.BackColor = Color.FromArgb(45, 45, 48);
+            menuPreparacionImagenes.ForeColor = Color.White;
+            menuPreparacionImagenes.Name = "menuPreparacionImagenes";
+            menuPreparacionImagenes.Size = new Size(240, 28);
+            menuPreparacionImagenes.Text = "Preparación de Imágenes";
+            menuPreparacionImagenes.Click += menuPreparacionImagenes_Click;
+
             // 
             // menuConfiguracion
             // 
@@ -204,6 +226,8 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuPlanosGCBA;
         private ToolStripMenuItem menuIngresoArchivos;
         private ToolStripMenuItem menuSeparacionImagenes;
+        private ToolStripMenuItem menuPreparacionLotes;
+        private ToolStripMenuItem menuPreparacionImagenes;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;

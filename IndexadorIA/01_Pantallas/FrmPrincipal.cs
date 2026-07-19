@@ -45,6 +45,16 @@ namespace IndexadorIA.Pantallas
             AbrirFormularioEnPanel(new FrmSeparacionImagenes());
         }
 
+        private void menuPreparacionLotes_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmPreparacionLotes());
+        }
+
+        private void menuPreparacionImagenes_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmPreparacionImagenes());
+        }
+
         private void menuCambiarClave_Click(object sender, EventArgs e)
         {
             if (SesionActual.UsuarioActual != null)
