@@ -21,6 +21,7 @@ namespace IndexadorIA.Pantallas
             menuSeparacionImagenes = new ToolStripMenuItem();
             menuPreparacionLotes = new ToolStripMenuItem();
             menuPreparacionImagenes = new ToolStripMenuItem();
+            menuProcesamientoIA = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -50,7 +51,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuPlanosGCBA
             // 
-            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes });
+            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA });
             menuPlanosGCBA.Font = new Font("Segoe UI", 10F);
             menuPlanosGCBA.ForeColor = Color.White;
             menuPlanosGCBA.Name = "menuPlanosGCBA";
@@ -93,6 +94,16 @@ namespace IndexadorIA.Pantallas
             menuPreparacionImagenes.Size = new Size(240, 28);
             menuPreparacionImagenes.Text = "Preparación de Imágenes";
             menuPreparacionImagenes.Click += menuPreparacionImagenes_Click;
+
+            // 
+            // menuProcesamientoIA
+            // 
+            menuProcesamientoIA.BackColor = Color.FromArgb(45, 45, 48);
+            menuProcesamientoIA.ForeColor = Color.White;
+            menuProcesamientoIA.Name = "menuProcesamientoIA";
+            menuProcesamientoIA.Size = new Size(240, 28);
+            menuProcesamientoIA.Text = "Procesamiento por OpenIA";
+            menuProcesamientoIA.Click += menuProcesamientoIA_Click;
 
             // 
             // menuConfiguracion
@@ -228,6 +239,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuSeparacionImagenes;
         private ToolStripMenuItem menuPreparacionLotes;
         private ToolStripMenuItem menuPreparacionImagenes;
+        private ToolStripMenuItem menuProcesamientoIA;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;

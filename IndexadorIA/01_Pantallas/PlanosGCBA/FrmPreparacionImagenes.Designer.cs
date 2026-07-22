@@ -97,9 +97,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // groupBoxPrincipal
             // 
-            groupBoxPrincipal.Controls.Add(panelFiltros);
-            groupBoxPrincipal.Controls.Add(panelBotonesSeleccion);
             groupBoxPrincipal.Controls.Add(panelGrilla);
+            groupBoxPrincipal.Controls.Add(panelBotonesSeleccion);
+            groupBoxPrincipal.Controls.Add(panelFiltros);
             groupBoxPrincipal.Dock = DockStyle.Fill;
             groupBoxPrincipal.ForeColor = Color.White;
             groupBoxPrincipal.Location = new Point(0, 0);
@@ -264,10 +264,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvLotes.AllowUserToDeleteRows = false;
             dgvLotes.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvLotes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvLotes.Location = new Point(10, 139);
+            dgvLotes.Dock = DockStyle.Fill;
+            dgvLotes.Location = new Point(0, 5);
             dgvLotes.Name = "dgvLotes";
             dgvLotes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvLotes.Size = new Size(667, 429);
+            dgvLotes.Size = new Size(680, 584);
             dgvLotes.TabIndex = 0;
             // 
             // lblInfoSeleccion

@@ -48,7 +48,8 @@ namespace IndexadorIA.Entidades
 
         /// <summary>
         /// Calidad de compresión JPG (1-100)
+        /// Reducido a 65 para optimizar tamaño en API de OpenAI
         /// </summary>
-        public int CalidadJPG { get; set; } = 90;
+        public int CalidadJPG { get; set; } = 65;
     }
 }

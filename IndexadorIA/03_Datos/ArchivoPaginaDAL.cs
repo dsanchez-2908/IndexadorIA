@@ -135,5 +135,25 @@ namespace IndexadorIA.Datos
 
             return paginas;
         }
+
+        /// <summary>
+        /// Actualiza el estado de un archivo/página
+        /// </summary>
+        public int ActualizarEstado(int cdArchivoPagina, int cdEstado, int cdUsuario)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_ARCHIVOS_PAGINAS 
+                    SET cdEstado = @cdEstado
+                    WHERE cdArchivoPagina = @cdArchivoPagina", conexion);
+
+                comando.Parameters.AddWithValue("@cdArchivoPagina", cdArchivoPagina);
+                comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+
+                conexion.Open();
+                return comando.ExecuteNonQuery();
+            }
+        }
     }
 }

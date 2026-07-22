@@ -17,5 +17,7 @@ namespace IndexadorIA.Entidades
         // Propiedades adicionales para UI
         public string DsArchivoOriginal { get; set; } = string.Empty;
         public string DsEstado { get; set; } = string.Empty;
+        public string? NombreArchivo { get; set; }
+        public string? RutaBase64 { get; set; }
     }
 }

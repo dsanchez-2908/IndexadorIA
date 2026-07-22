@@ -176,5 +176,119 @@ namespace IndexadorIA.Datos
 
             return archivos;
         }
+
+        /// <summary>
+        /// Actualiza el estado de un lote
+        /// </summary>
+        public void ActualizarEstado(int cdLote, int cdEstado, int cdUsuario)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_LOTE 
+                    SET cdEstadoLote = @cdEstado
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+                comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los archivos/páginas de un lote con sus rutas Base64
+        /// </summary>
+        public List<ArchivoPagina> ObtenerArchivosPaginasPorLote(int cdLote)
+        {
+            var archivos = new List<ArchivoPagina>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    SELECT ap.cdArchivoPagina, ap.dsNombreArchivoPagina, ap.nuPagina, 
+                           ap.dsRutaCompleta, a.dsNombreArchivo,
+                           REPLACE(REPLACE(ap.dsRutaCompleta, '.png', '.b64'), '.pdf', '.b64') as RutaBase64
+                    FROM TD_LOTE_ARCHIVOS la
+                    INNER JOIN TD_ARCHIVOS_PAGINAS ap ON la.cdArchivoPagina = ap.cdArchivoPagina
+                    INNER JOIN TD_ARCHIVOS_ORIGINAL a ON ap.cdArchivoOriginal = a.cdArchivo
+                    WHERE la.cdLote = @cdLote
+                    ORDER BY a.dsNombreArchivo, ap.nuPagina", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        archivos.Add(new ArchivoPagina
+                        {
+                            CdArchivoPagina = lector.GetInt32(0),
+                            DsNombreArchivoPagina = lector.GetString(1),
+                            NuPagina = lector.GetInt32(2),
+                            DsRutaCompleta = lector.GetString(3),
+                            NombreArchivo = lector.GetString(4),
+                            RutaBase64 = lector.GetString(5)
+                        });
+                    }
+                }
+            }
+
+            return archivos;
+        }
+
+        /// <summary>
+        /// Obtiene los lotes con un estado específico para procesamiento
+        /// </summary>
+        public List<Lote> ObtenerLotesPorEstado(int cdEstado, int? cdProyecto = null)
+        {
+            var lotes = new List<Lote>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, 
+                           l.cdEstadoLote, e.dsEstado, l.feAltaLote
+                    FROM TD_LOTE l
+                    INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    WHERE l.cdEstadoLote = @cdEstado";
+
+                if (cdProyecto.HasValue)
+                {
+                    sql += " AND EXISTS (SELECT 1 FROM TD_LOTE_ARCHIVOS la " +
+                           "INNER JOIN TD_ARCHIVOS_PAGINAS ap ON la.cdArchivoPagina = ap.cdArchivoPagina " +
+                           "INNER JOIN TD_ARCHIVOS_ORIGINAL a ON ap.cdArchivoOriginal = a.cdArchivo " +
+                           "WHERE la.cdLote = l.cdLote AND a.cdProyecto = @cdProyecto)";
+                }
+
+                sql += " ORDER BY l.feAltaLote DESC";
+
+                var comando = new SqlCommand(sql, conexion);
+                comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+                if (cdProyecto.HasValue)
+                    comando.Parameters.AddWithValue("@cdProyecto", cdProyecto.Value);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lotes.Add(new Lote
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            NuCantidadArchivos = lector.GetInt32(2),
+                            CdEstadoLote = lector.GetInt32(3),
+                            DsEstado = lector.GetString(4),
+                            FeAltaLote = lector.GetDateTime(5)
+                        });
+                    }
+                }
+            }
+
+            return lotes;
+        }
     }
 }

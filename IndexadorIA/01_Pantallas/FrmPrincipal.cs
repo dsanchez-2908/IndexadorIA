@@ -55,6 +55,11 @@ namespace IndexadorIA.Pantallas
             AbrirFormularioEnPanel(new FrmPreparacionImagenes());
         }
 
+        private void menuProcesamientoIA_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmProcesamientoIA());
+        }
+
         private void menuCambiarClave_Click(object sender, EventArgs e)
         {
             if (SesionActual.UsuarioActual != null)
