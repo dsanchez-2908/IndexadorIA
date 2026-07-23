@@ -155,5 +155,25 @@ namespace IndexadorIA.Datos
                 return comando.ExecuteNonQuery();
             }
         }
+
+        /// <summary>
+        /// Actualiza la marca de rotación manual (snGirada) de un archivo/página.
+        /// </summary>
+        public int ActualizarSnGirada(int cdArchivoPagina, string snGirada)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_ARCHIVOS_PAGINAS 
+                    SET snGirada = @snGirada
+                    WHERE cdArchivoPagina = @cdArchivoPagina", conexion);
+
+                comando.Parameters.AddWithValue("@cdArchivoPagina", cdArchivoPagina);
+                comando.Parameters.AddWithValue("@snGirada", snGirada);
+
+                conexion.Open();
+                return comando.ExecuteNonQuery();
+            }
+        }
     }
 }

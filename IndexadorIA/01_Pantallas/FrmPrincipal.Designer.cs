@@ -22,6 +22,7 @@ namespace IndexadorIA.Pantallas
             menuPreparacionLotes = new ToolStripMenuItem();
             menuPreparacionImagenes = new ToolStripMenuItem();
             menuProcesamientoIA = new ToolStripMenuItem();
+            menuControlFinalizacion = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -51,7 +52,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuPlanosGCBA
             // 
-            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA });
+            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuControlFinalizacion });
             menuPlanosGCBA.Font = new Font("Segoe UI", 10F);
             menuPlanosGCBA.ForeColor = Color.White;
             menuPlanosGCBA.Name = "menuPlanosGCBA";
@@ -104,6 +105,16 @@ namespace IndexadorIA.Pantallas
             menuProcesamientoIA.Size = new Size(240, 28);
             menuProcesamientoIA.Text = "Procesamiento por OpenIA";
             menuProcesamientoIA.Click += menuProcesamientoIA_Click;
+
+            // 
+            // menuControlFinalizacion
+            // 
+            menuControlFinalizacion.BackColor = Color.FromArgb(45, 45, 48);
+            menuControlFinalizacion.ForeColor = Color.White;
+            menuControlFinalizacion.Name = "menuControlFinalizacion";
+            menuControlFinalizacion.Size = new Size(240, 28);
+            menuControlFinalizacion.Text = "Control y Finalización";
+            menuControlFinalizacion.Click += menuControlFinalizacion_Click;
 
             // 
             // menuConfiguracion
@@ -240,6 +251,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuPreparacionLotes;
         private ToolStripMenuItem menuPreparacionImagenes;
         private ToolStripMenuItem menuProcesamientoIA;
+        private ToolStripMenuItem menuControlFinalizacion;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;

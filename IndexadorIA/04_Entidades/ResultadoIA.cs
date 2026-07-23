@@ -31,9 +31,27 @@ namespace IndexadorIA.Entidades
         public DateTime? FeUltimaModificacion { get; set; }
         public int? CdUsuarioModificacion { get; set; }
 
+        // Control de calidad
+        public int CdEstadoControl { get; set; }
+        public string? SnModificaDatos { get; set; }
+        public DateTime? FeControl { get; set; }
+        public int? CdUsuarioControl { get; set; }
+
         // Navegación (opcional)
         public string? DsTipoPlano { get; set; }
         public string? NombreArchivo { get; set; }
         public int? NumeroPagina { get; set; }
+        public string? DsEstadoControl { get; set; }
+
+        /// <summary>
+        /// Estados posibles para el proceso de control (dsProceso = 'CONTROL' en TD_ESTADOS)
+        /// </summary>
+        public static class EstadosControl
+        {
+            public const int PendienteControl = 1;
+            public const int Controlado = 2;
+            public const int PaginaIlegible = 3;
+            public const int DatosIlegibles = 4;
+        }
     }
 }

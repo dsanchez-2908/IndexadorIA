@@ -522,7 +522,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     string batchId = row.Cells["dsBatchId"].Value?.ToString() ?? "";
 
                     if (!string.IsNullOrEmpty(batchId) && 
-                        (estado == "validating" || estado == "in_progress" || estado == "finalizing"))
+                        (estado == "created" || estado == "validating" || estado == "in_progress" || estado == "finalizing"))
                     {
                         batchesPendientes.Add((batchId, i));
                     }

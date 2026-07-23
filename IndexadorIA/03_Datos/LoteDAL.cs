@@ -240,6 +240,68 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Obtiene la fecha de finalización del procesamiento IA (batch) de un lote,
+        /// o null si el lote aún no fue procesado / no tiene batch completado.
+        /// </summary>
+        public DateTime? ObtenerFechaProcesamientoIA(int cdLote)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    SELECT MAX(feCompleted)
+                    FROM TD_BATCH_TRACKING
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                var resultado = comando.ExecuteScalar();
+
+                return (resultado == null || resultado == DBNull.Value)
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(resultado);
+            }
+        }
+
+        /// <summary>
+        /// Obtiene un lote por su identificador.
+        /// </summary>
+        public Lote? ObtenerPorId(int cdLote)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, l.cdEstadoLote,
+                           l.feAltaLote, l.cdUsuarioAltaLote, e.dsEstado
+                    FROM TD_LOTE l
+                    LEFT JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    WHERE l.cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    if (lector.Read())
+                    {
+                        return new Lote
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            NuCantidadArchivos = lector.GetInt32(2),
+                            CdEstadoLote = lector.GetInt32(3),
+                            FeAltaLote = lector.GetDateTime(4),
+                            CdUsuarioAltaLote = lector.IsDBNull(5) ? null : lector.GetInt32(5),
+                            DsEstado = lector.IsDBNull(6) ? null : lector.GetString(6)
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Obtiene los lotes con un estado específico para procesamiento
         /// </summary>
         public List<Lote> ObtenerLotesPorEstado(int cdEstado, int? cdProyecto = null)
@@ -269,6 +331,73 @@ namespace IndexadorIA.Datos
                 comando.Parameters.AddWithValue("@cdEstado", cdEstado);
                 if (cdProyecto.HasValue)
                     comando.Parameters.AddWithValue("@cdProyecto", cdProyecto.Value);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lotes.Add(new Lote
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            NuCantidadArchivos = lector.GetInt32(2),
+                            CdEstadoLote = lector.GetInt32(3),
+                            DsEstado = lector.GetString(4),
+                            FeAltaLote = lector.GetDateTime(5)
+                        });
+                    }
+                }
+            }
+
+            return lotes;
+        }
+
+        /// <summary>
+        /// Obtiene lotes filtrados por estado, nombre de lote y rango de fecha de alta
+        /// </summary>
+        public List<Lote> ObtenerLotesPorEstadoFiltrado(int cdEstado, string? dsNombreLote = null,
+            DateTime? feAltaDesde = null, DateTime? feAltaHasta = null)
+        {
+            var lotes = new List<Lote>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, 
+                           l.cdEstadoLote, e.dsEstado, l.feAltaLote
+                    FROM TD_LOTE l
+                    INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    WHERE l.cdEstadoLote = @cdEstado";
+
+                if (!string.IsNullOrEmpty(dsNombreLote))
+                {
+                    sql += " AND l.dsNombreLote LIKE @dsNombreLote";
+                }
+
+                if (feAltaDesde.HasValue)
+                {
+                    sql += " AND l.feAltaLote >= @feAltaDesde";
+                }
+
+                if (feAltaHasta.HasValue)
+                {
+                    sql += " AND l.feAltaLote < @feAltaHasta";
+                }
+
+                sql += " ORDER BY l.feAltaLote DESC";
+
+                var comando = new SqlCommand(sql, conexion);
+                comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+
+                if (!string.IsNullOrEmpty(dsNombreLote))
+                    comando.Parameters.AddWithValue("@dsNombreLote", $"%{dsNombreLote}%");
+
+                if (feAltaDesde.HasValue)
+                    comando.Parameters.AddWithValue("@feAltaDesde", feAltaDesde.Value.Date);
+
+                if (feAltaHasta.HasValue)
+                    comando.Parameters.AddWithValue("@feAltaHasta", feAltaHasta.Value.Date.AddDays(1));
 
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
