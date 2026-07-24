@@ -28,11 +28,26 @@ namespace IndexadorIA.Datos
                 using var conn = new SqlConnection(_cadenaConexion);
                 conn.Open();
 
-                using (var cmdDelete = new SqlCommand(
-                    "DELETE FROM TD_001_RESULTADO_IA WHERE cdArchivoPagina = @cdArchivoPagina", conn))
+                using (var tx = conn.BeginTransaction())
                 {
-                    cmdDelete.Parameters.AddWithValue("@cdArchivoPagina", resultado.CdArchivoPagina);
-                    cmdDelete.ExecuteNonQuery();
+                    // Eliminar primero los tokens asociados a resultados previos de esta página
+                    // (evita conflicto de FK_TD_TOKEN_RESULTADO al borrar TD_001_RESULTADO_IA)
+                    using (var cmdDeleteTokens = new SqlCommand(
+                        @"DELETE FROM TD_TOKEN WHERE cdResultado IN
+                          (SELECT cdResultado FROM TD_001_RESULTADO_IA WHERE cdArchivoPagina = @cdArchivoPagina)", conn, tx))
+                    {
+                        cmdDeleteTokens.Parameters.AddWithValue("@cdArchivoPagina", resultado.CdArchivoPagina);
+                        cmdDeleteTokens.ExecuteNonQuery();
+                    }
+
+                    using (var cmdDelete = new SqlCommand(
+                        "DELETE FROM TD_001_RESULTADO_IA WHERE cdArchivoPagina = @cdArchivoPagina", conn, tx))
+                    {
+                        cmdDelete.Parameters.AddWithValue("@cdArchivoPagina", resultado.CdArchivoPagina);
+                        cmdDelete.ExecuteNonQuery();
+                    }
+
+                    tx.Commit();
                 }
 
                 using var cmd = new SqlCommand(@"

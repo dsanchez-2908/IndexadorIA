@@ -98,7 +98,8 @@ namespace IndexadorIA.Datos
         /// Obtiene archivos página filtrados para preparación de lotes
         /// </summary>
         public List<ArchivoPaginaGridDto> ObtenerArchivosPaginaParaLote(int cdProyecto, int cdEstado,
-            string? dsNombreArchivo = null, DateTime? feAltaDesde = null, DateTime? feAltaHasta = null)
+            string? dsNombreArchivo = null, DateTime? feAltaDesde = null, DateTime? feAltaHasta = null,
+            string? dsCarpeta = null)
         {
             var archivos = new List<ArchivoPaginaGridDto>();
 
@@ -145,6 +146,12 @@ namespace IndexadorIA.Datos
                 {
                     comando.CommandText += " AND a.feAlta <= @feAltaHasta";
                     comando.Parameters.AddWithValue("@feAltaHasta", feAltaHasta.Value.AddDays(1).AddSeconds(-1));
+                }
+
+                if (!string.IsNullOrEmpty(dsCarpeta))
+                {
+                    comando.CommandText += " AND b.dsNombreUltimaCarpeta LIKE @dsCarpeta";
+                    comando.Parameters.AddWithValue("@dsCarpeta", $"%{dsCarpeta}%");
                 }
 
                 comando.CommandText += " ORDER BY a.feAlta, a.cdArchivoPagina";

@@ -510,6 +510,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             {
                 lblEstado.Text = "Verificando estado de todos los batches pendientes...";
                 btnVerificarEstado.Enabled = false;
+                progressBar.Maximum = 100;
                 progressBar.Value = 0;
 
                 // Obtener todos los batches pendientes de la grilla actual
@@ -611,6 +612,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             try
             {
                 lblEstado.Text = "Buscando batches completados para procesar...";
+                progressBar.Maximum = 100;
                 progressBar.Value = 0;
 
                 // Obtener todos los batches completados que NO han sido procesados

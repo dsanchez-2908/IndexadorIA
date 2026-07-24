@@ -249,7 +249,7 @@ namespace IndexadorIA.Negocio
                                 }
                             }
                         },
-                        max_tokens = 1000
+                        max_tokens = 2000
                     }
                 };
 
@@ -867,6 +867,18 @@ namespace IndexadorIA.Negocio
                     var firstChoice = choices[0];
                     var message = firstChoice.GetProperty("message");
                     string respuestaIA = message.GetProperty("content").GetString() ?? "";
+
+                    // Verificar si la respuesta fue truncada por límite de tokens
+                    if (firstChoice.TryGetProperty("finish_reason", out var finishReasonElement) &&
+                        finishReasonElement.GetString() == "length")
+                    {
+                        logDAL.Insertar(new LogRegistro
+                        {
+                            DsNivel = LogRegistro.Niveles.WARNING,
+                            DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
+                            DsMensaje = $"La respuesta de la página {cdArchivoPagina} fue truncada por límite de max_tokens (finish_reason=length). El JSON puede estar incompleto."
+                        });
+                    }
 
                     // LOG: Ver respuesta RAW antes de limpiar
                     logDAL.Insertar(new LogRegistro

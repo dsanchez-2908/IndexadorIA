@@ -5,6 +5,17 @@ using System.Drawing.Imaging;
 
 namespace IndexadorIA.Utilidades
 {
+    /// <summary>
+    /// Modo de giro a aplicar sobre las páginas al separarlas
+    /// </summary>
+    public enum ModoGiro
+    {
+        Ninguno,
+        Automatico,
+        Derecha90,
+        Izquierda90
+    }
+
     public class ProcesamientoPaginas
     {
         /// <summary>
@@ -69,7 +80,7 @@ namespace IndexadorIA.Utilidades
             string rutaArchivo,
             string carpetaDestino,
             int secuenciaInicial,
-            bool aplicarRotacion,
+            ModoGiro modoGiro,
             bool detectarBlancas)
         {
             var resultados = new List<ResultadoPagina>();
@@ -138,9 +149,9 @@ namespace IndexadorIA.Utilidades
 
                             // Detectar rotación si es necesario
                             int rotacion = 0;
-                            if (aplicarRotacion)
+                            if (modoGiro != ModoGiro.Ninguno)
                             {
-                                rotacion = DetectarRotacionNecesaria(imagen);
+                                rotacion = DeterminarRotacion(imagen, modoGiro);
                                 if (rotacion > 0)
                                 {
                                     resultado.SeGiro = true;
@@ -293,7 +304,7 @@ namespace IndexadorIA.Utilidades
             string rutaArchivo,
             string carpetaDestino,
             int secuencia,
-            bool aplicarRotacion,
+            ModoGiro modoGiro,
             bool detectarBlancas)
         {
             var resultado = new ResultadoPagina
@@ -321,9 +332,9 @@ namespace IndexadorIA.Utilidades
                     }
 
                     // Detectar y aplicar rotación si es necesario
-                    if (aplicarRotacion)
+                    if (modoGiro != ModoGiro.Ninguno)
                     {
-                        var rotacion = DetectarRotacionNecesaria(imagen);
+                        var rotacion = DeterminarRotacion(imagen, modoGiro);
                         if (rotacion > 0)
                         {
                             resultado.SeGiro = true;
@@ -405,115 +416,192 @@ namespace IndexadorIA.Utilidades
         }
 
         /// <summary>
-        /// Detecta la rotación necesaria basándose en la orientación de la imagen
-        /// Heurística: Los planos generalmente tienen ancho > alto
+        /// Determina la rotación a aplicar en función del modo de giro elegido por el usuario.
+        /// - Manual (Derecha90/Izquierda90): se aplica el giro fijo indicado, sin analizar la imagen.
+        /// - Automático: se usa Tesseract OSD (Orientation and Script Detection) para detectar
+        ///   la orientación real del texto de la página, mucho más preciso que heurísticas de
+        ///   densidad de píxeles en los bordes.
         /// </summary>
-        private static int DetectarRotacionNecesaria(Image imagen)
+        private static int DeterminarRotacion(Image imagen, ModoGiro modoGiro)
         {
+            switch (modoGiro)
+            {
+                case ModoGiro.Derecha90:
+                    return 90;
+                case ModoGiro.Izquierda90:
+                    return 270;
+                case ModoGiro.Automatico:
+                    return DetectarRotacionConOSD(imagen);
+                default:
+                    return 0;
+            }
+        }
+
+        /// <summary>
+        /// Detecta la rotación necesaria usando el ejecutable de Tesseract instalado en el
+        /// sistema (tesseract.exe, disponible en el PATH) en modo OSD (Orientation and Script
+        /// Detection). Se invoca como proceso externo en lugar de usar la librería NuGet
+        /// Tesseract, ya que el binario oficial del sistema (con el modelo de idioma spa
+        /// instalado) da resultados mucho más precisos y consistentes con el flujo que ya
+        /// se usaba manualmente con Python/ocrmypdf.
+        /// </summary>
+        private static int DetectarRotacionConOSD(Image imagen)
+        {
+            string? rutaTemporalImagen = null;
+            string? rutaTemporalSalida = null;
             try
             {
-                // Si el alto es mayor que el ancho, probablemente necesita rotación
-                if (imagen.Height > imagen.Width)
+                string rutaTesseract = ObtenerRutaEjecutableTesseract();
+                if (string.IsNullOrEmpty(rutaTesseract))
                 {
-                    // Analizar distribución de contenido para determinar dirección
-                    using (var bitmap = new Bitmap(imagen))
+                    Datos.LogDAL.RegistrarLog(
+                        Entidades.LogRegistro.Niveles.WARNING,
+                        "ProcesamientoPaginas.DetectarRotacionConOSD",
+                        "No se encontró tesseract.exe instalado en el sistema (PATH). No se puede detectar la rotación automática, se omite el giro.");
+                    return 0;
+                }
+
+                rutaTemporalImagen = Path.Combine(Path.GetTempPath(), $"osd_{Guid.NewGuid():N}.png");
+                rutaTemporalSalida = Path.Combine(Path.GetTempPath(), $"osd_{Guid.NewGuid():N}");
+
+                using (var bitmap = new Bitmap(imagen))
+                {
+                    bitmap.Save(rutaTemporalImagen, ImageFormat.Png);
+                }
+
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = rutaTesseract,
+                    Arguments = $"\"{rutaTemporalImagen}\" \"{rutaTemporalSalida}\" --psm 0",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                string salidaEstandar;
+                string salidaError;
+                using (var proceso = System.Diagnostics.Process.Start(psi))
+                {
+                    if (proceso == null)
                     {
-                        // Análisis simple: verificar densidad de contenido en bordes
-                        int densidadIzquierda = AnalizarDensidadBorde(bitmap, BordeLado.Izquierda);
-                        int densidadDerecha = AnalizarDensidadBorde(bitmap, BordeLado.Derecha);
-                        int densidadSuperior = AnalizarDensidadBorde(bitmap, BordeLado.Superior);
-                        int densidadInferior = AnalizarDensidadBorde(bitmap, BordeLado.Inferior);
+                        return 0;
+                    }
 
-                        // Si hay más contenido en los bordes verticales, rotar 90° a la derecha
-                        int densidadVertical = densidadIzquierda + densidadDerecha;
-                        int densidadHorizontal = densidadSuperior + densidadInferior;
+                    salidaEstandar = proceso.StandardOutput.ReadToEnd();
+                    salidaError = proceso.StandardError.ReadToEnd();
+                    proceso.WaitForExit(15000);
+                }
 
-                        if (densidadVertical > densidadHorizontal * 1.2)
+                string rutaArchivoOsd = rutaTemporalSalida + ".osd";
+                string textoOsd = File.Exists(rutaArchivoOsd)
+                    ? File.ReadAllText(rutaArchivoOsd)
+                    : salidaEstandar;
+
+                if (string.IsNullOrWhiteSpace(textoOsd))
+                {
+                    Datos.LogDAL.RegistrarLog(
+                        Entidades.LogRegistro.Niveles.WARNING,
+                        "ProcesamientoPaginas.DetectarRotacionConOSD",
+                        $"tesseract --psm 0 no devolvió resultados de OSD. Salida error: {salidaError}");
+                    return 0;
+                }
+
+                // La salida de "tesseract --psm 0" contiene una línea del tipo
+                // "Rotate: 90" indicando cuántos grados hay que rotar la imagen
+                // en sentido horario para corregir su orientación.
+                foreach (var linea in textoOsd.Split('\n'))
+                {
+                    if (linea.StartsWith("Rotate:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string valor = linea.Split(':')[1].Trim();
+                        if (int.TryParse(valor, out int gradosRotar))
                         {
-                            // Rotar 90° en sentido horario
-                            return 90;
-                        }
-                        else
-                        {
-                            // Rotar 270° (90° antihorario) como alternativa
-                            return 270;
+                            return ((gradosRotar % 360) + 360) % 360;
                         }
                     }
                 }
 
-                // No se requiere rotación
                 return 0;
             }
-            catch
+            catch (Exception ex)
             {
+                Datos.LogDAL.RegistrarLog(
+                    Entidades.LogRegistro.Niveles.WARNING,
+                    "ProcesamientoPaginas.DetectarRotacionConOSD",
+                    "Error al detectar rotación automática con tesseract.exe, se omite el giro.",
+                    ex);
                 return 0;
+            }
+            finally
+            {
+                if (rutaTemporalImagen != null)
+                {
+                    IntentarEliminarArchivo(rutaTemporalImagen);
+                }
+                if (rutaTemporalSalida != null)
+                {
+                    IntentarEliminarArchivo(rutaTemporalSalida + ".osd");
+                }
             }
         }
 
-        private enum BordeLado { Izquierda, Derecha, Superior, Inferior }
+        private static string? _rutaTesseractCacheada;
+        private static bool _rutaTesseractBuscada;
 
         /// <summary>
-        /// Analiza la densidad de píxeles no blancos en un borde de la imagen
+        /// Localiza el ejecutable tesseract.exe instalado en el sistema (PATH o ubicaciones
+        /// típicas de instalación), el mismo binario usado manualmente desde consola/Python.
         /// </summary>
-        private static int AnalizarDensidadBorde(Bitmap bitmap, BordeLado lado)
+        private static string? ObtenerRutaEjecutableTesseract()
         {
-            int pixelesNoBlanccos = 0;
-            int anchoBorde = 50; // Píxeles del borde a analizar
-
-            switch (lado)
+            if (_rutaTesseractBuscada)
             {
-                case BordeLado.Izquierda:
-                    for (int y = 0; y < bitmap.Height; y += 5)
-                    {
-                        for (int x = 0; x < Math.Min(anchoBorde, bitmap.Width); x += 5)
-                        {
-                            if (EsPixelNoBlanco(bitmap.GetPixel(x, y)))
-                                pixelesNoBlanccos++;
-                        }
-                    }
-                    break;
-
-                case BordeLado.Derecha:
-                    for (int y = 0; y < bitmap.Height; y += 5)
-                    {
-                        for (int x = Math.Max(0, bitmap.Width - anchoBorde); x < bitmap.Width; x += 5)
-                        {
-                            if (EsPixelNoBlanco(bitmap.GetPixel(x, y)))
-                                pixelesNoBlanccos++;
-                        }
-                    }
-                    break;
-
-                case BordeLado.Superior:
-                    for (int y = 0; y < Math.Min(anchoBorde, bitmap.Height); y += 5)
-                    {
-                        for (int x = 0; x < bitmap.Width; x += 5)
-                        {
-                            if (EsPixelNoBlanco(bitmap.GetPixel(x, y)))
-                                pixelesNoBlanccos++;
-                        }
-                    }
-                    break;
-
-                case BordeLado.Inferior:
-                    for (int y = Math.Max(0, bitmap.Height - anchoBorde); y < bitmap.Height; y += 5)
-                    {
-                        for (int x = 0; x < bitmap.Width; x += 5)
-                        {
-                            if (EsPixelNoBlanco(bitmap.GetPixel(x, y)))
-                                pixelesNoBlanccos++;
-                        }
-                    }
-                    break;
+                return _rutaTesseractCacheada;
             }
 
-            return pixelesNoBlanccos;
-        }
+            _rutaTesseractBuscada = true;
 
-        private static bool EsPixelNoBlanco(Color pixel)
-        {
-            int brillo = (pixel.R + pixel.G + pixel.B) / 3;
-            return brillo < 240;
+            // 1) Buscar en el PATH del sistema
+            string? rutaPath = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrEmpty(rutaPath))
+            {
+                foreach (var carpeta in rutaPath.Split(Path.PathSeparator))
+                {
+                    try
+                    {
+                        string candidato = Path.Combine(carpeta, "tesseract.exe");
+                        if (File.Exists(candidato))
+                        {
+                            _rutaTesseractCacheada = candidato;
+                            return _rutaTesseractCacheada;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignorar entradas de PATH inválidas
+                    }
+                }
+            }
+
+            // 2) Ubicaciones típicas de instalación en Windows
+            string[] rutasComunes =
+            {
+                @"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                @"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
+            };
+
+            foreach (var ruta in rutasComunes)
+            {
+                if (File.Exists(ruta))
+                {
+                    _rutaTesseractCacheada = ruta;
+                    return _rutaTesseractCacheada;
+                }
+            }
+
+            _rutaTesseractCacheada = null;
+            return null;
         }
 
         /// <summary>

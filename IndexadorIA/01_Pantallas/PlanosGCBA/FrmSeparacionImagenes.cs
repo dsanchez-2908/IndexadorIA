@@ -42,6 +42,35 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             CargarArchivos();
         }
 
+        private void chkFiltroDesde_CheckedChanged(object sender, EventArgs e)
+        {
+            dtpFiltroDesde.Enabled = chkFiltroDesde.Checked;
+        }
+
+        private void chkFiltroHasta_CheckedChanged(object sender, EventArgs e)
+        {
+            dtpFiltroHasta.Enabled = chkFiltroHasta.Checked;
+        }
+
+        private void btnFiltrar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DateTime? feDesde = chkFiltroDesde.Checked ? dtpFiltroDesde.Value : (DateTime?)null;
+                DateTime? feHasta = chkFiltroHasta.Checked ? dtpFiltroHasta.Value : (DateTime?)null;
+                string dsCarpeta = txtFiltroCarpeta.Text;
+
+                _archivos = ObtenerArchivosPendientes(feDesde, feHasta, dsCarpeta);
+                MostrarArchivos();
+                ActualizarContadores();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al filtrar archivos: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void CargarArchivos()
         {
             try
@@ -60,13 +89,27 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
         }
 
-        private List<ArchivoOriginal> ObtenerArchivosPendientes()
+        private List<ArchivoOriginal> ObtenerArchivosPendientes(DateTime? feDesde = null, DateTime? feHasta = null, string dsCarpeta = null)
         {
             // Consulta directa a la base de datos para obtener archivos con cdEstado = 1
             var archivos = new List<ArchivoOriginal>();
 
             using (var conexion = new Microsoft.Data.SqlClient.SqlConnection(Datos.Configuracion.CadenaConexion))
             {
+                string filtroSql = "";
+                if (feDesde.HasValue)
+                {
+                    filtroSql += " AND a.feAlta >= @feDesde";
+                }
+                if (feHasta.HasValue)
+                {
+                    filtroSql += " AND a.feAlta < @feHasta";
+                }
+                if (!string.IsNullOrWhiteSpace(dsCarpeta))
+                {
+                    filtroSql += " AND a.dsNombreUltimaCarpeta LIKE @dsCarpeta";
+                }
+
                 var comando = new Microsoft.Data.SqlClient.SqlCommand(
                     @"SELECT a.cdArchivo, a.cdProyecto, a.dsNombreArchivo, a.dsExtension, 
                              a.dsRutaCompleta, a.dsNombreUltimaCarpeta, a.nuCantidadPaginas,
@@ -76,8 +119,21 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                       FROM TD_ARCHIVOS_ORIGINAL a
                       INNER JOIN TD_PROYECTOS p ON a.cdProyecto = p.cdProyecto
                       INNER JOIN TD_ESTADOS e ON a.dsProceso = e.dsProceso AND a.cdEstadoArchivo = e.cdEstado
-                      WHERE a.dsProceso = 'ARCHIVO_ORIGINAL' AND a.cdEstadoArchivo = 1
+                      WHERE a.dsProceso = 'ARCHIVO_ORIGINAL' AND a.cdEstadoArchivo = 1" + filtroSql + @"
                       ORDER BY a.feAlta DESC", conexion);
+
+                if (feDesde.HasValue)
+                {
+                    comando.Parameters.AddWithValue("@feDesde", feDesde.Value.Date);
+                }
+                if (feHasta.HasValue)
+                {
+                    comando.Parameters.AddWithValue("@feHasta", feHasta.Value.Date.AddDays(1));
+                }
+                if (!string.IsNullOrWhiteSpace(dsCarpeta))
+                {
+                    comando.Parameters.AddWithValue("@dsCarpeta", "%" + dsCarpeta + "%");
+                }
 
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
@@ -118,7 +174,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             {
                 Name = "Seleccion",
                 HeaderText = "Seleccionar",
-                Width = 80
+                Width = 80,
+                MinimumWidth = 80,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Resizable = DataGridViewTriState.False
             };
             dgvArchivos.Columns.Add(colSeleccion);
 
@@ -129,6 +188,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvArchivos.Columns.Add("DsExtension", "Extensión");
             dgvArchivos.Columns.Add("NuCantidadPaginas", "Páginas");
             dgvArchivos.Columns.Add("DsEstado", "Estado");
+            dgvArchivos.Columns.Add("DsNombreUltimaCarpeta", "Ultima Carpeta");
+            dgvArchivos.Columns.Add("FeAlta", "Fecha Alta");
             dgvArchivos.Columns.Add("DsRutaCompleta", "Ruta Completa");
 
             // Ocultar columnas que no se muestran pero se necesitan
@@ -141,6 +202,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvArchivos.Columns["DsExtension"].Width = 80;
             dgvArchivos.Columns["NuCantidadPaginas"].Width = 80;
             dgvArchivos.Columns["DsEstado"].Width = 150;
+            dgvArchivos.Columns["DsNombreUltimaCarpeta"].Width = 150;
+            dgvArchivos.Columns["FeAlta"].Width = 130;
 
             // Llenar datos
             foreach (var archivo in _archivos)
@@ -153,6 +216,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     archivo.DsExtension,
                     archivo.NuCantidadPaginas,
                     archivo.DsEstado,
+                    archivo.DsNombreUltimaCarpeta,
+                    archivo.FeAlta,
                     archivo.DsRutaCompleta
                 );
             }
@@ -244,7 +309,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 $"¿Está seguro de procesar {seleccionados.Count} archivo(s)?\n\n" +
                 $"Opciones seleccionadas:\n" +
                 $"- Eliminar archivo original: {(chkEliminarOriginal.Checked ? "SÍ" : "NO")}\n" +
-                $"- Girar automáticamente: {(chkGirarAutomaticamente.Checked ? "SÍ" : "NO")}\n" +
+                $"- Giro: {DescripcionModoGiro()}\n" +
                 $"- Detectar páginas blancas: {(chkMarcaBlanco.Checked ? "SÍ" : "NO")}",
                 "Confirmar Procesamiento",
                 MessageBoxButtons.YesNo,
@@ -369,7 +434,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             try
             {
                 string carpetaDestino = Path.GetDirectoryName(archivo.DsRutaCompleta) ?? "";
-                bool aplicarRotacion = chkGirarAutomaticamente.Checked;
+                ModoGiro modoGiro = ObtenerModoGiro();
                 bool detectarBlancas = chkMarcaBlanco.Checked;
                 bool eliminarOriginal = chkEliminarOriginal.Checked;
 
@@ -404,7 +469,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         archivo.DsRutaCompleta,
                         carpetaDestino,
                         secuenciaInicial,
-                        aplicarRotacion,
+                        modoGiro,
                         detectarBlancas);
 
                     // Si no hay resultados, el archivo está corrupto o sin páginas
@@ -458,7 +523,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         archivo.DsRutaCompleta,
                         carpetaDestino,
                         secuenciaInicial,
-                        aplicarRotacion,
+                        modoGiro,
                         detectarBlancas);
 
                     if (resultado.Exito)
@@ -581,8 +646,54 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnProcesar.Enabled = habilitar;
             dgvArchivos.Enabled = habilitar;
             chkEliminarOriginal.Enabled = habilitar;
-            chkGirarAutomaticamente.Enabled = habilitar;
+            chkHabilitarGiro.Enabled = habilitar;
+            rbGirarAutomatico.Enabled = habilitar && chkHabilitarGiro.Checked;
+            rbGirar90Derecha.Enabled = habilitar && chkHabilitarGiro.Checked;
+            rbGirar90Izquierda.Enabled = habilitar && chkHabilitarGiro.Checked;
             chkMarcaBlanco.Enabled = habilitar;
+        }
+
+        private void chkHabilitarGiro_CheckedChanged(object sender, EventArgs e)
+        {
+            bool habilitar = chkHabilitarGiro.Checked;
+            rbGirarAutomatico.Enabled = habilitar;
+            rbGirar90Derecha.Enabled = habilitar;
+            rbGirar90Izquierda.Enabled = habilitar;
+        }
+
+        private ModoGiro ObtenerModoGiro()
+        {
+            if (!chkHabilitarGiro.Checked)
+            {
+                return ModoGiro.Ninguno;
+            }
+
+            if (rbGirar90Derecha.Checked)
+            {
+                return ModoGiro.Derecha90;
+            }
+
+            if (rbGirar90Izquierda.Checked)
+            {
+                return ModoGiro.Izquierda90;
+            }
+
+            return ModoGiro.Automatico;
+        }
+
+        private string DescripcionModoGiro()
+        {
+            switch (ObtenerModoGiro())
+            {
+                case ModoGiro.Automatico:
+                    return "Autom\u00e1tico";
+                case ModoGiro.Derecha90:
+                    return "90\u00b0 a la derecha";
+                case ModoGiro.Izquierda90:
+                    return "90\u00b0 a la izquierda";
+                default:
+                    return "NO";
+            }
         }
 
         private void btnCerrar_Click(object sender, EventArgs e)

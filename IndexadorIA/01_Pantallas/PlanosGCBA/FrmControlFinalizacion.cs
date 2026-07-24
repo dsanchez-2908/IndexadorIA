@@ -163,5 +163,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             CargarLotes();
         }
+
+        private void btnCerrar_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
 }

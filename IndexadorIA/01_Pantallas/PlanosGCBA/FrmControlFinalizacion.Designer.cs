@@ -31,6 +31,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvLotes = new DataGridView();
             lblTotalizadorLotes = new Label();
             panelAcciones = new Panel();
+            btnCerrar = new Button();
             btnVerLote = new Button();
             groupBoxFiltros.SuspendLayout();
             groupBoxLotes.SuspendLayout();
@@ -231,6 +232,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // panelAcciones
             // 
             panelAcciones.Controls.Add(btnVerLote);
+            panelAcciones.Controls.Add(btnCerrar);
             panelAcciones.BackColor = Color.FromArgb(45, 45, 48);
             panelAcciones.Dock = DockStyle.Bottom;
             panelAcciones.Location = new Point(0, 428);
@@ -253,6 +255,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnVerLote.UseVisualStyleBackColor = false;
             btnVerLote.Enabled = false;
             btnVerLote.Click += btnVerLote_Click;
+            // 
+            // btnCerrar
+            // 
+            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.Location = new Point(789, 8);
+            btnCerrar.Margin = new Padding(3, 2, 3, 2);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(150, 30);
+            btnCerrar.TabIndex = 1;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
+            btnCerrar.Click += btnCerrar_Click;
             // 
             // FrmControlFinalizacion
             // 
@@ -294,5 +310,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblTotalizadorLotes;
         private Panel panelAcciones;
         private Button btnVerLote;
+        private Button btnCerrar;
     }
 }

@@ -527,6 +527,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
+            bool tipoPlanoCompleto = cboTipoPlanoDetalle.SelectedValue is int cdTipoPlanoValidar && cdTipoPlanoValidar != 0;
+
+            if (!tipoPlanoCompleto
+                || string.IsNullOrWhiteSpace(txtSeccion.Text)
+                || string.IsNullOrWhiteSpace(txtManzana.Text)
+                || string.IsNullOrWhiteSpace(txtParcela.Text)
+                || string.IsNullOrWhiteSpace(txtDireccion.Text))
+            {
+                MessageBox.Show(
+                    "Para marcar el registro como Controlado debe completar los campos: Tipo de Plano, Sección, Manzana, Parcela y Dirección.\n\nEl campo Expediente puede quedar incompleto.",
+                    "Datos incompletos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             try
             {
                 var resultado = _filaSeleccionada.Resultado;

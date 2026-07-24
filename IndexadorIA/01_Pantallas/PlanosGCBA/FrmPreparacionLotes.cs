@@ -171,6 +171,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     ? null 
                     : txtFiltroArchivo.Text.Trim();
 
+                string? filtroCarpeta = string.IsNullOrWhiteSpace(txtFiltroCarpeta.Text)
+                    ? null
+                    : txtFiltroCarpeta.Text.Trim();
+
                 DateTime? feDesde = null;
                 DateTime? feHasta = null;
 
@@ -178,7 +182,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 // (podríamos agregar CheckBox para habilitar/deshabilitar filtros de fecha)
 
                 // Por ahora cargo todos los archivos del proyecto 1 en estado 1
-                _archivos = _loteBL.ObtenerArchivosPaginaParaLote(1, filtroArchivo, feDesde, feHasta);
+                _archivos = _loteBL.ObtenerArchivosPaginaParaLote(1, filtroArchivo, feDesde, feHasta, filtroCarpeta);
 
                 dgvArchivos.DataSource = null;
                 dgvArchivos.DataSource = _archivos;
@@ -211,9 +215,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private void btnLimpiarFiltros_Click(object sender, EventArgs e)
         {
             txtFiltroArchivo.Clear();
+            txtFiltroCarpeta.Clear();
             dtpFeAltaDesde.Value = DateTime.Now;
             dtpFeAltaHasta.Value = DateTime.Now;
             CargarDatos();
+        }
+
+        private void btnCerrar_Click(object sender, EventArgs e)
+        {
+            Close();
         }
 
         private void btnSeleccionarTodo_Click(object sender, EventArgs e)

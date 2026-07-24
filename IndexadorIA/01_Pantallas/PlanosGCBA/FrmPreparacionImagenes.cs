@@ -76,7 +76,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvLotes.DefaultCellStyle.ForeColor = Color.White;
             dgvLotes.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
             dgvLotes.DefaultCellStyle.SelectionForeColor = Color.White;
-            dgvLotes.DefaultCellStyle.Padding = new Padding(5);
 
             // Alternating row color para mejor legibilidad
             dgvLotes.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(37, 37, 38);
@@ -91,7 +90,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 HeaderText = "Sel",
                 Name = "colSeleccionado",
                 DataPropertyName = "Seleccionado",
-                Width = 50,
+                Width = 60,
                 ReadOnly = false
             };
             dgvLotes.Columns.Add(colSeleccion);

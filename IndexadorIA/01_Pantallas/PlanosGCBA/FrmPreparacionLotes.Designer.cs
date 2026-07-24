@@ -18,12 +18,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelFiltros = new Panel();
             txtFiltroArchivo = new TextBox();
             lblFiltroArchivo = new Label();
+            txtFiltroCarpeta = new TextBox();
+            lblFiltroCarpeta = new Label();
             dtpFeAltaDesde = new DateTimePicker();
             lblFeAltaDesde = new Label();
             dtpFeAltaHasta = new DateTimePicker();
             lblFeAltaHasta = new Label();
             btnBuscar = new Button();
             btnLimpiarFiltros = new Button();
+            btnCerrar = new Button();
             dgvArchivos = new DataGridView();
             panelAcciones = new Panel();
             btnSeleccionarTodo = new Button();
@@ -43,12 +46,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelFiltros.BackColor = Color.FromArgb(45, 45, 48);
             panelFiltros.Controls.Add(txtFiltroArchivo);
             panelFiltros.Controls.Add(lblFiltroArchivo);
+            panelFiltros.Controls.Add(txtFiltroCarpeta);
+            panelFiltros.Controls.Add(lblFiltroCarpeta);
             panelFiltros.Controls.Add(dtpFeAltaDesde);
             panelFiltros.Controls.Add(lblFeAltaDesde);
             panelFiltros.Controls.Add(dtpFeAltaHasta);
             panelFiltros.Controls.Add(lblFeAltaHasta);
             panelFiltros.Controls.Add(btnBuscar);
             panelFiltros.Controls.Add(btnLimpiarFiltros);
+            panelFiltros.Controls.Add(btnCerrar);
             panelFiltros.Dock = DockStyle.Top;
             panelFiltros.Location = new Point(0, 0);
             panelFiltros.Name = "panelFiltros";
@@ -72,6 +78,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblFiltroArchivo.Size = new Size(124, 20);
             lblFiltroArchivo.TabIndex = 0;
             lblFiltroArchivo.Text = "Nombre Archivo:";
+            // 
+            // txtFiltroCarpeta
+            // 
+            txtFiltroCarpeta.Location = new Point(650, 60);
+            txtFiltroCarpeta.Name = "txtFiltroCarpeta";
+            txtFiltroCarpeta.Size = new Size(200, 27);
+            txtFiltroCarpeta.TabIndex = 6;
+            // 
+            // lblFiltroCarpeta
+            // 
+            lblFiltroCarpeta.AutoSize = true;
+            lblFiltroCarpeta.ForeColor = Color.White;
+            lblFiltroCarpeta.Location = new Point(570, 63);
+            lblFiltroCarpeta.Name = "lblFiltroCarpeta";
+            lblFiltroCarpeta.Size = new Size(70, 20);
+            lblFiltroCarpeta.TabIndex = 0;
+            lblFiltroCarpeta.Text = "Carpeta:";
             // 
             // dtpFeAltaDesde
             // 
@@ -115,10 +138,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnBuscar.FlatAppearance.BorderSize = 0;
             btnBuscar.FlatStyle = FlatStyle.Flat;
             btnBuscar.ForeColor = Color.White;
-            btnBuscar.Location = new Point(550, 20);
+            btnBuscar.Location = new Point(950, 20);
             btnBuscar.Name = "btnBuscar";
             btnBuscar.Size = new Size(100, 35);
-            btnBuscar.TabIndex = 6;
+            btnBuscar.TabIndex = 7;
             btnBuscar.Text = "Buscar";
             btnBuscar.UseVisualStyleBackColor = false;
             btnBuscar.Click += btnBuscar_Click;
@@ -129,13 +152,27 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnLimpiarFiltros.FlatAppearance.BorderSize = 0;
             btnLimpiarFiltros.FlatStyle = FlatStyle.Flat;
             btnLimpiarFiltros.ForeColor = Color.White;
-            btnLimpiarFiltros.Location = new Point(660, 20);
+            btnLimpiarFiltros.Location = new Point(1060, 20);
             btnLimpiarFiltros.Name = "btnLimpiarFiltros";
             btnLimpiarFiltros.Size = new Size(100, 35);
-            btnLimpiarFiltros.TabIndex = 7;
+            btnLimpiarFiltros.TabIndex = 8;
             btnLimpiarFiltros.Text = "Limpiar";
             btnLimpiarFiltros.UseVisualStyleBackColor = false;
             btnLimpiarFiltros.Click += btnLimpiarFiltros_Click;
+            // 
+            // btnCerrar
+            // 
+            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
+            btnCerrar.FlatAppearance.BorderSize = 0;
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.Location = new Point(1170, 20);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(100, 35);
+            btnCerrar.TabIndex = 9;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
+            btnCerrar.Click += btnCerrar_Click;
             // 
             // dgvArchivos
             // 
@@ -277,10 +314,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Panel panelFiltros;
         private TextBox txtFiltroArchivo;
         private Label lblFiltroArchivo;
+        private TextBox txtFiltroCarpeta;
+        private Label lblFiltroCarpeta;
         private DateTimePicker dtpFeAltaDesde;
         private Label lblFeAltaDesde;
         private DateTimePicker dtpFeAltaHasta;
         private Label lblFeAltaHasta;
+        private Button btnCerrar;
         private Button btnBuscar;
         private Button btnLimpiarFiltros;
         private DataGridView dgvArchivos;

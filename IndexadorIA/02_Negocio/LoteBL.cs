@@ -21,12 +21,13 @@ namespace IndexadorIA.Negocio
         /// Obtiene archivos página disponibles para crear lotes
         /// </summary>
         public List<ArchivoPaginaGridDto> ObtenerArchivosPaginaParaLote(int cdProyecto, 
-            string? dsNombreArchivo = null, DateTime? feAltaDesde = null, DateTime? feAltaHasta = null)
+            string? dsNombreArchivo = null, DateTime? feAltaDesde = null, DateTime? feAltaHasta = null,
+            string? dsCarpeta = null)
         {
             try
             {
                 // cdEstado=1 son archivos en estado "Pendiente de Agrupar en Lote"
-                return _loteDAL.ObtenerArchivosPaginaParaLote(cdProyecto, 1, dsNombreArchivo, feAltaDesde, feAltaHasta);
+                return _loteDAL.ObtenerArchivosPaginaParaLote(cdProyecto, 1, dsNombreArchivo, feAltaDesde, feAltaHasta, dsCarpeta);
             }
             catch (Exception ex)
             {

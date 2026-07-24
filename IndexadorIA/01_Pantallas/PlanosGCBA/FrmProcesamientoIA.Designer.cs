@@ -96,13 +96,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             progressBar.Location = new Point(18, 38);
             progressBar.Margin = new Padding(3, 2, 3, 2);
             progressBar.Name = "progressBar";
-            progressBar.Size = new Size(630, 19);
+            progressBar.Size = new Size(460, 19);
             progressBar.TabIndex = 1;
             // 
             // btnProcesar
             // 
             btnProcesar.ForeColor = Color.Black;
-            btnProcesar.Location = new Point(660, 18);
+            btnProcesar.Location = new Point(490, 18);
             btnProcesar.Margin = new Padding(3, 2, 3, 2);
             btnProcesar.Name = "btnProcesar";
             btnProcesar.Size = new Size(175, 38);
@@ -114,14 +114,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnCerrar
             // 
             btnCerrar.ForeColor = Color.Black;
-            btnCerrar.Location = new Point(660, 18);
+            btnCerrar.Location = new Point(675, 18);
             btnCerrar.Margin = new Padding(3, 2, 3, 2);
             btnCerrar.Name = "btnCerrar";
-            btnCerrar.Size = new Size(175, 38);
+            btnCerrar.Size = new Size(155, 38);
             btnCerrar.TabIndex = 3;
             btnCerrar.Text = "Cerrar";
             btnCerrar.UseVisualStyleBackColor = true;
-            btnCerrar.Visible = false;
+            btnCerrar.Visible = true;
             btnCerrar.Click += btnCerrar_Click;
             // 
             // groupBoxLotes
