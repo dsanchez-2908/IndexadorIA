@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Globalization;
 using Microsoft.Data.SqlClient;
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
@@ -12,6 +14,218 @@ namespace IndexadorIA.Negocio
     public static class OpenAIBL
     {
         private static readonly HttpClient _httpClient = new HttpClient();
+
+        /// <summary>
+        /// Normaliza un texto para comparaciones: quita acentos, espacios extra y pasa a mayusculas.
+        /// </summary>
+        private static string NormalizarTexto(string? texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+            {
+                return string.Empty;
+            }
+
+            string textoSinAcentos = QuitarAcentos(texto.Trim());
+            return textoSinAcentos.ToUpperInvariant();
+        }
+
+        /// <summary>
+        /// Limpia un texto extraido por la IA, dejando null si queda vacio tras el recorte.
+        /// </summary>
+        private static string? LimpiarTexto(string? texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+            {
+                return null;
+            }
+
+            string limpio = texto.Trim();
+            return limpio.Length == 0 ? null : limpio;
+        }
+
+        /// <summary>
+        /// Quita diacriticos (acentos) de un texto.
+        /// </summary>
+        private static string QuitarAcentos(string texto)
+        {
+            string normalizado = texto.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+
+            foreach (char c in normalizado)
+            {
+                var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (categoria != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString().Normalize(NormalizationForm.FormC);
+        }
+
+        /// <summary>
+        /// Normaliza el campo dsExpediente con formato [EX]-[ANIO]-[EXPEDIENTE]-[GCABA]-[REPARTICION].
+        /// Si no se puede parsear correctamente en 5 partes, devuelve el texto original (recortado)
+        /// y marca <paramref name="esValido"/> en false para que la confianza se fije en 0.5000.
+        /// </summary>
+        private static string? NormalizarExpediente(string? dsExpediente, List<Reparticion> reparticiones, out bool esValido)
+        {
+            esValido = false;
+
+            if (string.IsNullOrWhiteSpace(dsExpediente))
+            {
+                return null;
+            }
+
+            string[] partes = dsExpediente.Split('-', StringSplitOptions.None);
+
+            if (partes.Length != 5)
+            {
+                return dsExpediente.Trim();
+            }
+
+            string ex = partes[0].Trim();
+            string anioTexto = partes[1].Trim();
+            string expedienteTexto = partes[2].Trim();
+            string gcaba = partes[3].Trim();
+            string reparticionTexto = partes[4].Trim();
+
+            if (!int.TryParse(anioTexto, NumberStyles.Integer, CultureInfo.InvariantCulture, out int anio)
+                || anio < 1900 || anio > 2050)
+            {
+                return dsExpediente.Trim();
+            }
+
+            if (!int.TryParse(expedienteTexto, NumberStyles.Integer, CultureInfo.InvariantCulture, out int numeroExpediente))
+            {
+                return dsExpediente.Trim();
+            }
+
+            string anioNormalizado = anio.ToString("D4", CultureInfo.InvariantCulture);
+            string expedienteNormalizado = numeroExpediente.ToString("D8", CultureInfo.InvariantCulture);
+
+            string reparticionNormalizada = NormalizarTexto(reparticionTexto);
+            var reparticionEncontrada = reparticiones
+                .FirstOrDefault(r => NormalizarTexto(r.DsReparticion) == reparticionNormalizada);
+
+            if (reparticionEncontrada == null)
+            {
+                return $"{ex}-{anioNormalizado}-{expedienteNormalizado}-{gcaba}-{reparticionTexto}";
+            }
+
+            esValido = true;
+            return $"{ex}-{anioNormalizado}-{expedienteNormalizado}-{gcaba}-{reparticionEncontrada.DsReparticion}";
+        }
+
+        /// <summary>
+        /// Normaliza el campo dsDireccion: mayusculas, quita ° , . y reemplaza / por &#8211;
+        /// </summary>
+        private static string? NormalizarDireccion(string? dsDireccion)
+        {
+            if (string.IsNullOrWhiteSpace(dsDireccion))
+            {
+                return null;
+            }
+
+            string resultado = dsDireccion.Trim().ToUpperInvariant();
+            resultado = resultado.Replace("°", string.Empty)
+                                  .Replace(",", string.Empty)
+                                  .Replace(".", string.Empty)
+                                  .Replace("/", "\u2013");
+
+            return resultado;
+        }
+
+        /// <summary>
+        /// Normaliza el campo dsSeccion: quita espacios/caracteres especiales y completa con ceros a 3 digitos.
+        /// </summary>
+        private static string? NormalizarSeccion(string? dsSeccion)
+        {
+            if (string.IsNullOrWhiteSpace(dsSeccion))
+            {
+                return null;
+            }
+
+            string soloAlfanumerico = Regex.Replace(dsSeccion, @"[^A-Za-z0-9]", string.Empty);
+
+            if (soloAlfanumerico.Length == 0)
+            {
+                return null;
+            }
+
+            if (int.TryParse(soloAlfanumerico, NumberStyles.Integer, CultureInfo.InvariantCulture, out int numeroSeccion))
+            {
+                return numeroSeccion.ToString("D3", CultureInfo.InvariantCulture);
+            }
+
+            return soloAlfanumerico.ToUpperInvariant();
+        }
+
+        /// <summary>
+        /// Normaliza el campo dsManzana: quita espacios/caracteres especiales; si es solo numerico
+        /// completa a 3 digitos; si tiene parte alfabetica "LL" completa la parte numerica a 2 digitos
+        /// y deja "LL" en mayuscula; si tiene otra parte alfabetica completa la parte numerica a 3 digitos
+        /// y deja el texto en mayuscula.
+        /// </summary>
+        private static string? NormalizarManzana(string? dsManzana)
+        {
+            return NormalizarAlfanumericoConLetra(dsManzana, letraMayuscula: true);
+        }
+
+        /// <summary>
+        /// Normaliza el campo dsParcela: igual que Manzana, pero la parte alfabetica (si no es "LL")
+        /// se deja en minuscula.
+        /// </summary>
+        private static string? NormalizarParcela(string? dsParcela)
+        {
+            return NormalizarAlfanumericoConLetra(dsParcela, letraMayuscula: false);
+        }
+
+        /// <summary>
+        /// Logica compartida de normalizacion para Manzana/Parcela.
+        /// </summary>
+        private static string? NormalizarAlfanumericoConLetra(string? valor, bool letraMayuscula)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+            {
+                return null;
+            }
+
+            string soloAlfanumerico = Regex.Replace(valor, @"[^A-Za-z0-9]", string.Empty);
+
+            if (soloAlfanumerico.Length == 0)
+            {
+                return null;
+            }
+
+            // Caso solo numerico
+            if (int.TryParse(soloAlfanumerico, NumberStyles.Integer, CultureInfo.InvariantCulture, out int numeroSolo))
+            {
+                return numeroSolo.ToString("D3", CultureInfo.InvariantCulture);
+            }
+
+            string parteNumerica = new string(soloAlfanumerico.Where(char.IsDigit).ToArray());
+            string parteTexto = new string(soloAlfanumerico.Where(c => !char.IsDigit(c)).ToArray());
+
+            if (parteNumerica.Length == 0)
+            {
+                return soloAlfanumerico.ToUpperInvariant();
+            }
+
+            int numero = int.Parse(parteNumerica, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            bool esLL = parteTexto.Equals("LL", StringComparison.OrdinalIgnoreCase);
+
+            if (esLL)
+            {
+                return $"{numero.ToString("D2", CultureInfo.InvariantCulture)}LL";
+            }
+
+            string parteTextoFormateada = letraMayuscula
+                ? parteTexto.ToUpperInvariant()
+                : parteTexto.ToLowerInvariant();
+
+            return $"{numero.ToString("D3", CultureInfo.InvariantCulture)}{parteTextoFormateada}";
+        }
 
         /// <summary>
         /// Procesa un lote completo con OpenAI Batch API
@@ -657,6 +871,10 @@ namespace IndexadorIA.Negocio
             var archivoPaginaDAL = new ArchivoPaginaDAL();
             var loteDAL = new LoteDAL();
             var parametroDAL = new ParametrosDAL();
+            var categoriaPlanoDAL = new CategoriaPlanoDAL();
+            var tipoPlanoDAL = new TipoPlanoDAL();
+            var reparticionDAL = new ReparticionDAL();
+            var reparticiones = reparticionDAL.ObtenerTodos();
 
             try
             {
@@ -932,17 +1150,25 @@ namespace IndexadorIA.Negocio
                         continue;
                     }
 
-                    // Mapear cdTipoPlano según el valor de tipoPlano
+                    // Resolver cdCategoriaPlano y cdTipoPlano contra los catalogos, comparando de forma normalizada
+                    int? cdCategoriaPlano = null;
                     int? cdTipoPlano = null;
-                    if (!string.IsNullOrEmpty(datosExtraidos.tipoPlano))
+
+                    if (!string.IsNullOrWhiteSpace(datosExtraidos.categoriaPlano))
                     {
-                        cdTipoPlano = datosExtraidos.tipoPlano.ToUpper() switch
-                        {
-                            "OBRA" => 1,
-                            "MENSURA" => 2,
-                            "INSTALACIONES" => 3,
-                            _ => null
-                        };
+                        string categoriaNormalizada = NormalizarTexto(datosExtraidos.categoriaPlano);
+                        var categoria = categoriaPlanoDAL.ObtenerTodos()
+                            .FirstOrDefault(c => NormalizarTexto(c.DsCategoriaPlano) == categoriaNormalizada);
+                        cdCategoriaPlano = categoria?.CdCategoriaPlano;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(datosExtraidos.tipoPlano))
+                    {
+                        string tipoNormalizado = NormalizarTexto(datosExtraidos.tipoPlano);
+                        var tipo = tipoPlanoDAL.ObtenerTodos()
+                            .Where(t => !cdCategoriaPlano.HasValue || t.CdCategoriaPlano == cdCategoriaPlano.Value)
+                            .FirstOrDefault(t => NormalizarTexto(t.DsTipoPlano) == tipoNormalizado);
+                        cdTipoPlano = tipo?.CdTipoPlano;
                     }
 
                     // Obtener tokens
@@ -951,23 +1177,39 @@ namespace IndexadorIA.Negocio
                     int completionTokens = usage.GetProperty("completion_tokens").GetInt32();
                     int totalTokens = usage.GetProperty("total_tokens").GetInt32();
 
+                    // Normalizar campos extraidos antes de persistir
+                    string? dsExpedienteNormalizado = NormalizarExpediente(
+                        LimpiarTexto(datosExtraidos.expediente), reparticiones, out bool expedienteValido);
+                    decimal? nuConfianzaExpediente = expedienteValido
+                        ? datosExtraidos.confianza?.expediente
+                        : 0.5000m;
+
+                    string? dsSeccionNormalizada = NormalizarSeccion(LimpiarTexto(datosExtraidos.seccion));
+                    string? dsManzanaNormalizada = NormalizarManzana(LimpiarTexto(datosExtraidos.manzana));
+                    string? dsParcelaNormalizada = NormalizarParcela(LimpiarTexto(datosExtraidos.parcela));
+                    string? dsDireccionNormalizada = NormalizarDireccion(LimpiarTexto(datosExtraidos.direccion));
+
                     // Guardar resultado con campos parseados
                     int cdResultado = resultadoDAL.Insertar(new ResultadoIA
                     {
                         CdLote = cdLote,
                         CdArchivoPagina = cdArchivoPagina,
+                        CdCategoriaPlano = cdCategoriaPlano,
                         CdTipoPlano = cdTipoPlano,
-                        DsExpediente = datosExtraidos.expediente,
-                        DsSeccion = datosExtraidos.seccion,
-                        DsManzana = datosExtraidos.manzana,
-                        DsParcela = datosExtraidos.parcela,
-                        DsDireccion = datosExtraidos.direccion,
+                        DsExpediente = dsExpedienteNormalizado,
+                        DsSeccion = dsSeccionNormalizada,
+                        DsManzana = dsManzanaNormalizada,
+                        DsParcela = dsParcelaNormalizada,
+                        DsDireccion = dsDireccionNormalizada,
+                        DsNumeroPlano = LimpiarTexto(datosExtraidos.numeroPlano),
+                        NuConfianzaCategoriaPlano = datosExtraidos.confianza?.categoriaPlano,
                         NuConfianzaTipoPlano = datosExtraidos.confianza?.tipoPlano,
-                        NuConfianzaExpediente = datosExtraidos.confianza?.expediente,
+                        NuConfianzaExpediente = nuConfianzaExpediente,
                         NuConfianzaSeccion = datosExtraidos.confianza?.seccion,
                         NuConfianzaManzana = datosExtraidos.confianza?.manzana,
                         NuConfianzaParcela = datosExtraidos.confianza?.parcela,
                         NuConfianzaDireccion = datosExtraidos.confianza?.direccion,
+                        NuConfianzaNumeroPlano = datosExtraidos.confianza?.numeroPlano,
                         FeAlta = DateTime.Now,
                         CdUsuarioAlta = cdUsuario
                     });

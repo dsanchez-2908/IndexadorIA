@@ -5,19 +5,36 @@ using IndexadorIA.Negocio;
 namespace IndexadorIA.Pantallas.PlanosGCBA
 {
     /// <summary>
-    /// Pantalla de Control y Finalización de lotes asignados para control (cdEstado=6)
+    /// Pantalla de Asignación de Lotes: permite asignar lotes procesados por IA (cdEstado=4)
+    /// a un usuario para su control, cambiando su estado a "Controlando" (cdEstado=6)
     /// </summary>
-    public partial class FrmControlFinalizacion : Form
+    public partial class FrmAsignacionLote : Form
     {
-        private const int CD_ESTADO_CONTROLANDO = 6;
-        private List<Lote> _lotesActuales = new();
+        private const int CD_ESTADO_PROCESADO_IA = 4;
 
-        public FrmControlFinalizacion()
+        private List<LoteSeleccionable> _lotesActuales = new();
+
+        /// <summary>
+        /// Envoltorio de Lote con una propiedad de selección para el checkbox de la grilla
+        /// </summary>
+        private class LoteSeleccionable
+        {
+            public bool Seleccionado { get; set; }
+            public Lote Lote { get; set; } = null!;
+
+            public int CdLote => Lote.CdLote;
+            public string DsNombreLote => Lote.DsNombreLote;
+            public int NuCantidadArchivos => Lote.NuCantidadArchivos;
+            public string? DsEstado => Lote.DsEstado;
+            public DateTime FeAltaLote => Lote.FeAltaLote;
+        }
+
+        public FrmAsignacionLote()
         {
             InitializeComponent();
         }
 
-        private void FrmControlFinalizacion_Load(object sender, EventArgs e)
+        private void FrmAsignacionLote_Load(object sender, EventArgs e)
         {
             try
             {
@@ -28,6 +45,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 dtpFechaHasta.Enabled = false;
 
                 ConfigurarDataGridView();
+                CargarUsuarios();
                 CargarLotes();
             }
             catch (Exception ex)
@@ -41,6 +59,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             dgvLotes.AutoGenerateColumns = false;
             dgvLotes.Columns.Clear();
+
+            dgvLotes.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                Name = "chkSeleccionado",
+                DataPropertyName = "Seleccionado",
+                HeaderText = string.Empty,
+                Width = 40
+            });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -80,6 +106,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             });
         }
 
+        private void CargarUsuarios()
+        {
+            var usuarioDAL = new UsuarioDAL();
+            var usuarios = usuarioDAL.ObtenerTodos();
+
+            cboUsuarios.DisplayMember = "DsUsuario";
+            cboUsuarios.ValueMember = "CdUsuario";
+            cboUsuarios.DataSource = usuarios;
+            cboUsuarios.SelectedIndex = -1;
+        }
+
         private void CargarLotes()
         {
             try
@@ -89,10 +126,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 string? dsNombreLote = string.IsNullOrWhiteSpace(txtNombreLote.Text) ? null : txtNombreLote.Text.Trim();
                 DateTime? feAltaDesde = chkFiltrarFecha.Checked ? dtpFechaDesde.Value : null;
                 DateTime? feAltaHasta = chkFiltrarFecha.Checked ? dtpFechaHasta.Value : null;
-                int? cdUsuarioAsignado = SesionActual.UsuarioActual?.CdUsuario;
 
-                _lotesActuales = loteDAL.ObtenerLotesPorEstadoFiltrado(
-                    CD_ESTADO_CONTROLANDO, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuarioAsignado);
+                var lotes = loteDAL.ObtenerLotesPorEstadoFiltrado(
+                    CD_ESTADO_PROCESADO_IA, dsNombreLote, feAltaDesde, feAltaHasta);
+
+                _lotesActuales = lotes.Select(l => new LoteSeleccionable { Lote = l }).ToList();
 
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotesActuales;
@@ -131,39 +169,56 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             CargarLotes();
         }
 
-        private void dgvLotes_SelectionChanged(object sender, EventArgs e)
+        private void dgvLotes_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            btnVerLote.Enabled = dgvLotes.SelectedRows.Count > 0;
-        }
-
-        private void dgvLotes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
+            if (e.RowIndex >= 0 && dgvLotes.Columns[e.ColumnIndex].Name == "chkSeleccionado")
             {
-                AbrirVentanaVerLote();
+                dgvLotes.EndEdit();
             }
         }
 
-        private void btnVerLote_Click(object sender, EventArgs e)
+        private void btnAsignarLotes_Click(object sender, EventArgs e)
         {
-            AbrirVentanaVerLote();
-        }
-
-        private void AbrirVentanaVerLote()
-        {
-            if (dgvLotes.SelectedRows.Count == 0)
+            try
             {
-                MessageBox.Show("Seleccione un lote para ver su detalle.",
-                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                var lotesSeleccionados = _lotesActuales.Where(l => l.Seleccionado).Select(l => l.CdLote).ToList();
+
+                if (lotesSeleccionados.Count == 0)
+                {
+                    MessageBox.Show("Seleccione al menos un lote para asignar.",
+                        "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (cboUsuarios.SelectedValue is not int cdUsuarioAsignado)
+                {
+                    MessageBox.Show("Seleccione un usuario para asignar los lotes.",
+                        "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var confirmacion = MessageBox.Show(
+                    $"¿Confirma asignar {lotesSeleccionados.Count} lote(s) al usuario seleccionado?",
+                    "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (confirmacion != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                var loteDAL = new LoteDAL();
+                loteDAL.AsignarLotes(lotesSeleccionados, cdUsuarioAsignado);
+
+                MessageBox.Show("Lotes asignados correctamente.",
+                    "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                CargarLotes();
             }
-
-            var lote = (Lote)dgvLotes.SelectedRows[0].DataBoundItem;
-
-            using var frmVerLote = new FrmVerLote(lote.CdLote);
-            frmVerLote.ShowDialog(this);
-
-            CargarLotes();
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al asignar lotes: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void btnCerrar_Click(object sender, EventArgs e)

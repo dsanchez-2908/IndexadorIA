@@ -26,7 +26,7 @@ namespace IndexadorIA.Datos
             {
                 using var conn = new SqlConnection(_cadenaConexion);
                 using var cmd = new SqlCommand(@"
-                    SELECT cdTipoPlano, dsTipoPlano, snActivo, dsDescripcion, feAlta 
+                    SELECT cdTipoPlano, cdCategoriaPlano, dsTipoPlano, snActivo, dsAcronimo, feAlta 
                     FROM TD_TIPOS_PLANO 
                     WHERE snActivo = 1 
                     ORDER BY dsTipoPlano", conn);
@@ -39,10 +39,11 @@ namespace IndexadorIA.Datos
                     tipos.Add(new TipoPlano
                     {
                         CdTipoPlano = reader.GetInt32(0),
-                        DsTipoPlano = reader.GetString(1),
-                        SnActivo = reader.GetBoolean(2),
-                        DsDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
-                        FeAlta = reader.GetDateTime(4)
+                        CdCategoriaPlano = reader.GetInt32(1),
+                        DsTipoPlano = reader.GetString(2),
+                        SnActivo = reader.GetBoolean(3),
+                        DsAcronimo = reader.IsDBNull(4) ? null : reader.GetString(4),
+                        FeAlta = reader.GetDateTime(5)
                     });
                 }
 
@@ -63,19 +64,25 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
-        /// Busca un tipo de plano por su descripción (case insensitive)
+        /// Busca un tipo de plano por su descripción (case/acentos/espacios insensible),
+        /// opcionalmente restringido a una categoría de plano.
         /// </summary>
-        public TipoPlano? BuscarPorNombre(string dsTipoPlano)
+        public TipoPlano? BuscarPorNombre(string dsTipoPlano, int? cdCategoriaPlano = null)
         {
             try
             {
                 using var conn = new SqlConnection(_cadenaConexion);
-                using var cmd = new SqlCommand(@"
-                    SELECT cdTipoPlano, dsTipoPlano, snActivo, dsDescripcion, feAlta 
+                using var cmd = new SqlCommand($@"
+                    SELECT cdTipoPlano, cdCategoriaPlano, dsTipoPlano, snActivo, dsAcronimo, feAlta 
                     FROM TD_TIPOS_PLANO 
-                    WHERE LOWER(dsTipoPlano) = LOWER(@dsTipoPlano)", conn);
+                    WHERE UPPER(LTRIM(RTRIM(dsTipoPlano))) = UPPER(LTRIM(RTRIM(@dsTipoPlano)))
+                    {(cdCategoriaPlano.HasValue ? "AND cdCategoriaPlano = @cdCategoriaPlano" : "")}", conn);
 
                 cmd.Parameters.AddWithValue("@dsTipoPlano", dsTipoPlano);
+                if (cdCategoriaPlano.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@cdCategoriaPlano", cdCategoriaPlano.Value);
+                }
 
                 conn.Open();
                 using var reader = cmd.ExecuteReader();
@@ -85,10 +92,11 @@ namespace IndexadorIA.Datos
                     return new TipoPlano
                     {
                         CdTipoPlano = reader.GetInt32(0),
-                        DsTipoPlano = reader.GetString(1),
-                        SnActivo = reader.GetBoolean(2),
-                        DsDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
-                        FeAlta = reader.GetDateTime(4)
+                        CdCategoriaPlano = reader.GetInt32(1),
+                        DsTipoPlano = reader.GetString(2),
+                        SnActivo = reader.GetBoolean(3),
+                        DsAcronimo = reader.IsDBNull(4) ? null : reader.GetString(4),
+                        FeAlta = reader.GetDateTime(5)
                     };
                 }
 

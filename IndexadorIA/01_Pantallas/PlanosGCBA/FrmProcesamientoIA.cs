@@ -744,6 +744,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     SELECT 
                         bt.cdBatchTracking,
                         bt.cdLote,
+                        l.dsNombreLote,
                         bt.dsBatchId,
                         bt.dsFileId,
                         bt.dsEstado,
@@ -756,6 +757,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         bt.feAlta,
                         bt.feUltimaConsulta
                     FROM TD_BATCH_TRACKING bt
+                    INNER JOIN TD_LOTE l ON l.cdLote = bt.cdLote
                     WHERE (bt.dsEstado IN ('created', 'validating', 'in_progress', 'finalizing', 'completed', 'failed', 'expired', 'cancelling', 'cancelled')
                            OR bt.dsEstado IS NULL)
                       {filtroResultadoProcesado}
@@ -774,6 +776,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     dgvTracking.Columns["cdBatchTracking"].Visible = false;
                     dgvTracking.Columns["cdLote"].HeaderText = "Cód. Lote";
                     dgvTracking.Columns["cdLote"].Width = 80;
+                    dgvTracking.Columns["dsNombreLote"].HeaderText = "Nombre Lote";
+                    dgvTracking.Columns["dsNombreLote"].Width = 150;
                     dgvTracking.Columns["dsBatchId"].HeaderText = "Batch ID";
                     dgvTracking.Columns["dsFileId"].HeaderText = "File ID";
                     dgvTracking.Columns["dsEstado"].HeaderText = "Estado";

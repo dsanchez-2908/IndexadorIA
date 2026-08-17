@@ -22,7 +22,9 @@ namespace IndexadorIA.Pantallas
             menuPreparacionLotes = new ToolStripMenuItem();
             menuPreparacionImagenes = new ToolStripMenuItem();
             menuProcesamientoIA = new ToolStripMenuItem();
+            menuAsignacionLote = new ToolStripMenuItem();
             menuControlFinalizacion = new ToolStripMenuItem();
+            menuFinalizarLote = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -46,17 +48,18 @@ namespace IndexadorIA.Pantallas
             menuStrip.Items.AddRange(new ToolStripItem[] { menuPlanosGCBA, menuConfiguracion });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
-            menuStrip.Size = new Size(1200, 28);
+            menuStrip.Padding = new Padding(5, 2, 0, 2);
+            menuStrip.Size = new Size(1050, 27);
             menuStrip.TabIndex = 0;
             menuStrip.Text = "menuStrip1";
             // 
             // menuPlanosGCBA
             // 
-            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuControlFinalizacion });
+            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuAsignacionLote, menuControlFinalizacion, menuFinalizarLote });
             menuPlanosGCBA.Font = new Font("Segoe UI", 10F);
             menuPlanosGCBA.ForeColor = Color.White;
             menuPlanosGCBA.Name = "menuPlanosGCBA";
-            menuPlanosGCBA.Size = new Size(147, 24);
+            menuPlanosGCBA.Size = new Size(120, 23);
             menuPlanosGCBA.Text = "Planos de GCBA";
             // 
             // menuIngresoArchivos
@@ -64,7 +67,7 @@ namespace IndexadorIA.Pantallas
             menuIngresoArchivos.BackColor = Color.FromArgb(45, 45, 48);
             menuIngresoArchivos.ForeColor = Color.White;
             menuIngresoArchivos.Name = "menuIngresoArchivos";
-            menuIngresoArchivos.Size = new Size(240, 28);
+            menuIngresoArchivos.Size = new Size(244, 24);
             menuIngresoArchivos.Text = "Ingreso de Archivos";
             menuIngresoArchivos.Click += menuIngresoArchivos_Click;
             // 
@@ -73,7 +76,7 @@ namespace IndexadorIA.Pantallas
             menuSeparacionImagenes.BackColor = Color.FromArgb(45, 45, 48);
             menuSeparacionImagenes.ForeColor = Color.White;
             menuSeparacionImagenes.Name = "menuSeparacionImagenes";
-            menuSeparacionImagenes.Size = new Size(240, 28);
+            menuSeparacionImagenes.Size = new Size(244, 24);
             menuSeparacionImagenes.Text = "Separación de Imágenes";
             menuSeparacionImagenes.Click += menuSeparacionImagenes_Click;
             // 
@@ -82,40 +85,54 @@ namespace IndexadorIA.Pantallas
             menuPreparacionLotes.BackColor = Color.FromArgb(45, 45, 48);
             menuPreparacionLotes.ForeColor = Color.White;
             menuPreparacionLotes.Name = "menuPreparacionLotes";
-            menuPreparacionLotes.Size = new Size(240, 28);
+            menuPreparacionLotes.Size = new Size(244, 24);
             menuPreparacionLotes.Text = "Preparación de Lotes";
             menuPreparacionLotes.Click += menuPreparacionLotes_Click;
-
             // 
             // menuPreparacionImagenes
             // 
             menuPreparacionImagenes.BackColor = Color.FromArgb(45, 45, 48);
             menuPreparacionImagenes.ForeColor = Color.White;
             menuPreparacionImagenes.Name = "menuPreparacionImagenes";
-            menuPreparacionImagenes.Size = new Size(240, 28);
+            menuPreparacionImagenes.Size = new Size(244, 24);
             menuPreparacionImagenes.Text = "Preparación de Imágenes";
             menuPreparacionImagenes.Click += menuPreparacionImagenes_Click;
-
             // 
             // menuProcesamientoIA
             // 
             menuProcesamientoIA.BackColor = Color.FromArgb(45, 45, 48);
             menuProcesamientoIA.ForeColor = Color.White;
             menuProcesamientoIA.Name = "menuProcesamientoIA";
-            menuProcesamientoIA.Size = new Size(240, 28);
+            menuProcesamientoIA.Size = new Size(244, 24);
             menuProcesamientoIA.Text = "Procesamiento por OpenIA";
             menuProcesamientoIA.Click += menuProcesamientoIA_Click;
-
+            // 
+            // menuAsignacionLote
+            // 
+            menuAsignacionLote.BackColor = Color.FromArgb(45, 45, 48);
+            menuAsignacionLote.ForeColor = Color.White;
+            menuAsignacionLote.Name = "menuAsignacionLote";
+            menuAsignacionLote.Size = new Size(244, 24);
+            menuAsignacionLote.Text = "Asignación de Lotes";
+            menuAsignacionLote.Click += menuAsignacionLote_Click;
             // 
             // menuControlFinalizacion
             // 
             menuControlFinalizacion.BackColor = Color.FromArgb(45, 45, 48);
             menuControlFinalizacion.ForeColor = Color.White;
             menuControlFinalizacion.Name = "menuControlFinalizacion";
-            menuControlFinalizacion.Size = new Size(240, 28);
+            menuControlFinalizacion.Size = new Size(244, 24);
             menuControlFinalizacion.Text = "Control y Finalización";
             menuControlFinalizacion.Click += menuControlFinalizacion_Click;
-
+            // 
+            // menuFinalizarLote
+            // 
+            menuFinalizarLote.BackColor = Color.FromArgb(45, 45, 48);
+            menuFinalizarLote.ForeColor = Color.White;
+            menuFinalizarLote.Name = "menuFinalizarLote";
+            menuFinalizarLote.Size = new Size(244, 24);
+            menuFinalizarLote.Text = "Finalizar Lote";
+            menuFinalizarLote.Click += menuFinalizarLote_Click;
             // 
             // menuConfiguracion
             // 
@@ -123,7 +140,7 @@ namespace IndexadorIA.Pantallas
             menuConfiguracion.Font = new Font("Segoe UI", 10F);
             menuConfiguracion.ForeColor = Color.White;
             menuConfiguracion.Name = "menuConfiguracion";
-            menuConfiguracion.Size = new Size(127, 24);
+            menuConfiguracion.Size = new Size(106, 23);
             menuConfiguracion.Text = "Configuración";
             // 
             // menuProyectos
@@ -131,7 +148,7 @@ namespace IndexadorIA.Pantallas
             menuProyectos.BackColor = Color.FromArgb(45, 45, 48);
             menuProyectos.ForeColor = Color.White;
             menuProyectos.Name = "menuProyectos";
-            menuProyectos.Size = new Size(210, 28);
+            menuProyectos.Size = new Size(166, 24);
             menuProyectos.Text = "Proyectos";
             menuProyectos.Click += menuProyectos_Click;
             // 
@@ -140,7 +157,7 @@ namespace IndexadorIA.Pantallas
             menuUsuarios.BackColor = Color.FromArgb(45, 45, 48);
             menuUsuarios.ForeColor = Color.White;
             menuUsuarios.Name = "menuUsuarios";
-            menuUsuarios.Size = new Size(210, 28);
+            menuUsuarios.Size = new Size(166, 24);
             menuUsuarios.Text = "Usuarios";
             menuUsuarios.Click += menuUsuarios_Click;
             // 
@@ -149,14 +166,14 @@ namespace IndexadorIA.Pantallas
             toolStripSeparator1.BackColor = Color.FromArgb(45, 45, 48);
             toolStripSeparator1.ForeColor = Color.White;
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(207, 6);
+            toolStripSeparator1.Size = new Size(163, 6);
             // 
             // menuCambiarClave
             // 
             menuCambiarClave.BackColor = Color.FromArgb(45, 45, 48);
             menuCambiarClave.ForeColor = Color.White;
             menuCambiarClave.Name = "menuCambiarClave";
-            menuCambiarClave.Size = new Size(210, 28);
+            menuCambiarClave.Size = new Size(166, 24);
             menuCambiarClave.Text = "Cambiar Clave";
             menuCambiarClave.Click += menuCambiarClave_Click;
             // 
@@ -165,7 +182,7 @@ namespace IndexadorIA.Pantallas
             menuCerrarSesion.BackColor = Color.FromArgb(45, 45, 48);
             menuCerrarSesion.ForeColor = Color.White;
             menuCerrarSesion.Name = "menuCerrarSesion";
-            menuCerrarSesion.Size = new Size(210, 28);
+            menuCerrarSesion.Size = new Size(166, 24);
             menuCerrarSesion.Text = "Cerrar Sesión";
             menuCerrarSesion.Click += menuCerrarSesion_Click;
             // 
@@ -174,9 +191,10 @@ namespace IndexadorIA.Pantallas
             statusStrip.BackColor = Color.FromArgb(45, 45, 48);
             statusStrip.ImageScalingSize = new Size(20, 20);
             statusStrip.Items.AddRange(new ToolStripItem[] { lblUsuario, lblFecha });
-            statusStrip.Location = new Point(0, 671);
+            statusStrip.Location = new Point(0, 503);
             statusStrip.Name = "statusStrip";
-            statusStrip.Size = new Size(1200, 29);
+            statusStrip.Padding = new Padding(1, 0, 12, 0);
+            statusStrip.Size = new Size(1050, 22);
             statusStrip.TabIndex = 1;
             statusStrip.Text = "statusStrip1";
             // 
@@ -185,7 +203,7 @@ namespace IndexadorIA.Pantallas
             lblUsuario.Font = new Font("Segoe UI", 9F);
             lblUsuario.ForeColor = Color.White;
             lblUsuario.Name = "lblUsuario";
-            lblUsuario.Size = new Size(60, 24);
+            lblUsuario.Size = new Size(50, 17);
             lblUsuario.Text = "Usuario:";
             // 
             // lblFecha
@@ -193,7 +211,7 @@ namespace IndexadorIA.Pantallas
             lblFecha.Font = new Font("Segoe UI", 9F);
             lblFecha.ForeColor = Color.White;
             lblFecha.Name = "lblFecha";
-            lblFecha.Size = new Size(1125, 24);
+            lblFecha.Size = new Size(987, 17);
             lblFecha.Spring = true;
             lblFecha.Text = "Fecha";
             lblFecha.TextAlign = ContentAlignment.MiddleRight;
@@ -203,9 +221,10 @@ namespace IndexadorIA.Pantallas
             panelContenido.BackColor = Color.FromArgb(32, 32, 32);
             panelContenido.Controls.Add(lblBienvenida);
             panelContenido.Dock = DockStyle.Fill;
-            panelContenido.Location = new Point(0, 28);
+            panelContenido.Location = new Point(0, 27);
+            panelContenido.Margin = new Padding(3, 2, 3, 2);
             panelContenido.Name = "panelContenido";
-            panelContenido.Size = new Size(1200, 643);
+            panelContenido.Size = new Size(1050, 476);
             panelContenido.TabIndex = 2;
             // 
             // lblBienvenida
@@ -215,23 +234,24 @@ namespace IndexadorIA.Pantallas
             lblBienvenida.ForeColor = Color.White;
             lblBienvenida.Location = new Point(0, 0);
             lblBienvenida.Name = "lblBienvenida";
-            lblBienvenida.Size = new Size(1200, 643);
+            lblBienvenida.Size = new Size(1050, 476);
             lblBienvenida.TabIndex = 0;
             lblBienvenida.Text = "Bienvenido a IndexadorIA";
             lblBienvenida.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // FrmPrincipal
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1200, 700);
+            ClientSize = new Size(1050, 525);
             Controls.Add(panelContenido);
             Controls.Add(statusStrip);
             Controls.Add(menuStrip);
             MainMenuStrip = menuStrip;
+            Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260727)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
@@ -251,7 +271,9 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuPreparacionLotes;
         private ToolStripMenuItem menuPreparacionImagenes;
         private ToolStripMenuItem menuProcesamientoIA;
+        private ToolStripMenuItem menuAsignacionLote;
         private ToolStripMenuItem menuControlFinalizacion;
+        private ToolStripMenuItem menuFinalizarLote;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;

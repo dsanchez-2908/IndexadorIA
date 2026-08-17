@@ -7,10 +7,28 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 {
     public partial class FrmSeparacionImagenes : Form
     {
+        /// <summary>
+        /// Referencia liviana a una página girada automáticamente con baja confianza,
+        /// usada para poblar la pantalla de revisión manual de rotaciones al finalizar
+        /// el procesamiento del lote.
+        /// </summary>
+        private class PaginaParaRevisionGiro
+        {
+            public ArchivoPagina ArchivoPaginaRef { get; set; } = null!;
+            public string? RutaImagenTemporal { get; set; }
+        }
+
         private readonly ArchivoOriginalBL _archivoOriginalBL;
         private readonly ArchivoPaginaBL _archivoPaginaBL;
         private List<ArchivoOriginal> _archivos;
         private int _ultimoIndiceSeleccionado = 0;
+
+        /// <summary>
+        /// Páginas giradas automáticamente con baja confianza en la detección de
+        /// orientación, acumuladas durante el procesamiento del lote actual, para
+        /// mostrarlas al usuario en la pantalla de revisión al finalizar.
+        /// </summary>
+        private readonly List<PaginaParaRevisionGiro> _paginasParaRevisionGiro = new();
 
         public FrmSeparacionImagenes()
         {
@@ -304,6 +322,28 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
+            // Validar que Tesseract esté disponible si se eligió giro automático,
+            // para no procesar el lote sin girar y sin que el usuario se entere.
+            if (ObtenerModoGiro() == Utilidades.ModoGiro.Automatico && !Utilidades.ProcesamientoPaginas.EstaTesseractInstalado())
+            {
+                Datos.LogDAL.RegistrarLog(
+                    Entidades.LogRegistro.Niveles.ERROR,
+                    "FrmSeparacionImagenes.btnProcesar_Click",
+                    "No se puede procesar con giro automático: Tesseract OCR no está instalado en el sistema.",
+                    null,
+                    SesionActual.UsuarioActual?.CdUsuario,
+                    SesionActual.UsuarioActual?.DsUsuario);
+
+                MessageBox.Show(
+                    "No se encontró Tesseract OCR instalado en el sistema.\n\n" +
+                    "El giro automático de páginas requiere Tesseract OCR para detectar la orientación del texto.\n" +
+                    "Instale Tesseract OCR (o seleccione otro modo de giro) e intente nuevamente.",
+                    "Error - Tesseract no instalado",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             // Confirmar procesamiento
             var resultado = MessageBox.Show(
                 $"¿Está seguro de procesar {seleccionados.Count} archivo(s)?\n\n" +
@@ -358,6 +398,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             int totalProcesados = 0;
             int totalErrores = 0;
+            _paginasParaRevisionGiro.Clear();
 
             // Registrar inicio del procesamiento
             Datos.LogDAL.RegistrarLog(
@@ -427,6 +468,31 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             // Recargar grilla
             CargarArchivos();
+
+            // Si hubo páginas giradas automáticamente con baja confianza, mostrar
+            // la pantalla de revisión manual para que el usuario las corrija.
+            if (_paginasParaRevisionGiro.Count > 0)
+            {
+                var paginasRevision = _paginasParaRevisionGiro
+                    .Where(p => !string.IsNullOrEmpty(p.RutaImagenTemporal) && File.Exists(p.RutaImagenTemporal))
+                    .Select(p => new FrmRevisionRotaciones.PaginaRevision
+                    {
+                        RutaPdf = p.ArchivoPaginaRef.DsRutaCompleta,
+                        RutaImagen = p.RutaImagenTemporal!,
+                        NombreArchivo = p.ArchivoPaginaRef.DsNombreArchivoPagina
+                    })
+                    .ToList();
+
+                _paginasParaRevisionGiro.Clear();
+
+                if (paginasRevision.Count > 0)
+                {
+                    using (var frmRevision = new FrmRevisionRotaciones(paginasRevision))
+                    {
+                        frmRevision.ShowDialog(this);
+                    }
+                }
+            }
         }
 
         private (bool exito, string mensaje) ProcesarArchivoIndividual(ArchivoOriginal archivo)
@@ -513,6 +579,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                                 CdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 1
                             };
                             rotaciones.Add(rotacion);
+
+                            if (resultado.BajaConfianzaGiro)
+                            {
+                                _paginasParaRevisionGiro.Add(new PaginaParaRevisionGiro
+                                {
+                                    ArchivoPaginaRef = pagina,
+                                    RutaImagenTemporal = resultado.RutaImagenTemporalRevision
+                                });
+                            }
                         }
                     }
                 }
@@ -550,6 +625,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             CdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 1
                         };
                         rotaciones.Add(rotacion);
+
+                        if (resultado.BajaConfianzaGiro)
+                        {
+                            _paginasParaRevisionGiro.Add(new PaginaParaRevisionGiro
+                            {
+                                ArchivoPaginaRef = pagina,
+                                RutaImagenTemporal = resultado.RutaImagenTemporalRevision
+                            });
+                        }
                     }
                 }
 

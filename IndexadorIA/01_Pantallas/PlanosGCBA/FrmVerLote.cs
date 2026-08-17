@@ -14,7 +14,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
     {
         private readonly int _cdLote;
         private List<FilaArchivoPagina> _filasCompletas = new();
+        private List<CategoriaPlano> _categoriasPlano = new();
         private List<TipoPlano> _tiposPlano = new();
+        private List<Reparticion> _reparticiones = new();
         private FilaArchivoPagina? _filaSeleccionada;
         private ResultadoIA? _valoresOriginalesResultado;
         private float _factorZoom = 1.0f;
@@ -31,7 +33,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             public ResultadoIA? Resultado { get; set; }
 
             public string DsNombreArchivoPagina => Archivo.DsNombreArchivoPagina;
+            public string DsCategoriaPlano => Resultado?.DsCategoriaPlano ?? string.Empty;
             public string DsTipoPlano => Resultado?.DsTipoPlano ?? string.Empty;
+            public string DsNumeroPlano => Resultado?.DsNumeroPlano ?? string.Empty;
             public string DsExpediente => Resultado?.DsExpediente ?? string.Empty;
             public string DsSeccion => Resultado?.DsSeccion ?? string.Empty;
             public string DsManzana => Resultado?.DsManzana ?? string.Empty;
@@ -45,7 +49,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     if (Resultado == null) return 0;
                     var valores = new[]
                     {
+                        Resultado.NuConfianzaCategoriaPlano,
                         Resultado.NuConfianzaTipoPlano,
+                        Resultado.NuConfianzaNumeroPlano,
                         Resultado.NuConfianzaExpediente,
                         Resultado.NuConfianzaSeccion,
                         Resultado.NuConfianzaManzana,
@@ -73,7 +79,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             try
             {
                 CargarEncabezadoLote();
-                CargarTiposPlano();
+                CargarCategoriasYTiposPlano();
                 LimpiarPanelDetalle();
                 CargarDatosGrilla();
             }
@@ -108,10 +114,21 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 : "N/D";
         }
 
-        private void CargarTiposPlano()
+        private void CargarCategoriasYTiposPlano()
         {
+            var categoriaPlanoDAL = new CategoriaPlanoDAL();
             var tipoPlanoDAL = new TipoPlanoDAL();
+            var reparticionDAL = new ReparticionDAL();
+            _categoriasPlano = categoriaPlanoDAL.ObtenerTodos();
             _tiposPlano = tipoPlanoDAL.ObtenerTodos();
+            _reparticiones = reparticionDAL.ObtenerTodos();
+
+            cboCategoriaPlanoFiltro.DisplayMember = "DsCategoriaPlano";
+            cboCategoriaPlanoFiltro.ValueMember = "CdCategoriaPlano";
+            cboCategoriaPlanoFiltro.DataSource = new List<CategoriaPlano>
+            {
+                new CategoriaPlano { CdCategoriaPlano = 0, DsCategoriaPlano = "(Todos)" }
+            }.Concat(_categoriasPlano).ToList();
 
             cboTipoPlanoFiltro.DisplayMember = "DsTipoPlano";
             cboTipoPlanoFiltro.ValueMember = "CdTipoPlano";
@@ -120,9 +137,40 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 new TipoPlano { CdTipoPlano = 0, DsTipoPlano = "(Todos)" }
             }.Concat(_tiposPlano).ToList();
 
+            var autoCompleteTiposPlano = new AutoCompleteStringCollection();
+            autoCompleteTiposPlano.AddRange(_tiposPlano.Select(t => t.DsTipoPlano).ToArray());
+            cboTipoPlanoFiltro.AutoCompleteCustomSource = autoCompleteTiposPlano;
+            cboTipoPlanoDetalle.AutoCompleteCustomSource = autoCompleteTiposPlano;
+
+            cboCategoriaPlanoDetalle.DisplayMember = "DsCategoriaPlano";
+            cboCategoriaPlanoDetalle.ValueMember = "CdCategoriaPlano";
+            cboCategoriaPlanoDetalle.DataSource = _categoriasPlano.ToList();
+
+            ActualizarTiposPlanoDetalle(null);
+        }
+
+        /// <summary>
+        /// Filtra el combo de Tipo de Plano del detalle según la categoría seleccionada.
+        /// Si no se indica categoría, muestra todos los tipos.
+        /// </summary>
+        private void ActualizarTiposPlanoDetalle(int? cdCategoriaPlano)
+        {
+            var tiposFiltrados = cdCategoriaPlano.HasValue
+                ? _tiposPlano.Where(t => t.CdCategoriaPlano == cdCategoriaPlano.Value).ToList()
+                : _tiposPlano.ToList();
+
             cboTipoPlanoDetalle.DisplayMember = "DsTipoPlano";
             cboTipoPlanoDetalle.ValueMember = "CdTipoPlano";
-            cboTipoPlanoDetalle.DataSource = _tiposPlano.ToList();
+            cboTipoPlanoDetalle.DataSource = tiposFiltrados;
+        }
+
+        private void cboCategoriaPlanoDetalle_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int? cdCategoriaPlano = cboCategoriaPlanoDetalle.SelectedValue is int cdCategoria && cdCategoria != 0
+                ? cdCategoria
+                : null;
+
+            ActualizarTiposPlanoDetalle(cdCategoriaPlano);
         }
 
         private void CargarDatosGrilla()
@@ -165,9 +213,21 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             });
             dgvArchivos.Columns.Add(new DataGridViewTextBoxColumn
             {
+                Name = "dsCategoriaPlano",
+                DataPropertyName = "DsCategoriaPlano",
+                HeaderText = "Categoría de Plano"
+            });
+            dgvArchivos.Columns.Add(new DataGridViewTextBoxColumn
+            {
                 Name = "dsTipoPlano",
                 DataPropertyName = "DsTipoPlano",
                 HeaderText = "Tipo de Plano"
+            });
+            dgvArchivos.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsNumeroPlano",
+                DataPropertyName = "DsNumeroPlano",
+                HeaderText = "Número de Plano"
             });
             dgvArchivos.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -212,8 +272,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnLimpiarFiltrosPagina_Click(object sender, EventArgs e)
         {
+            cboCategoriaPlanoFiltro.SelectedIndex = 0;
             cboTipoPlanoFiltro.SelectedIndex = 0;
+            chkFaltaCategoriaPlano.Checked = false;
             chkFaltaTipoPlano.Checked = false;
+            chkFaltaNumeroPlano.Checked = false;
             chkFaltaExpediente.Checked = false;
             chkFaltaSeccion.Checked = false;
             chkFaltaManzana.Checked = false;
@@ -228,13 +291,24 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             IEnumerable<FilaArchivoPagina> filas = _filasCompletas;
 
+            if (cboCategoriaPlanoFiltro.SelectedItem is CategoriaPlano categoriaSeleccionada && categoriaSeleccionada.CdCategoriaPlano != 0)
+            {
+                filas = filas.Where(f => f.Resultado?.CdCategoriaPlano == categoriaSeleccionada.CdCategoriaPlano);
+            }
+
             if (cboTipoPlanoFiltro.SelectedItem is TipoPlano tipoSeleccionado && tipoSeleccionado.CdTipoPlano != 0)
             {
                 filas = filas.Where(f => f.Resultado?.CdTipoPlano == tipoSeleccionado.CdTipoPlano);
             }
 
+            if (chkFaltaCategoriaPlano.Checked)
+                filas = filas.Where(f => f.Resultado?.CdCategoriaPlano == null);
+
             if (chkFaltaTipoPlano.Checked)
                 filas = filas.Where(f => f.Resultado?.CdTipoPlano == null);
+
+            if (chkFaltaNumeroPlano.Checked)
+                filas = filas.Where(f => string.IsNullOrWhiteSpace(f.DsNumeroPlano));
 
             if (chkFaltaExpediente.Checked)
                 filas = filas.Where(f => string.IsNullOrWhiteSpace(f.DsExpediente));
@@ -288,7 +362,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             _valoresOriginalesResultado = resultado == null ? null : new ResultadoIA
             {
                 CdResultado = resultado.CdResultado,
+                CdCategoriaPlano = resultado.CdCategoriaPlano,
                 CdTipoPlano = resultado.CdTipoPlano,
+                DsNumeroPlano = resultado.DsNumeroPlano,
                 DsExpediente = resultado.DsExpediente,
                 DsSeccion = resultado.DsSeccion,
                 DsManzana = resultado.DsManzana,
@@ -296,14 +372,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 DsDireccion = resultado.DsDireccion
             };
 
+            cboCategoriaPlanoDetalle.SelectedValue = resultado?.CdCategoriaPlano ?? 0;
+            ActualizarTiposPlanoDetalle(resultado?.CdCategoriaPlano);
             cboTipoPlanoDetalle.SelectedValue = resultado?.CdTipoPlano ?? 0;
-            txtExpediente.Text = resultado?.DsExpediente ?? string.Empty;
+            txtNumeroPlano.Text = resultado?.DsNumeroPlano ?? string.Empty;
+            CargarExpedienteEnCampos(resultado?.DsExpediente);
             txtSeccion.Text = resultado?.DsSeccion ?? string.Empty;
             txtManzana.Text = resultado?.DsManzana ?? string.Empty;
             txtParcela.Text = resultado?.DsParcela ?? string.Empty;
             txtDireccion.Text = resultado?.DsDireccion ?? string.Empty;
 
+            lblConfianzaCategoriaPlano.Text = FormatearConfianza(resultado?.NuConfianzaCategoriaPlano);
             lblConfianzaTipoPlano.Text = FormatearConfianza(resultado?.NuConfianzaTipoPlano);
+            lblConfianzaNumeroPlano.Text = FormatearConfianza(resultado?.NuConfianzaNumeroPlano);
             lblConfianzaExpediente.Text = FormatearConfianza(resultado?.NuConfianzaExpediente);
             lblConfianzaSeccion.Text = FormatearConfianza(resultado?.NuConfianzaSeccion);
             lblConfianzaManzana.Text = FormatearConfianza(resultado?.NuConfianzaManzana);
@@ -323,14 +404,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblSnGirada.Text = "Girada: -";
             lblSnPosibleBlanca.Text = "Posible Blanca: -";
 
+            cboCategoriaPlanoDetalle.SelectedIndex = -1;
+            ActualizarTiposPlanoDetalle(null);
             cboTipoPlanoDetalle.SelectedIndex = -1;
-            txtExpediente.Text = string.Empty;
+            txtNumeroPlano.Text = string.Empty;
+            CargarExpedienteEnCampos(null);
             txtSeccion.Text = string.Empty;
             txtManzana.Text = string.Empty;
             txtParcela.Text = string.Empty;
             txtDireccion.Text = string.Empty;
 
+            lblConfianzaCategoriaPlano.Text = "-- %";
             lblConfianzaTipoPlano.Text = "-- %";
+            lblConfianzaNumeroPlano.Text = "-- %";
             lblConfianzaExpediente.Text = "-- %";
             lblConfianzaSeccion.Text = "-- %";
             lblConfianzaManzana.Text = "-- %";
@@ -344,6 +430,78 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private static string FormatearConfianza(decimal? confianza)
         {
             return confianza.HasValue ? $"{confianza.Value:0.#} %" : "-- %";
+        }
+
+        /// <summary>
+        /// Distribuye el expediente (formato EX-ANIO-NUMERO-GCABA-REPARTICION) en los
+        /// 5 textbox del panel de detalle. Si no tiene exactamente 5 partes, se vuelca
+        /// el valor completo en el 5to campo (Reparticion) para no perder informacion.
+        /// </summary>
+        private void CargarExpedienteEnCampos(string? dsExpediente)
+        {
+            if (string.IsNullOrWhiteSpace(dsExpediente))
+            {
+                txtExpedienteEx.Text = string.Empty;
+                txtExpedienteAnio.Text = string.Empty;
+                txtExpedienteNumero.Text = string.Empty;
+                txtExpedienteGcaba.Text = string.Empty;
+                txtExpedienteReparticion.Text = string.Empty;
+                return;
+            }
+
+            string[] partes = dsExpediente.Split('-', StringSplitOptions.None);
+
+            if (partes.Length == 5)
+            {
+                txtExpedienteEx.Text = partes[0].Trim();
+                txtExpedienteAnio.Text = partes[1].Trim();
+                txtExpedienteNumero.Text = partes[2].Trim();
+                txtExpedienteGcaba.Text = partes[3].Trim();
+                txtExpedienteReparticion.Text = partes[4].Trim();
+            }
+            else
+            {
+                txtExpedienteEx.Text = string.Empty;
+                txtExpedienteAnio.Text = string.Empty;
+                txtExpedienteNumero.Text = string.Empty;
+                txtExpedienteGcaba.Text = string.Empty;
+                txtExpedienteReparticion.Text = dsExpediente.Trim();
+            }
+        }
+
+        /// <summary>
+        /// Reconstruye el expediente concatenando los 5 campos con guiones, completando
+        /// el numero de expediente con ceros a la izquierda hasta 8 digitos y validando
+        /// que la reparticion exista en TD_REPARTICIONES.
+        /// </summary>
+        private string? ArmarExpedienteDesdeCampos(out bool reparticionValida)
+        {
+            reparticionValida = true;
+
+            string ex = txtExpedienteEx.Text.Trim();
+            string anio = txtExpedienteAnio.Text.Trim();
+            string numero = txtExpedienteNumero.Text.Trim();
+            string gcaba = txtExpedienteGcaba.Text.Trim();
+            string reparticion = txtExpedienteReparticion.Text.Trim();
+
+            if (string.IsNullOrEmpty(ex) && string.IsNullOrEmpty(anio) && string.IsNullOrEmpty(numero)
+                && string.IsNullOrEmpty(gcaba) && string.IsNullOrEmpty(reparticion))
+            {
+                return null;
+            }
+
+            if (int.TryParse(numero, out int numeroExpediente))
+            {
+                numero = numeroExpediente.ToString("D8");
+            }
+
+            if (!string.IsNullOrEmpty(reparticion))
+            {
+                reparticionValida = _reparticiones.Any(r =>
+                    string.Equals(r.DsReparticion, reparticion, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return $"{ex}-{anio}-{numero}-{gcaba}-{reparticion}";
         }
 
         /// <summary>
@@ -527,17 +685,29 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
+            bool categoriaCompleta = cboCategoriaPlanoDetalle.SelectedValue is int cdCategoriaPlanoValidar && cdCategoriaPlanoValidar != 0;
             bool tipoPlanoCompleto = cboTipoPlanoDetalle.SelectedValue is int cdTipoPlanoValidar && cdTipoPlanoValidar != 0;
 
-            if (!tipoPlanoCompleto
+            if (!categoriaCompleta
+                || !tipoPlanoCompleto
                 || string.IsNullOrWhiteSpace(txtSeccion.Text)
                 || string.IsNullOrWhiteSpace(txtManzana.Text)
                 || string.IsNullOrWhiteSpace(txtParcela.Text)
                 || string.IsNullOrWhiteSpace(txtDireccion.Text))
             {
                 MessageBox.Show(
-                    "Para marcar el registro como Controlado debe completar los campos: Tipo de Plano, Sección, Manzana, Parcela y Dirección.\n\nEl campo Expediente puede quedar incompleto.",
+                    "Para marcar el registro como Controlado debe completar los campos: Categoría de Plano, Tipo de Plano, Sección, Manzana, Parcela y Dirección.\n\nLos campos Expediente y Número de Plano pueden quedar incompletos.",
                     "Datos incompletos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string? dsExpedienteArmado = ArmarExpedienteDesdeCampos(out bool reparticionValida);
+
+            if (!reparticionValida)
+            {
+                MessageBox.Show(
+                    $"La repartición \"{txtExpedienteReparticion.Text.Trim()}\" no existe en TD_REPARTICIONES. Corríjala antes de guardar.",
+                    "Repartición inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -546,14 +716,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 var resultado = _filaSeleccionada.Resultado;
                 int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
 
+                resultado.CdCategoriaPlano = cboCategoriaPlanoDetalle.SelectedValue is int cdCategoriaPlano && cdCategoriaPlano != 0 ? cdCategoriaPlano : null;
                 resultado.CdTipoPlano = cboTipoPlanoDetalle.SelectedValue is int cdTipoPlano && cdTipoPlano != 0 ? cdTipoPlano : null;
-                resultado.DsExpediente = txtExpediente.Text;
+                resultado.DsNumeroPlano = txtNumeroPlano.Text;
+                resultado.DsExpediente = dsExpedienteArmado;
                 resultado.DsSeccion = txtSeccion.Text;
                 resultado.DsManzana = txtManzana.Text;
                 resultado.DsParcela = txtParcela.Text;
                 resultado.DsDireccion = txtDireccion.Text;
 
                 bool modificoDatos = DatosFueronModificados(resultado);
+                RegistrarCorreccionesSiCorresponde(resultado, cdUsuario);
 
                 var resultadoIADAL = new ResultadoIADAL();
                 resultadoIADAL.ActualizarDatos(resultado, cdUsuario);
@@ -585,12 +758,75 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return false;
 
             var original = _valoresOriginalesResultado;
-            return original.CdTipoPlano != resultadoActualizado.CdTipoPlano
+            return original.CdCategoriaPlano != resultadoActualizado.CdCategoriaPlano
+                || original.CdTipoPlano != resultadoActualizado.CdTipoPlano
+                || original.DsNumeroPlano != resultadoActualizado.DsNumeroPlano
                 || original.DsExpediente != resultadoActualizado.DsExpediente
                 || original.DsSeccion != resultadoActualizado.DsSeccion
                 || original.DsManzana != resultadoActualizado.DsManzana
                 || original.DsParcela != resultadoActualizado.DsParcela
                 || original.DsDireccion != resultadoActualizado.DsDireccion;
+        }
+
+        /// <summary>
+        /// Compara los valores originales contra los actualizados y registra en TD_CORRECIONES
+        /// cada campo que haya sido modificado manualmente, con fines estadísticos.
+        /// </summary>
+        private void RegistrarCorreccionesSiCorresponde(ResultadoIA resultadoActualizado, int cdUsuario)
+        {
+            if (_valoresOriginalesResultado == null)
+                return;
+
+            var original = _valoresOriginalesResultado;
+            var correccionDAL = new CorreccionDAL();
+
+            void RegistrarSiDistinto(string dsCampo, string? valorAnterior, string? valorNuevo)
+            {
+                if (valorAnterior == valorNuevo)
+                    return;
+
+                correccionDAL.Insertar(new Correccion
+                {
+                    CdResultado = resultadoActualizado.CdResultado,
+                    DsCampo = dsCampo,
+                    DsValorAnterior = valorAnterior,
+                    DsValorNuevo = valorNuevo,
+                    CdUsuarioControl = cdUsuario
+                });
+            }
+
+            RegistrarSiDistinto(Correccion.Campos.Categoria,
+                ObtenerDescripcionCategoria(original.CdCategoriaPlano),
+                ObtenerDescripcionCategoria(resultadoActualizado.CdCategoriaPlano));
+
+            RegistrarSiDistinto(Correccion.Campos.TipoPlano,
+                ObtenerDescripcionTipoPlano(original.CdTipoPlano),
+                ObtenerDescripcionTipoPlano(resultadoActualizado.CdTipoPlano));
+
+            RegistrarSiDistinto(Correccion.Campos.Direccion, original.DsDireccion, resultadoActualizado.DsDireccion);
+            RegistrarSiDistinto(Correccion.Campos.Seccion, original.DsSeccion, resultadoActualizado.DsSeccion);
+            RegistrarSiDistinto(Correccion.Campos.Manzana, original.DsManzana, resultadoActualizado.DsManzana);
+            RegistrarSiDistinto(Correccion.Campos.Parcela, original.DsParcela, resultadoActualizado.DsParcela);
+            RegistrarSiDistinto(Correccion.Campos.Expediente, original.DsExpediente, resultadoActualizado.DsExpediente);
+            RegistrarSiDistinto(Correccion.Campos.NumeroPlano, original.DsNumeroPlano, resultadoActualizado.DsNumeroPlano);
+        }
+
+        private string? ObtenerDescripcionCategoria(int? cdCategoriaPlano)
+        {
+            if (!cdCategoriaPlano.HasValue)
+                return null;
+
+            return _categoriasPlano.FirstOrDefault(c => c.CdCategoriaPlano == cdCategoriaPlano.Value)?.DsCategoriaPlano
+                ?? cdCategoriaPlano.Value.ToString();
+        }
+
+        private string? ObtenerDescripcionTipoPlano(int? cdTipoPlano)
+        {
+            if (!cdTipoPlano.HasValue)
+                return null;
+
+            return _tiposPlano.FirstOrDefault(t => t.CdTipoPlano == cdTipoPlano.Value)?.DsTipoPlano
+                ?? cdTipoPlano.Value.ToString();
         }
 
         private void btnGirarIzquierda_Click(object sender, EventArgs e)
@@ -743,8 +979,79 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnMarcarLoteCompletado_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Funcionalidad pendiente de implementar (Parte 3).", "Marcar lote como completado",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            try
+            {
+                var loteDAL = new LoteDAL();
+                var resultadoIADAL = new ResultadoIADAL();
+                var loteFinalizacionBL = new LoteFinalizacionBL();
+
+                var resultados = resultadoIADAL.ObtenerPorLote(_cdLote, mostrarTodos: true);
+                var archivosPorPagina = loteDAL.ObtenerArchivosPaginasPorLote(_cdLote)
+                    .ToDictionary(a => a.CdArchivoPagina, a => a);
+
+                var filas = resultados
+                    .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
+                    .Select(r => new LoteFinalizacionBL.FilaFinalizacion
+                    {
+                        Archivo = archivosPorPagina[r.CdArchivoPagina],
+                        Resultado = r
+                    }).ToList();
+
+                if (filas.Count == 0)
+                {
+                    MessageBox.Show("No hay registros en el lote para procesar.", "Aviso",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Control 1: campos obligatorios completos para estados Pendiente de Control y Controlado
+                var faltantes = loteFinalizacionBL.ValidarCamposObligatorios(filas);
+                if (faltantes.Count > 0)
+                {
+                    MessageBox.Show(
+                        $"Existen {faltantes.Count} registro(s) sin completar los campos obligatorios " +
+                        "(Tipo de Plano, Sección, Manzana, Parcela, Dirección).\n\n" +
+                        "Complete los datos faltantes antes de marcar el lote como completado.",
+                        "Datos incompletos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Control 2: advertir si quedan registros sin controlar (Pendiente de Control)
+                int cantidadPendientes = loteFinalizacionBL.ContarPendientesControl(filas);
+                if (cantidadPendientes > 0)
+                {
+                    var respuesta = MessageBox.Show(
+                        $"Quedan {cantidadPendientes} registro(s) sin controlar (Pendiente de Control).\n\n" +
+                        "¿Desea continuar de todas formas?",
+                        "Registros sin controlar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                    if (respuesta != DialogResult.Yes)
+                        return;
+                }
+
+                var confirmacion = MessageBox.Show(
+                    $"El lote tiene {filas.Count} registro(s) listo(s). " +
+                    "El lote quedará marcado como \"Pendiente de Finalizar\" y su finalización " +
+                    "(movimiento de archivos y generación del CSV) se realizará desde la pantalla de finalización.\n\n" +
+                    "¿Desea continuar?",
+                    "Marcar Lote Pendiente de Finalizar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (confirmacion != DialogResult.Yes)
+                    return;
+
+                int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+                loteFinalizacionBL.MarcarLotePendienteFinalizar(_cdLote, cdUsuario);
+
+                MessageBox.Show("El lote fue marcado como Pendiente de Finalizar.", "Marcar Lote Pendiente de Finalizar",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo completar el lote: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void btnCerrar_Click(object sender, EventArgs e)

@@ -19,6 +19,100 @@ namespace IndexadorIA.Utilidades
     public class ProcesamientoPaginas
     {
         /// <summary>
+        /// Carpeta temporal donde se guardan las imágenes PNG de las páginas giradas
+        /// automáticamente con baja confianza, para que el usuario las revise en la
+        /// pantalla "Revisión de rotaciones" al finalizar el procesamiento del lote.
+        /// </summary>
+        public static string CarpetaRevisionGiro => Path.Combine(Path.GetTempPath(), "IndexadorIA_RevisionGiro");
+
+        /// <summary>
+        /// Elimina la carpeta temporal con las imágenes de revisión de rotaciones,
+        /// junto con todo su contenido. Se llama al finalizar la pantalla de revisión.
+        /// </summary>
+        public static void LimpiarCarpetaRevisionGiro()
+        {
+            try
+            {
+                if (Directory.Exists(CarpetaRevisionGiro))
+                {
+                    Directory.Delete(CarpetaRevisionGiro, recursive: true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Datos.LogDAL.RegistrarLog(
+                    Entidades.LogRegistro.Niveles.WARNING,
+                    "ProcesamientoPaginas.LimpiarCarpetaRevisionGiro",
+                    "No se pudo eliminar la carpeta temporal de revisión de rotaciones.",
+                    ex);
+            }
+        }
+
+        /// <summary>
+        /// Guarda una copia PNG (ya rotada, tal como quedó aplicada) de una página con
+        /// giro automático de baja confianza, para mostrarla luego en la pantalla de
+        /// revisión manual. Se reduce la resolución respecto del render original (300
+        /// DPI) porque solo se usa como miniatura de previsualización; esto evita
+        /// manipular bitmaps enormes en la pantalla de revisión, que era la causa de
+        /// la lentitud al rotar/mostrar imágenes.
+        /// </summary>
+        private const int AnchoMaximoImagenRevision = 500;
+
+        private static string? GuardarImagenTemporalRevision(Image imagen, int gradosYaAplicados, string nombreArchivoPagina)
+        {
+            try
+            {
+                Directory.CreateDirectory(CarpetaRevisionGiro);
+
+                string nombreImagen = $"{Path.GetFileNameWithoutExtension(nombreArchivoPagina)}_{Guid.NewGuid():N}.png";
+                string rutaImagen = Path.Combine(CarpetaRevisionGiro, nombreImagen);
+
+                using (var bitmap = new Bitmap(imagen))
+                using (var bitmapRotado = gradosYaAplicados > 0 ? RotarImagen(bitmap, gradosYaAplicados) : bitmap.Clone() as Image)
+                using (var bitmapReducido = ReducirResolucion(bitmapRotado, AnchoMaximoImagenRevision))
+                {
+                    bitmapReducido.Save(rutaImagen, ImageFormat.Png);
+                }
+
+                return rutaImagen;
+            }
+            catch (Exception ex)
+            {
+                Datos.LogDAL.RegistrarLog(
+                    Entidades.LogRegistro.Niveles.WARNING,
+                    "ProcesamientoPaginas.GuardarImagenTemporalRevision",
+                    $"No se pudo guardar la imagen temporal de revisión para {nombreArchivoPagina}",
+                    ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Reduce una imagen a un ancho máximo (manteniendo la proporción), usada para
+        /// generar miniaturas livianas en la pantalla de revisión de rotaciones.
+        /// </summary>
+        private static Bitmap ReducirResolucion(Image imagen, int anchoMaximo)
+        {
+            if (imagen.Width <= anchoMaximo)
+            {
+                return new Bitmap(imagen);
+            }
+
+            double escala = (double)anchoMaximo / imagen.Width;
+            int nuevoAncho = anchoMaximo;
+            int nuevoAlto = (int)Math.Round(imagen.Height * escala);
+
+            var bitmapReducido = new Bitmap(nuevoAncho, nuevoAlto);
+            using (var graphics = Graphics.FromImage(bitmapReducido))
+            {
+                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+                graphics.DrawImage(imagen, 0, 0, nuevoAncho, nuevoAlto);
+            }
+
+            return bitmapReducido;
+        }
+
+        /// <summary>
         /// Intenta eliminar un archivo con reintentos (para manejar bloqueos temporales)
         /// </summary>
         private static bool IntentarEliminarArchivo(string rutaArchivo, int maxIntentos = 3, int esperaMilisegundos = 100)
@@ -70,6 +164,20 @@ namespace IndexadorIA.Utilidades
             public bool EsPosibleBlanca { get; set; }
             public bool Exito { get; set; }
             public string? Mensaje { get; set; }
+
+            /// <summary>
+            /// Indica que el giro automático se aplicó igual, pero la detección de
+            /// orientación (Tesseract OSD) tuvo baja confianza, por lo que conviene
+            /// que el usuario revise manualmente esta página.
+            /// </summary>
+            public bool BajaConfianzaGiro { get; set; }
+
+            /// <summary>
+            /// Ruta de la imagen temporal (PNG) generada para poder mostrar esta
+            /// página en la pantalla de revisión de rotaciones de baja confianza.
+            /// Solo se completa cuando BajaConfianzaGiro es true.
+            /// </summary>
+            public string? RutaImagenTemporalRevision { get; set; }
         }
 
         /// <summary>
@@ -149,13 +257,20 @@ namespace IndexadorIA.Utilidades
 
                             // Detectar rotación si es necesario
                             int rotacion = 0;
+                            bool bajaConfianzaGiro = false;
                             if (modoGiro != ModoGiro.Ninguno)
                             {
-                                rotacion = DeterminarRotacion(imagen, modoGiro);
+                                rotacion = DeterminarRotacion(imagen, modoGiro, out bajaConfianzaGiro);
                                 if (rotacion > 0)
                                 {
                                     resultado.SeGiro = true;
                                     resultado.GradosRotacion = rotacion;
+                                }
+
+                                if (bajaConfianzaGiro)
+                                {
+                                    resultado.BajaConfianzaGiro = true;
+                                    resultado.RutaImagenTemporalRevision = GuardarImagenTemporalRevision(imagen, rotacion, nombreArchivo);
                                 }
                             }
 
@@ -334,7 +449,7 @@ namespace IndexadorIA.Utilidades
                     // Detectar y aplicar rotación si es necesario
                     if (modoGiro != ModoGiro.Ninguno)
                     {
-                        var rotacion = DeterminarRotacion(imagen, modoGiro);
+                        var rotacion = DeterminarRotacion(imagen, modoGiro, out bool bajaConfianzaGiro);
                         if (rotacion > 0)
                         {
                             resultado.SeGiro = true;
@@ -350,6 +465,12 @@ namespace IndexadorIA.Utilidades
                         {
                             // Copiar sin rotación
                             File.Copy(rutaArchivo, rutaCompleta, true);
+                        }
+
+                        if (bajaConfianzaGiro)
+                        {
+                            resultado.BajaConfianzaGiro = true;
+                            resultado.RutaImagenTemporalRevision = GuardarImagenTemporalRevision(imagen, rotacion, resultado.NombreArchivo);
                         }
                     }
                     else
@@ -422,8 +543,9 @@ namespace IndexadorIA.Utilidades
         ///   la orientación real del texto de la página, mucho más preciso que heurísticas de
         ///   densidad de píxeles en los bordes.
         /// </summary>
-        private static int DeterminarRotacion(Image imagen, ModoGiro modoGiro)
+        private static int DeterminarRotacion(Image imagen, ModoGiro modoGiro, out bool bajaConfianza)
         {
+            bajaConfianza = false;
             switch (modoGiro)
             {
                 case ModoGiro.Derecha90:
@@ -431,7 +553,7 @@ namespace IndexadorIA.Utilidades
                 case ModoGiro.Izquierda90:
                     return 270;
                 case ModoGiro.Automatico:
-                    return DetectarRotacionConOSD(imagen);
+                    return DetectarRotacionConOSD(imagen, out bajaConfianza);
                 default:
                     return 0;
             }
@@ -445,8 +567,9 @@ namespace IndexadorIA.Utilidades
         /// instalado) da resultados mucho más precisos y consistentes con el flujo que ya
         /// se usaba manualmente con Python/ocrmypdf.
         /// </summary>
-        private static int DetectarRotacionConOSD(Image imagen)
+        private static int DetectarRotacionConOSD(Image imagen, out bool bajaConfianza)
         {
+            bajaConfianza = false;
             string? rutaTemporalImagen = null;
             string? rutaTemporalSalida = null;
             try
@@ -455,9 +578,10 @@ namespace IndexadorIA.Utilidades
                 if (string.IsNullOrEmpty(rutaTesseract))
                 {
                     Datos.LogDAL.RegistrarLog(
-                        Entidades.LogRegistro.Niveles.WARNING,
+                        Entidades.LogRegistro.Niveles.ERROR,
                         "ProcesamientoPaginas.DetectarRotacionConOSD",
-                        "No se encontró tesseract.exe instalado en el sistema (PATH). No se puede detectar la rotación automática, se omite el giro.");
+                        "No se encontró tesseract.exe instalado en el sistema (PATH ni ubicaciones típicas de instalación). " +
+                        "No se puede aplicar el giro automático de las páginas. Instale Tesseract OCR o seleccione otro modo de giro.");
                     return 0;
                 }
 
@@ -507,9 +631,21 @@ namespace IndexadorIA.Utilidades
                     return 0;
                 }
 
-                // La salida de "tesseract --psm 0" contiene una línea del tipo
-                // "Rotate: 90" indicando cuántos grados hay que rotar la imagen
-                // en sentido horario para corregir su orientación.
+                // La salida de "tesseract --psm 0" contiene líneas del tipo:
+                //   Rotate: 90
+                //   Orientation confidence: 6.62
+                // "Rotate" indica cuántos grados hay que rotar la imagen en sentido
+                // horario para corregir su orientación, pero esa detección puede ser
+                // poco confiable en páginas con poco texto (planos con sellos,
+                // membretes, etc.), donde Tesseract llega a confundir 0°/180° (o
+                // 90°/270°) por la simetría de algunos caracteres. Por eso se exige
+                // un mínimo de confianza antes de aplicar el giro; de lo contrario
+                // se omite y se deja registro para poder diagnosticarlo.
+                const double confianzaMinima = 3.0;
+
+                int? gradosDetectados = null;
+                double? confianzaOrientacion = null;
+
                 foreach (var linea in textoOsd.Split('\n'))
                 {
                     if (linea.StartsWith("Rotate:", StringComparison.OrdinalIgnoreCase))
@@ -517,12 +653,37 @@ namespace IndexadorIA.Utilidades
                         string valor = linea.Split(':')[1].Trim();
                         if (int.TryParse(valor, out int gradosRotar))
                         {
-                            return ((gradosRotar % 360) + 360) % 360;
+                            gradosDetectados = ((gradosRotar % 360) + 360) % 360;
+                        }
+                    }
+                    else if (linea.StartsWith("Orientation confidence:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string valor = linea.Split(':')[1].Trim();
+                        if (double.TryParse(valor, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double confianza))
+                        {
+                            confianzaOrientacion = confianza;
                         }
                     }
                 }
 
-                return 0;
+                if (gradosDetectados == null)
+                {
+                    return 0;
+                }
+
+                // Ya NO se omite el giro por baja confianza: se aplica igual, pero
+                // se marca la página para que el usuario la revise manualmente en la
+                // pantalla de "Revisión de rotaciones" al finalizar el lote.
+                if (confianzaOrientacion.HasValue && confianzaOrientacion.Value < confianzaMinima)
+                {
+                    bajaConfianza = true;
+                    Datos.LogDAL.RegistrarLog(
+                        Entidades.LogRegistro.Niveles.WARNING,
+                        "ProcesamientoPaginas.DetectarRotacionConOSD",
+                        $"Detección de rotación automática con baja confianza ({confianzaOrientacion.Value:0.00}). Se aplicó igual el giro de {gradosDetectados.Value}°, pero se marcó la página para revisión manual.");
+                }
+
+                return gradosDetectados.Value;
             }
             catch (Exception ex)
             {
@@ -548,6 +709,17 @@ namespace IndexadorIA.Utilidades
 
         private static string? _rutaTesseractCacheada;
         private static bool _rutaTesseractBuscada;
+
+        /// <summary>
+        /// Indica si tesseract.exe está instalado y disponible en el sistema (PATH o
+        /// ubicaciones típicas de instalación). Debe usarse antes de procesar un lote con
+        /// giro automático, para poder avisar al usuario ANTES de procesar en lugar de
+        /// omitir el giro silenciosamente.
+        /// </summary>
+        public static bool EstaTesseractInstalado()
+        {
+            return !string.IsNullOrEmpty(ObtenerRutaEjecutableTesseract());
+        }
 
         /// <summary>
         /// Localiza el ejecutable tesseract.exe instalado en el sistema (PATH o ubicaciones
@@ -705,6 +877,63 @@ namespace IndexadorIA.Utilidades
             finally
             {
                 // Liberar recursos si no se hizo en try
+                try { documento?.Close(); } catch { }
+                try { escritor?.Close(); } catch { }
+                try { lector?.Close(); } catch { }
+            }
+        }
+
+        /// <summary>
+        /// Rota 90° (u otros grados) un PDF de una sola página que ya está en disco,
+        /// sumando la rotación indicada a la rotación actual del archivo. Se usa desde
+        /// la pantalla de revisión manual de rotaciones para corregir páginas giradas
+        /// incorrectamente por la detección automática.
+        /// </summary>
+        public static void RotarPaginaPdfEnDisco(string rutaPdf, int grados)
+        {
+            string rutaTemporal = rutaPdf + ".tmp";
+
+            iText.Kernel.Pdf.PdfReader? lector = null;
+            iText.Kernel.Pdf.PdfWriter? escritor = null;
+            iText.Kernel.Pdf.PdfDocument? documento = null;
+
+            try
+            {
+                lector = new iText.Kernel.Pdf.PdfReader(rutaPdf);
+                escritor = new iText.Kernel.Pdf.PdfWriter(rutaTemporal);
+                documento = new iText.Kernel.Pdf.PdfDocument(lector, escritor);
+
+                var pagina = documento.GetPage(1);
+                int rotacionActual = pagina.GetRotation();
+                int nuevaRotacion = ((rotacionActual + grados) % 360 + 360) % 360;
+                pagina.SetRotation(nuevaRotacion);
+
+                documento.Close();
+                documento = null;
+                escritor.Close();
+                escritor = null;
+                lector.Close();
+                lector = null;
+
+                // Reemplazar el archivo original por la versión rotada
+                File.Delete(rutaPdf);
+                File.Move(rutaTemporal, rutaPdf);
+            }
+            catch (Exception ex)
+            {
+                try { documento?.Close(); } catch { }
+                try { escritor?.Close(); } catch { }
+                try { lector?.Close(); } catch { }
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                IntentarEliminarArchivo(rutaTemporal);
+
+                throw new Exception($"Error al rotar el PDF en disco '{rutaPdf}': {ex.GetType().Name} - {ex.Message}", ex);
+            }
+            finally
+            {
                 try { documento?.Close(); } catch { }
                 try { escritor?.Close(); } catch { }
                 try { lector?.Close(); } catch { }

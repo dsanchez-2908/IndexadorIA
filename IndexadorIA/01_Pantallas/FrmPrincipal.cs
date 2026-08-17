@@ -60,9 +60,19 @@ namespace IndexadorIA.Pantallas
             AbrirFormularioEnPanel(new PlanosGCBA.FrmProcesamientoIA());
         }
 
+        private void menuAsignacionLote_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmAsignacionLote());
+        }
+
         private void menuControlFinalizacion_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmControlFinalizacion());
+        }
+
+        private void menuFinalizarLote_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmFinalizarLote());
         }
 
         private void menuCambiarClave_Click(object sender, EventArgs e)

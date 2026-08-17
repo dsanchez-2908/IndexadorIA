@@ -361,10 +361,11 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
-        /// Obtiene lotes filtrados por estado, nombre de lote y rango de fecha de alta
+        /// Obtiene lotes filtrados por estado, nombre de lote, rango de fecha de alta
+        /// y opcionalmente por usuario asignado
         /// </summary>
         public List<Lote> ObtenerLotesPorEstadoFiltrado(int cdEstado, string? dsNombreLote = null,
-            DateTime? feAltaDesde = null, DateTime? feAltaHasta = null)
+            DateTime? feAltaDesde = null, DateTime? feAltaHasta = null, int? cdUsuarioAsignado = null)
         {
             var lotes = new List<Lote>();
 
@@ -372,7 +373,7 @@ namespace IndexadorIA.Datos
             {
                 var sql = @"
                     SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, 
-                           l.cdEstadoLote, e.dsEstado, l.feAltaLote
+                           l.cdEstadoLote, e.dsEstado, l.feAltaLote, l.cdUsuarioAsignado
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
                     WHERE l.cdEstadoLote = @cdEstado";
@@ -392,6 +393,11 @@ namespace IndexadorIA.Datos
                     sql += " AND l.feAltaLote < @feAltaHasta";
                 }
 
+                if (cdUsuarioAsignado.HasValue)
+                {
+                    sql += " AND l.cdUsuarioAsignado = @cdUsuarioAsignado";
+                }
+
                 sql += " ORDER BY l.feAltaLote DESC";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -406,6 +412,9 @@ namespace IndexadorIA.Datos
                 if (feAltaHasta.HasValue)
                     comando.Parameters.AddWithValue("@feAltaHasta", feAltaHasta.Value.Date.AddDays(1));
 
+                if (cdUsuarioAsignado.HasValue)
+                    comando.Parameters.AddWithValue("@cdUsuarioAsignado", cdUsuarioAsignado.Value);
+
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
                 {
@@ -418,13 +427,210 @@ namespace IndexadorIA.Datos
                             NuCantidadArchivos = lector.GetInt32(2),
                             CdEstadoLote = lector.GetInt32(3),
                             DsEstado = lector.GetString(4),
-                            FeAltaLote = lector.GetDateTime(5)
+                            FeAltaLote = lector.GetDateTime(5),
+                            CdUsuarioAsignado = lector.IsDBNull(6) ? null : lector.GetInt32(6)
                         });
                     }
                 }
             }
 
             return lotes;
+        }
+
+        /// <summary>
+        /// Asigna una lista de lotes a un usuario para su control, cambiando su estado a "Controlando" (cdEstado=6)
+        /// </summary>
+        public void AsignarLotes(List<int> cdLotes, int cdUsuarioAsignado)
+        {
+            const int CD_ESTADO_CONTROLANDO = 6;
+
+            if (cdLotes == null || cdLotes.Count == 0)
+            {
+                return;
+            }
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                conexion.Open();
+                using (var transaccion = conexion.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (int cdLote in cdLotes)
+                        {
+                            var comando = new SqlCommand(@"
+                                UPDATE TD_LOTE
+                                SET cdEstadoLote = @cdEstadoLote,
+                                    cdUsuarioAsignado = @cdUsuarioAsignado
+                                WHERE cdLote = @cdLote", conexion, transaccion);
+
+                            comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_CONTROLANDO);
+                            comando.Parameters.AddWithValue("@cdUsuarioAsignado", cdUsuarioAsignado);
+                            comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                            comando.ExecuteNonQuery();
+                        }
+
+                        transaccion.Commit();
+                    }
+                    catch
+                    {
+                        transaccion.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los lotes en un estado especifico (por defecto 7 - Pendiente de Finalizar)
+        /// junto con estadisticas de estado de control y cantidad de correcciones manuales,
+        /// aplicando filtros opcionales de nombre de lote y rango de fecha de control.
+        /// </summary>
+        public List<Entidades.LoteFinalizacionGridDto> ObtenerLotesPendientesFinalizarConEstadisticas(
+            string? dsNombreLote = null, DateTime? feControlDesde = null, DateTime? feControlHasta = null,
+            int cdEstadoLote = 7)
+        {
+            var lotes = new List<Entidades.LoteFinalizacionGridDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT l.cdLote, l.dsNombreLote, u.dsNombreCompleto,
+                           COUNT(r.cdResultado) AS nuCantidadPlanos,
+                           SUM(CASE WHEN r.cdEstadoControl = 2 THEN 1 ELSE 0 END) AS nuCantidadControlado,
+                           SUM(CASE WHEN r.cdEstadoControl = 1 THEN 1 ELSE 0 END) AS nuCantidadPendiente,
+                           SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
+                           SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           (SELECT COUNT(DISTINCT c.cdResultado)
+                            FROM TD_CORRECIONES c
+                            INNER JOIN TD_001_RESULTADO_IA ri ON ri.cdResultado = c.cdResultado
+                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido
+                    FROM TD_LOTE l
+                    LEFT JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
+                    LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
+                    WHERE l.cdEstadoLote = @cdEstadoLote";
+
+                if (!string.IsNullOrEmpty(dsNombreLote))
+                {
+                    sql += " AND l.dsNombreLote LIKE @dsNombreLote";
+                }
+
+                if (feControlDesde.HasValue)
+                {
+                    sql += " AND EXISTS (SELECT 1 FROM TD_001_RESULTADO_IA rf WHERE rf.cdLote = l.cdLote AND rf.feControl >= @feControlDesde)";
+                }
+
+                if (feControlHasta.HasValue)
+                {
+                    sql += " AND EXISTS (SELECT 1 FROM TD_001_RESULTADO_IA rf WHERE rf.cdLote = l.cdLote AND rf.feControl < @feControlHasta)";
+                }
+
+                sql += @"
+                    GROUP BY l.cdLote, l.dsNombreLote, u.dsNombreCompleto
+                    ORDER BY l.cdLote DESC";
+
+                var comando = new SqlCommand(sql, conexion);
+                comando.Parameters.AddWithValue("@cdEstadoLote", cdEstadoLote);
+
+                if (!string.IsNullOrEmpty(dsNombreLote))
+                    comando.Parameters.AddWithValue("@dsNombreLote", $"%{dsNombreLote}%");
+
+                if (feControlDesde.HasValue)
+                    comando.Parameters.AddWithValue("@feControlDesde", feControlDesde.Value.Date);
+
+                if (feControlHasta.HasValue)
+                    comando.Parameters.AddWithValue("@feControlHasta", feControlHasta.Value.Date.AddDays(1));
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lotes.Add(new Entidades.LoteFinalizacionGridDto
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            DsUsuarioAsignado = lector.IsDBNull(2) ? null : lector.GetString(2),
+                            NuCantidadPlanos = lector.GetInt32(3),
+                            NuCantidadControlado = lector.GetInt32(4),
+                            NuCantidadPendiente = lector.GetInt32(5),
+                            NuCantidadPaginaIlegible = lector.GetInt32(6),
+                            NuCantidadDatosIlegibles = lector.GetInt32(7),
+                            NuCantidadCorregido = lector.GetInt32(8)
+                        });
+                    }
+                }
+            }
+
+            return lotes;
+        }
+
+        /// <summary>
+        /// Actualiza el nombre de archivo final (ya renombrado/movido) de una pagina.
+        /// </summary>
+        public void ActualizarNombreArchivoFinal(int cdArchivoPagina, string dsNombreArchivoFinal)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_ARCHIVOS_PAGINAS
+                    SET dsNombreArchivoFinal = @dsNombreArchivoFinal
+                    WHERE cdArchivoPagina = @cdArchivoPagina", conexion);
+
+                comando.Parameters.AddWithValue("@dsNombreArchivoFinal", dsNombreArchivoFinal);
+                comando.Parameters.AddWithValue("@cdArchivoPagina", cdArchivoPagina);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Obtiene las filas de metadatos de la vista VW_001_RESULTADO_IA para un lote,
+        /// usadas para generar los CSV de finalizacion.
+        /// </summary>
+        public List<Entidades.ResultadoIAMetadataDto> ObtenerMetadatosParaCsv(int cdLote)
+        {
+            var filas = new List<Entidades.ResultadoIAMetadataDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    SELECT dsRutaCompleta, dsNombreArchivoOriginal, dsNombreArchivoFinal,
+                           dsCategoriaPlano, dsTipoPlano, dsAcronimo, dsDireccion, dsSeccion,
+                           dsManzana, dsParcela, dsExpediente, dsNumeroPlano, cdEstadoControl
+                    FROM VW_001_RESULTADO_IA
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        filas.Add(new Entidades.ResultadoIAMetadataDto
+                        {
+                            DsRutaCompleta = lector.IsDBNull(0) ? string.Empty : lector.GetString(0),
+                            DsNombreArchivoOriginal = lector.IsDBNull(1) ? string.Empty : lector.GetString(1),
+                            DsNombreArchivoFinal = lector.IsDBNull(2) ? string.Empty : lector.GetString(2),
+                            DsCategoriaPlano = lector.IsDBNull(3) ? string.Empty : lector.GetString(3),
+                            DsTipoPlano = lector.IsDBNull(4) ? string.Empty : lector.GetString(4),
+                            DsAcronimo = lector.IsDBNull(5) ? string.Empty : lector.GetString(5),
+                            DsDireccion = lector.IsDBNull(6) ? string.Empty : lector.GetString(6),
+                            DsSeccion = lector.IsDBNull(7) ? string.Empty : lector.GetString(7),
+                            DsManzana = lector.IsDBNull(8) ? string.Empty : lector.GetString(8),
+                            DsParcela = lector.IsDBNull(9) ? string.Empty : lector.GetString(9),
+                            DsExpediente = lector.IsDBNull(10) ? string.Empty : lector.GetString(10),
+                            DsNumeroPlano = lector.IsDBNull(11) ? string.Empty : lector.GetString(11),
+                            CdEstadoControl = lector.GetInt32(12)
+                        });
+                    }
+                }
+            }
+
+            return filas;
         }
     }
 }
