@@ -567,6 +567,129 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Obtiene, agrupado por usuario asignado, el resumen de lotes y planos
+        /// asignados/controlados/pendientes para la pantalla Monitor de Lotes.
+        /// Se consideran "asignados" todos los lotes que pasaron por el flujo de control
+        /// (estados 6 Controlando, 7 Pendiente de Finalizar y 3 Finalizado), "controlados"
+        /// los que ya completaron el control (estados 7 y 3) y "pendientes" los que
+        /// todavía están en control (estado 6).
+        /// </summary>
+        public List<Entidades.MonitorLoteUsuarioDto> ObtenerMonitorLotesPorUsuario()
+        {
+            var resultado = new List<Entidades.MonitorLoteUsuarioDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT u.cdUsuario, u.dsNombreCompleto,
+                           COUNT(DISTINCT l.cdLote) AS nuTotalLotesAsignados,
+                           ISNULL(SUM(l.nuCantidadArchivos), 0) AS nuCantidadPlanosAsignados,
+                           COUNT(DISTINCT CASE WHEN l.cdEstadoLote IN (3, 7) THEN l.cdLote END) AS nuTotalLotesControlados,
+                           ISNULL(SUM(CASE WHEN l.cdEstadoLote IN (3, 7) THEN l.nuCantidadArchivos ELSE 0 END), 0) AS nuCantidadPlanosControlados,
+                           COUNT(DISTINCT CASE WHEN l.cdEstadoLote = 6 THEN l.cdLote END) AS nuTotalLotesPendientes,
+                           ISNULL(SUM(CASE WHEN l.cdEstadoLote = 6 THEN l.nuCantidadArchivos ELSE 0 END), 0) AS nuCantidadPlanosPendientes
+                    FROM TD_LOTE l
+                    INNER JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
+                    WHERE l.cdEstadoLote IN (6, 7, 3)
+                    GROUP BY u.cdUsuario, u.dsNombreCompleto
+                    ORDER BY u.dsNombreCompleto";
+
+                var comando = new SqlCommand(sql, conexion);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        resultado.Add(new Entidades.MonitorLoteUsuarioDto
+                        {
+                            CdUsuario = lector.GetInt32(0),
+                            DsUsuario = lector.GetString(1),
+                            NuTotalLotesAsignados = lector.GetInt32(2),
+                            NuCantidadPlanosAsignados = lector.GetInt32(3),
+                            NuTotalLotesControlados = lector.GetInt32(4),
+                            NuCantidadPlanosControlados = lector.GetInt32(5),
+                            NuTotalLotesPendientes = lector.GetInt32(6),
+                            NuCantidadPlanosPendientes = lector.GetInt32(7)
+                        });
+                    }
+                }
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
+        /// Obtiene el detalle de lotes de un usuario asignado, con estadísticas de control
+        /// por página y filtro opcional de estado: null/0 = Todo, 6 = Pendiente de Control,
+        /// -1 = Controlado (incluye Pendiente de Finalizar (7) y Finalizado (3)).
+        /// </summary>
+        public List<Entidades.LoteMonitorDetalleDto> ObtenerLotesPorUsuarioConEstadisticas(
+            int cdUsuarioAsignado, int? filtroEstado = null)
+        {
+            var lotes = new List<Entidades.LoteMonitorDetalleDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado,
+                           COUNT(r.cdResultado) AS nuCantidadPlanos,
+                           SUM(CASE WHEN r.cdEstadoControl = 2 THEN 1 ELSE 0 END) AS nuCantidadControlado,
+                           SUM(CASE WHEN r.cdEstadoControl = 1 THEN 1 ELSE 0 END) AS nuCantidadPendiente,
+                           SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
+                           SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           (SELECT COUNT(DISTINCT c.cdResultado)
+                            FROM TD_CORRECIONES c
+                            INNER JOIN TD_001_RESULTADO_IA ri ON ri.cdResultado = c.cdResultado
+                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido
+                    FROM TD_LOTE l
+                    LEFT JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
+                    WHERE l.cdUsuarioAsignado = @cdUsuarioAsignado
+                      AND l.cdEstadoLote IN (6, 7, 3)";
+
+                if (filtroEstado.HasValue && filtroEstado.Value == 6)
+                {
+                    sql += " AND l.cdEstadoLote = 6";
+                }
+                else if (filtroEstado.HasValue && filtroEstado.Value == -1)
+                {
+                    sql += " AND l.cdEstadoLote IN (7, 3)";
+                }
+
+                sql += @"
+                    GROUP BY l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado
+                    ORDER BY l.cdLote DESC";
+
+                var comando = new SqlCommand(sql, conexion);
+                comando.Parameters.AddWithValue("@cdUsuarioAsignado", cdUsuarioAsignado);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lotes.Add(new Entidades.LoteMonitorDetalleDto
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            CdEstadoLote = lector.GetInt32(2),
+                            DsEstadoLote = lector.IsDBNull(3) ? string.Empty : lector.GetString(3),
+                            NuCantidadPlanos = lector.GetInt32(4),
+                            NuCantidadControlado = lector.GetInt32(5),
+                            NuCantidadPendiente = lector.GetInt32(6),
+                            NuCantidadPaginaIlegible = lector.GetInt32(7),
+                            NuCantidadDatosIlegibles = lector.GetInt32(8),
+                            NuCantidadCorregido = lector.GetInt32(9)
+                        });
+                    }
+                }
+            }
+
+            return lotes;
+        }
+
+        /// <summary>
         /// Actualiza el nombre de archivo final (ya renombrado/movido) de una pagina.
         /// </summary>
         public void ActualizarNombreArchivoFinal(int cdArchivoPagina, string dsNombreArchivoFinal)

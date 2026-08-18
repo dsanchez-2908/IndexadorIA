@@ -89,22 +89,7 @@ namespace IndexadorIA.Pantallas
                 // Si es primer ingreso, no validar clave actual
                 if (_esPrimerIngreso)
                 {
-                    // Simplemente actualizar la clave sin validar la actual
-                    bool resultado = _usuarioBL.CambiarClave(_cdUsuario, "", nuevaClave, confirmarClave).exito;
-
-                    if (!resultado)
-                    {
-                        // Si falla la validación normal, usar método directo
-                        var usuario = _usuarioBL.ObtenerPorCodigo(_cdUsuario);
-                        if (usuario != null && nuevaClave == confirmarClave)
-                        {
-                            usuario.DsClave = Datos.Seguridad.EncriptarSHA256(nuevaClave);
-                            usuario.SnClaveTemporal = false;
-                            usuario.SnPrimerIngreso = false;
-                            resultado = _usuarioBL.Actualizar(usuario.CdUsuario, usuario.DsUsuario, 
-                                usuario.DsNombreCompleto, usuario.IdRol, usuario.CdEstado).exito;
-                        }
-                    }
+                    var (resultado, mensajeError) = _usuarioBL.CambiarClavePrimerIngreso(_cdUsuario, nuevaClave, confirmarClave);
 
                     if (resultado)
                     {
@@ -115,7 +100,7 @@ namespace IndexadorIA.Pantallas
                     }
                     else
                     {
-                        MessageBox.Show("Error al cambiar la contraseña", "Error", 
+                        MessageBox.Show(mensajeError, "Error", 
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }

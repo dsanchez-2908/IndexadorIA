@@ -183,6 +183,33 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
+        /// Cambia la contraseña de un usuario en su primer ingreso o cuando tiene clave temporal,
+        /// sin requerir validar la contraseña actual.
+        /// </summary>
+        public (bool exito, string mensaje) CambiarClavePrimerIngreso(int cdUsuario, string nuevaClave, string confirmarClave)
+        {
+            if (string.IsNullOrWhiteSpace(nuevaClave))
+                return (false, "La nueva contraseña es requerida");
+
+            if (nuevaClave.Length < 4)
+                return (false, "La contraseña debe tener al menos 4 caracteres");
+
+            if (nuevaClave != confirmarClave)
+                return (false, "Las contraseñas no coinciden");
+
+            Usuario? usuario = _usuarioDAL.ObtenerPorCodigo(cdUsuario);
+            if (usuario == null)
+                return (false, "Usuario no encontrado");
+
+            bool resultado = _usuarioDAL.CambiarClave(cdUsuario, nuevaClave, false);
+
+            if (resultado)
+                return (true, "Contraseña cambiada exitosamente");
+
+            return (false, "Error al cambiar la contraseña");
+        }
+
+        /// <summary>
         /// Restablece la contraseña de un usuario (genera clave temporal)
         /// </summary>
         public (bool exito, string mensaje, string? claveTemporal) RestablecerClave(int cdUsuario)

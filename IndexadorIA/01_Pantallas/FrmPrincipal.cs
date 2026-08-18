@@ -23,6 +23,42 @@ namespace IndexadorIA.Pantallas
             }
 
             lblFecha.Text = DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy");
+
+            AplicarPermisosPorRol();
+        }
+
+        /// <summary>
+        /// Restringe la visibilidad de los menús según el rol del usuario autenticado.
+        /// El rol "Data Entry" solo puede acceder a:
+        ///   Planos de GCBA / Control y Finalización
+        ///   Configuración / Cambiar Clave y Cerrar Sesión
+        /// </summary>
+        private void AplicarPermisosPorRol()
+        {
+            if (SesionActual.UsuarioActual == null)
+            {
+                return;
+            }
+
+            if (string.Equals(SesionActual.UsuarioActual.CdRol, "DATAENTRY", StringComparison.OrdinalIgnoreCase))
+            {
+                // Oculta el menú "Lotes" completo
+                menuLotes.Visible = false;
+
+                // En "Planos de GCBA" solo deja visible "Control y Finalización"
+                menuIngresoArchivos.Visible = false;
+                menuSeparacionImagenes.Visible = false;
+                menuPreparacionLotes.Visible = false;
+                menuPreparacionImagenes.Visible = false;
+                menuProcesamientoIA.Visible = false;
+                menuAsignacionLote.Visible = false;
+                menuFinalizarLote.Visible = false;
+
+                // En "Configuración" solo deja visible "Cambiar Clave" y "Cerrar Sesión"
+                menuProyectos.Visible = false;
+                menuUsuarios.Visible = false;
+                toolStripSeparator1.Visible = false;
+            }
         }
 
         private void menuUsuarios_Click(object sender, EventArgs e)
@@ -73,6 +109,11 @@ namespace IndexadorIA.Pantallas
         private void menuFinalizarLote_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmFinalizarLote());
+        }
+
+        private void menuMonitorLotes_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmMonitorLotes());
         }
 
         private void menuCambiarClave_Click(object sender, EventArgs e)

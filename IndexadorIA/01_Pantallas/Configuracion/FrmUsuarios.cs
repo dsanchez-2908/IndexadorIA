@@ -155,7 +155,7 @@ namespace IndexadorIA.Pantallas.Configuracion
         {
             if (e.RowIndex < 0) return;
 
-            int cdUsuario = Convert.ToInt32(dgvUsuarios.Rows[e.RowIndex].Cells["colCodigo"].Value);
+            int cdUsuario = Convert.ToInt32(dgvUsuarios.Rows[e.RowIndex].Cells["CdUsuario"].Value);
 
             // Botón Editar
             if (e.ColumnIndex == dgvUsuarios.Columns["colEditar"].Index)

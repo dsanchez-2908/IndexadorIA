@@ -16,6 +16,8 @@ namespace IndexadorIA.Pantallas
         private void InitializeComponent()
         {
             menuStrip = new MenuStrip();
+            menuLotes = new ToolStripMenuItem();
+            menuMonitorLotes = new ToolStripMenuItem();
             menuPlanosGCBA = new ToolStripMenuItem();
             menuIngresoArchivos = new ToolStripMenuItem();
             menuSeparacionImagenes = new ToolStripMenuItem();
@@ -45,13 +47,31 @@ namespace IndexadorIA.Pantallas
             // 
             menuStrip.BackColor = Color.FromArgb(45, 45, 48);
             menuStrip.ImageScalingSize = new Size(20, 20);
-            menuStrip.Items.AddRange(new ToolStripItem[] { menuPlanosGCBA, menuConfiguracion });
+            menuStrip.Items.AddRange(new ToolStripItem[] { menuLotes, menuPlanosGCBA, menuConfiguracion });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
             menuStrip.Padding = new Padding(5, 2, 0, 2);
             menuStrip.Size = new Size(1050, 27);
             menuStrip.TabIndex = 0;
             menuStrip.Text = "menuStrip1";
+            // 
+            // menuLotes
+            // 
+            menuLotes.DropDownItems.AddRange(new ToolStripItem[] { menuMonitorLotes });
+            menuLotes.Font = new Font("Segoe UI", 10F);
+            menuLotes.ForeColor = Color.White;
+            menuLotes.Name = "menuLotes";
+            menuLotes.Size = new Size(70, 23);
+            menuLotes.Text = "Lotes";
+            // 
+            // menuMonitorLotes
+            // 
+            menuMonitorLotes.BackColor = Color.FromArgb(45, 45, 48);
+            menuMonitorLotes.ForeColor = Color.White;
+            menuMonitorLotes.Name = "menuMonitorLotes";
+            menuMonitorLotes.Size = new Size(244, 24);
+            menuMonitorLotes.Text = "Monitor de Lotes";
+            menuMonitorLotes.Click += menuMonitorLotes_Click;
             // 
             // menuPlanosGCBA
             // 
@@ -274,6 +294,8 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuAsignacionLote;
         private ToolStripMenuItem menuControlFinalizacion;
         private ToolStripMenuItem menuFinalizarLote;
+        private ToolStripMenuItem menuLotes;
+        private ToolStripMenuItem menuMonitorLotes;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;
