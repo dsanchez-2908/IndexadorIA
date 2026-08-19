@@ -61,7 +61,7 @@ namespace IndexadorIA.Pantallas
             menuLotes.Font = new Font("Segoe UI", 10F);
             menuLotes.ForeColor = Color.White;
             menuLotes.Name = "menuLotes";
-            menuLotes.Size = new Size(70, 23);
+            menuLotes.Size = new Size(54, 23);
             menuLotes.Text = "Lotes";
             // 
             // menuMonitorLotes
@@ -69,7 +69,7 @@ namespace IndexadorIA.Pantallas
             menuMonitorLotes.BackColor = Color.FromArgb(45, 45, 48);
             menuMonitorLotes.ForeColor = Color.White;
             menuMonitorLotes.Name = "menuMonitorLotes";
-            menuMonitorLotes.Size = new Size(244, 24);
+            menuMonitorLotes.Size = new Size(184, 24);
             menuMonitorLotes.Text = "Monitor de Lotes";
             menuMonitorLotes.Click += menuMonitorLotes_Click;
             // 
@@ -142,7 +142,7 @@ namespace IndexadorIA.Pantallas
             menuControlFinalizacion.ForeColor = Color.White;
             menuControlFinalizacion.Name = "menuControlFinalizacion";
             menuControlFinalizacion.Size = new Size(244, 24);
-            menuControlFinalizacion.Text = "Control y Finalización";
+            menuControlFinalizacion.Text = "Control de Lotes";
             menuControlFinalizacion.Click += menuControlFinalizacion_Click;
             // 
             // menuFinalizarLote
@@ -271,7 +271,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20260727)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260819)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;

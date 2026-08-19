@@ -1,4 +1,5 @@
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 
 namespace IndexadorIA.Pantallas
 {
@@ -8,8 +9,18 @@ namespace IndexadorIA.Pantallas
     public partial class FrmCambiarClave : Form
     {
         private readonly UsuarioBL _usuarioBL;
+        private readonly ApiClienteServicio? _apiCliente;
         private readonly int _cdUsuario;
         private readonly bool _esPrimerIngreso;
+        private readonly bool _usarApi;
+        private readonly string? _dsUsuarioApi;
+        private readonly string? _claveTemporalApi;
+
+        /// <summary>
+        /// Cuando el formulario se usó en modo API y el cambio fue exitoso,
+        /// contiene la respuesta de login (con el token JWT) devuelta por la API.
+        /// </summary>
+        public LoginApiResponseDto? RespuestaLogin { get; private set; }
 
         public FrmCambiarClave(int cdUsuario, bool esPrimerIngreso = false)
         {
@@ -17,7 +28,30 @@ namespace IndexadorIA.Pantallas
             _usuarioBL = new UsuarioBL();
             _cdUsuario = cdUsuario;
             _esPrimerIngreso = esPrimerIngreso;
+            _usarApi = false;
 
+            AjustarLayoutPrimerIngreso();
+        }
+
+        /// <summary>
+        /// Constructor para modo remoto (API): cambia la clave temporal de un usuario
+        /// que aún no tiene sesión local, usando el endpoint /api/auth/cambiar-clave-temporal.
+        /// </summary>
+        public FrmCambiarClave(string dsUsuarioApi, string claveTemporalApi)
+        {
+            InitializeComponent();
+            _usuarioBL = new UsuarioBL();
+            _apiCliente = new ApiClienteServicio();
+            _esPrimerIngreso = true;
+            _usarApi = true;
+            _dsUsuarioApi = dsUsuarioApi;
+            _claveTemporalApi = claveTemporalApi;
+
+            AjustarLayoutPrimerIngreso();
+        }
+
+        private void AjustarLayoutPrimerIngreso()
+        {
             // Si es primer ingreso, ocultar campo de clave actual
             if (_esPrimerIngreso)
             {
@@ -82,6 +116,12 @@ namespace IndexadorIA.Pantallas
                 return;
             }
 
+            if (_usarApi)
+            {
+                CambiarClaveTemporalApiAsync(nuevaClave, confirmarClave).ConfigureAwait(true);
+                return;
+            }
+
             try
             {
                 Cursor = Cursors.WaitCursor;
@@ -126,6 +166,39 @@ namespace IndexadorIA.Pantallas
             {
                 MessageBox.Show($"Error al cambiar la contraseña: {ex.Message}", "Error", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private async Task CambiarClaveTemporalApiAsync(string nuevaClave, string confirmarClave)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                btnGuardar.Enabled = false;
+
+                RespuestaLogin = await _apiCliente!.CambiarClaveTemporalAsync(
+                    _dsUsuarioApi!, _claveTemporalApi!, nuevaClave, confirmarClave);
+
+                MessageBox.Show("Contraseña cambiada exitosamente", "Éxito",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnGuardar.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cambiar la contraseña: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnGuardar.Enabled = true;
             }
             finally
             {

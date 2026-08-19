@@ -178,6 +178,7 @@ namespace IndexadorIA.Datos
                     comando.Parameters.AddWithValue("@dsNombreCompleto", usuario.DsNombreCompleto);
                     comando.Parameters.AddWithValue("@snClaveTemporal", usuario.SnClaveTemporal);
                     comando.Parameters.AddWithValue("@snPrimerIngreso", usuario.SnPrimerIngreso);
+                    comando.Parameters.AddWithValue("@idRol", usuario.IdRol);
                     comando.Parameters.AddWithValue("@cdEstado", usuario.CdEstado);
                     comando.Parameters.AddWithValue("@feAlta", usuario.FeAlta);
                     comando.Parameters.AddWithValue("@cdUsuarioAlta", 

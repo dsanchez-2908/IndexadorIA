@@ -499,7 +499,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
-                string carpetaDestino = Path.GetDirectoryName(archivo.DsRutaCompleta) ?? "";
+                string carpetaDestino = Path.Combine(Path.GetDirectoryName(archivo.DsRutaCompleta) ?? "", "Planos Originales");
+                Directory.CreateDirectory(carpetaDestino);
                 ModoGiro modoGiro = ObtenerModoGiro();
                 bool detectarBlancas = chkMarcaBlanco.Checked;
                 bool eliminarOriginal = chkEliminarOriginal.Checked;

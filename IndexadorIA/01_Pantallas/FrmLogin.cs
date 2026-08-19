@@ -1,5 +1,6 @@
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 
 namespace IndexadorIA.Pantallas
 {
@@ -9,11 +10,13 @@ namespace IndexadorIA.Pantallas
     public partial class FrmLogin : Form
     {
         private readonly UsuarioBL _usuarioBL;
+        private readonly ApiClienteServicio _apiCliente;
 
         public FrmLogin()
         {
             InitializeComponent();
             _usuarioBL = new UsuarioBL();
+            _apiCliente = new ApiClienteServicio();
         }
 
         private void btnIngresar_Click(object sender, EventArgs e)
@@ -51,6 +54,17 @@ namespace IndexadorIA.Pantallas
                 return;
             }
 
+            if (chkIngresoRemoto.Checked)
+            {
+                RealizarLoginRemotoAsync(usuario, clave).ConfigureAwait(true);
+                return;
+            }
+
+            RealizarLoginLocal(usuario, clave);
+        }
+
+        private void RealizarLoginLocal(string usuario, string clave)
+        {
             try
             {
                 Cursor = Cursors.WaitCursor;
@@ -61,6 +75,7 @@ namespace IndexadorIA.Pantallas
                 if (exito && usuarioObj != null)
                 {
                     SesionActual.UsuarioActual = usuarioObj;
+                    SesionApi.ModoRemoto = false;
 
                     // Verificar si es primer ingreso o tiene clave temporal
                     if (usuarioObj.SnPrimerIngreso || usuarioObj.SnClaveTemporal)
@@ -104,6 +119,78 @@ namespace IndexadorIA.Pantallas
                 btnIngresar.Enabled = true;
                 Cursor = Cursors.Default;
             }
+        }
+
+        private async Task RealizarLoginRemotoAsync(string usuario, string clave)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                btnIngresar.Enabled = false;
+
+                LoginApiResponseDto respuesta = await _apiCliente.LoginAsync(usuario, clave);
+
+                if (respuesta.RequiereCambioClave)
+                {
+                    MessageBox.Show("Debe cambiar su contraseña temporal", "Primer Ingreso",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    using (FrmCambiarClave frmCambiar = new FrmCambiarClave(usuario, clave))
+                    {
+                        if (frmCambiar.ShowDialog() == DialogResult.OK && frmCambiar.RespuestaLogin != null)
+                        {
+                            AplicarSesionRemota(frmCambiar.RespuestaLogin);
+                            AbrirPrincipal();
+                        }
+                        else
+                        {
+                            btnIngresar.Enabled = true;
+                            Cursor = Cursors.Default;
+                        }
+                    }
+
+                    return;
+                }
+
+                AplicarSesionRemota(respuesta);
+                AbrirPrincipal();
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "Error de Login",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                txtClave.Text = "";
+                txtClave.Focus();
+                btnIngresar.Enabled = true;
+                Cursor = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al intentar ingresar en modo remoto: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnIngresar.Enabled = true;
+                Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Construye un Usuario local mínimo a partir de la respuesta de login de la API,
+        /// para que el resto de la aplicación (menús, permisos por rol) siga funcionando igual.
+        /// </summary>
+        private static void AplicarSesionRemota(LoginApiResponseDto respuesta)
+        {
+            SesionActual.UsuarioActual = new Usuario
+            {
+                CdUsuario = respuesta.CdUsuario,
+                DsUsuario = respuesta.DsUsuario,
+                DsNombreCompleto = respuesta.DsNombreCompleto,
+                CdRol = respuesta.CdRol,
+                DsRol = respuesta.DsRol,
+                CdEstado = 1
+            };
+
+            SesionApi.ModoRemoto = true;
+            SesionApi.Token = respuesta.Token;
         }
 
         private void AbrirPrincipal()

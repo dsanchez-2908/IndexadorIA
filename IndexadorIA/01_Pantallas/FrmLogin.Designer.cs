@@ -30,6 +30,7 @@ namespace IndexadorIA.Pantallas
         {
             panelPrincipal = new Panel();
             panelFormulario = new Panel();
+            chkIngresoRemoto = new CheckBox();
             btnIngresar = new Button();
             txtClave = new TextBox();
             lblClave = new Label();
@@ -48,12 +49,13 @@ namespace IndexadorIA.Pantallas
             panelPrincipal.Location = new Point(0, 0);
             panelPrincipal.Name = "panelPrincipal";
             panelPrincipal.Padding = new Padding(50);
-            panelPrincipal.Size = new Size(500, 400);
+            panelPrincipal.Size = new Size(500, 440);
             panelPrincipal.TabIndex = 0;
             // 
             // panelFormulario
             // 
             panelFormulario.BackColor = Color.FromArgb(45, 45, 48);
+            panelFormulario.Controls.Add(chkIngresoRemoto);
             panelFormulario.Controls.Add(btnIngresar);
             panelFormulario.Controls.Add(txtClave);
             panelFormulario.Controls.Add(lblClave);
@@ -64,8 +66,21 @@ namespace IndexadorIA.Pantallas
             panelFormulario.Location = new Point(50, 50);
             panelFormulario.Name = "panelFormulario";
             panelFormulario.Padding = new Padding(40);
-            panelFormulario.Size = new Size(400, 300);
+            panelFormulario.Size = new Size(400, 340);
             panelFormulario.TabIndex = 0;
+            // 
+            // chkIngresoRemoto
+            // 
+            chkIngresoRemoto.AutoSize = true;
+            chkIngresoRemoto.Cursor = Cursors.Hand;
+            chkIngresoRemoto.Font = new Font("Segoe UI", 9F);
+            chkIngresoRemoto.ForeColor = Color.White;
+            chkIngresoRemoto.Location = new Point(40, 205);
+            chkIngresoRemoto.Name = "chkIngresoRemoto";
+            chkIngresoRemoto.Size = new Size(160, 21);
+            chkIngresoRemoto.TabIndex = 4;
+            chkIngresoRemoto.Text = "Ingreso remoto (API)";
+            chkIngresoRemoto.UseVisualStyleBackColor = true;
             // 
             // btnIngresar
             // 
@@ -145,7 +160,7 @@ namespace IndexadorIA.Pantallas
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(500, 400);
+            ClientSize = new Size(500, 440);
             Controls.Add(panelPrincipal);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
@@ -168,5 +183,6 @@ namespace IndexadorIA.Pantallas
         private TextBox txtClave;
         private Label lblClave;
         private Button btnIngresar;
+        private CheckBox chkIngresoRemoto;
     }
 }

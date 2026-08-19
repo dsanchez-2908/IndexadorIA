@@ -103,12 +103,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnVerImagenPDF = new Button();
             btnGirarIzquierda = new Button();
             btnGirarDerecha = new Button();
-            panelBotones = new FlowLayoutPanel();
-            btnGuardarControlada = new Button();
+            panelBotones = new Panel();
             btnMarcarPaginaIlegible = new Button();
             btnMarcarDatosIlegible = new Button();
             btnMarcarLoteCompletado = new Button();
             btnCerrar = new Button();
+            btnGuardarControlada = new Button();
             panelEncabezado.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerPrincipal).BeginInit();
             splitContainerPrincipal.Panel1.SuspendLayout();
@@ -254,7 +254,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // splitContainerPrincipal.Panel2
             // 
             splitContainerPrincipal.Panel2.Controls.Add(splitContainerDetalle);
-            splitContainerPrincipal.Size = new Size(1400, 808);
+            splitContainerPrincipal.Size = new Size(1400, 690);
             splitContainerPrincipal.SplitterDistance = 459;
             splitContainerPrincipal.TabIndex = 1;
             // 
@@ -265,7 +265,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelIzquierdo.Dock = DockStyle.Fill;
             panelIzquierdo.Location = new Point(0, 0);
             panelIzquierdo.Name = "panelIzquierdo";
-            panelIzquierdo.Size = new Size(459, 808);
+            panelIzquierdo.Size = new Size(459, 690);
             panelIzquierdo.TabIndex = 0;
             // 
             // dgvArchivos
@@ -297,13 +297,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvArchivos.Dock = DockStyle.Fill;
             dgvArchivos.EnableHeadersVisualStyles = false;
             dgvArchivos.GridColor = Color.FromArgb(63, 63, 70);
-            dgvArchivos.Location = new Point(0, 260);
+            dgvArchivos.Location = new Point(0, 300);
             dgvArchivos.MultiSelect = false;
             dgvArchivos.Name = "dgvArchivos";
             dgvArchivos.ReadOnly = true;
             dgvArchivos.RowHeadersWidth = 51;
             dgvArchivos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvArchivos.Size = new Size(459, 430);
+            dgvArchivos.Size = new Size(459, 390);
             dgvArchivos.TabIndex = 1;
             dgvArchivos.SelectionChanged += dgvArchivos_SelectionChanged;
             // 
@@ -431,16 +431,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             chkFaltaExpediente.TabIndex = 3;
             chkFaltaExpediente.Text = "Falta Expediente";
             // 
-            // chkFaltaNumeroPlano
-            // 
-            chkFaltaNumeroPlano.AutoSize = true;
-            chkFaltaNumeroPlano.ForeColor = Color.White;
-            chkFaltaNumeroPlano.Location = new Point(180, 110);
-            chkFaltaNumeroPlano.Name = "chkFaltaNumeroPlano";
-            chkFaltaNumeroPlano.Size = new Size(140, 19);
-            chkFaltaNumeroPlano.TabIndex = 4;
-            chkFaltaNumeroPlano.Text = "Falta Número de Plano";
-            // 
             // chkFaltaTipoPlano
             // 
             chkFaltaTipoPlano.AutoSize = true;
@@ -457,16 +447,25 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             chkFaltaCategoriaPlano.ForeColor = Color.White;
             chkFaltaCategoriaPlano.Location = new Point(12, 85);
             chkFaltaCategoriaPlano.Name = "chkFaltaCategoriaPlano";
-            chkFaltaCategoriaPlano.Size = new Size(150, 19);
+            chkFaltaCategoriaPlano.Size = new Size(154, 19);
             chkFaltaCategoriaPlano.TabIndex = 1;
             chkFaltaCategoriaPlano.Text = "Falta Categoría de Plano";
+            // 
+            // chkFaltaNumeroPlano
+            // 
+            chkFaltaNumeroPlano.AutoSize = true;
+            chkFaltaNumeroPlano.ForeColor = Color.White;
+            chkFaltaNumeroPlano.Location = new Point(180, 110);
+            chkFaltaNumeroPlano.Name = "chkFaltaNumeroPlano";
+            chkFaltaNumeroPlano.Size = new Size(147, 19);
+            chkFaltaNumeroPlano.TabIndex = 4;
+            chkFaltaNumeroPlano.Text = "Falta Número de Plano";
             // 
             // cboTipoPlanoFiltro
             // 
             cboTipoPlanoFiltro.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             cboTipoPlanoFiltro.AutoCompleteSource = AutoCompleteSource.ListItems;
             cboTipoPlanoFiltro.BackColor = Color.FromArgb(30, 30, 30);
-            cboTipoPlanoFiltro.DropDownStyle = ComboBoxStyle.DropDown;
             cboTipoPlanoFiltro.DropDownWidth = 500;
             cboTipoPlanoFiltro.ForeColor = Color.White;
             cboTipoPlanoFiltro.FormattingEnabled = true;
@@ -531,7 +530,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // splitContainerDetalle.Panel2
             // 
             splitContainerDetalle.Panel2.Controls.Add(panelDerecho);
-            splitContainerDetalle.Size = new Size(937, 808);
+            splitContainerDetalle.Size = new Size(937, 690);
             splitContainerDetalle.SplitterDistance = 460;
             splitContainerDetalle.TabIndex = 0;
             // 
@@ -541,7 +540,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelCentro.Dock = DockStyle.Fill;
             panelCentro.Location = new Point(0, 0);
             panelCentro.Name = "panelCentro";
-            panelCentro.Size = new Size(460, 808);
+            panelCentro.Size = new Size(460, 690);
             panelCentro.TabIndex = 0;
             // 
             // groupBoxDetalle
@@ -588,7 +587,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.ForeColor = Color.White;
             groupBoxDetalle.Location = new Point(0, 0);
             groupBoxDetalle.Name = "groupBoxDetalle";
-            groupBoxDetalle.Size = new Size(460, 808);
+            groupBoxDetalle.Size = new Size(460, 690);
             groupBoxDetalle.TabIndex = 0;
             groupBoxDetalle.TabStop = false;
             groupBoxDetalle.Text = "Detalle de la Página";
@@ -604,7 +603,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtDireccion.Multiline = true;
             txtDireccion.Name = "txtDireccion";
             txtDireccion.ScrollBars = ScrollBars.Vertical;
-            txtDireccion.Size = new Size(300, 60);
+            txtDireccion.Size = new Size(300, 80);
             txtDireccion.TabIndex = 21;
             // 
             // lblConfianzaDireccion
@@ -631,7 +630,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             txtParcela.BackColor = Color.FromArgb(30, 30, 30);
             txtParcela.BorderStyle = BorderStyle.FixedSingle;
-            txtParcela.CharacterCasing = CharacterCasing.Upper;
             txtParcela.Font = new Font("Segoe UI", 12F);
             txtParcela.ForeColor = Color.White;
             txtParcela.Location = new Point(15, 493);
@@ -728,12 +726,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteEx.BackColor = Color.FromArgb(30, 30, 30);
             txtExpedienteEx.BorderStyle = BorderStyle.FixedSingle;
             txtExpedienteEx.CharacterCasing = CharacterCasing.Upper;
+            txtExpedienteEx.Enabled = false;
             txtExpedienteEx.Font = new Font("Segoe UI", 12F);
             txtExpedienteEx.ForeColor = Color.White;
             txtExpedienteEx.Location = new Point(15, 334);
             txtExpedienteEx.Name = "txtExpedienteEx";
             txtExpedienteEx.Size = new Size(35, 29);
             txtExpedienteEx.TabIndex = 9;
+            txtExpedienteEx.Text = "EX";
             // 
             // lblExpedienteGuion1
             // 
@@ -741,7 +741,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteGuion1.ForeColor = Color.White;
             lblExpedienteGuion1.Location = new Point(52, 341);
             lblExpedienteGuion1.Name = "lblExpedienteGuion1";
-            lblExpedienteGuion1.Size = new Size(9, 15);
+            lblExpedienteGuion1.Size = new Size(12, 15);
             lblExpedienteGuion1.TabIndex = 10;
             lblExpedienteGuion1.Text = "-";
             // 
@@ -764,7 +764,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteGuion2.ForeColor = Color.White;
             lblExpedienteGuion2.Location = new Point(114, 341);
             lblExpedienteGuion2.Name = "lblExpedienteGuion2";
-            lblExpedienteGuion2.Size = new Size(9, 15);
+            lblExpedienteGuion2.Size = new Size(12, 15);
             lblExpedienteGuion2.TabIndex = 12;
             lblExpedienteGuion2.Text = "-";
             // 
@@ -778,16 +778,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteNumero.Location = new Point(126, 334);
             txtExpedienteNumero.MaxLength = 8;
             txtExpedienteNumero.Name = "txtExpedienteNumero";
-            txtExpedienteNumero.Size = new Size(75, 29);
+            txtExpedienteNumero.Size = new Size(85, 29);
             txtExpedienteNumero.TabIndex = 13;
             // 
             // lblExpedienteGuion3
             // 
             lblExpedienteGuion3.AutoSize = true;
             lblExpedienteGuion3.ForeColor = Color.White;
-            lblExpedienteGuion3.Location = new Point(203, 341);
+            lblExpedienteGuion3.Location = new Point(215, 341);
             lblExpedienteGuion3.Name = "lblExpedienteGuion3";
-            lblExpedienteGuion3.Size = new Size(9, 15);
+            lblExpedienteGuion3.Size = new Size(12, 15);
             lblExpedienteGuion3.TabIndex = 14;
             lblExpedienteGuion3.Text = "-";
             // 
@@ -796,20 +796,22 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteGcaba.BackColor = Color.FromArgb(30, 30, 30);
             txtExpedienteGcaba.BorderStyle = BorderStyle.FixedSingle;
             txtExpedienteGcaba.CharacterCasing = CharacterCasing.Upper;
+            txtExpedienteGcaba.Enabled = false;
             txtExpedienteGcaba.Font = new Font("Segoe UI", 12F);
             txtExpedienteGcaba.ForeColor = Color.White;
-            txtExpedienteGcaba.Location = new Point(215, 334);
+            txtExpedienteGcaba.Location = new Point(227, 334);
             txtExpedienteGcaba.Name = "txtExpedienteGcaba";
             txtExpedienteGcaba.Size = new Size(55, 29);
             txtExpedienteGcaba.TabIndex = 15;
+            txtExpedienteGcaba.Text = "GCABA";
             // 
             // lblExpedienteGuion4
             // 
             lblExpedienteGuion4.AutoSize = true;
             lblExpedienteGuion4.ForeColor = Color.White;
-            lblExpedienteGuion4.Location = new Point(273, 341);
+            lblExpedienteGuion4.Location = new Point(285, 341);
             lblExpedienteGuion4.Name = "lblExpedienteGuion4";
-            lblExpedienteGuion4.Size = new Size(9, 15);
+            lblExpedienteGuion4.Size = new Size(12, 15);
             lblExpedienteGuion4.TabIndex = 16;
             lblExpedienteGuion4.Text = "-";
             // 
@@ -820,7 +822,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteReparticion.CharacterCasing = CharacterCasing.Upper;
             txtExpedienteReparticion.Font = new Font("Segoe UI", 12F);
             txtExpedienteReparticion.ForeColor = Color.White;
-            txtExpedienteReparticion.Location = new Point(285, 334);
+            txtExpedienteReparticion.Location = new Point(297, 334);
             txtExpedienteReparticion.Name = "txtExpedienteReparticion";
             txtExpedienteReparticion.Size = new Size(120, 29);
             txtExpedienteReparticion.TabIndex = 17;
@@ -829,7 +831,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblConfianzaExpediente.AutoSize = true;
             lblConfianzaExpediente.ForeColor = Color.Yellow;
-            lblConfianzaExpediente.Location = new Point(410, 337);
+            lblConfianzaExpediente.Location = new Point(422, 337);
             lblConfianzaExpediente.Name = "lblConfianzaExpediente";
             lblConfianzaExpediente.Size = new Size(30, 15);
             lblConfianzaExpediente.TabIndex = 18;
@@ -845,44 +847,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteCampo.TabIndex = 8;
             lblExpedienteCampo.Text = "Expediente:";
             // 
-            // txtNumeroPlano
-            // 
-            txtNumeroPlano.BackColor = Color.FromArgb(30, 30, 30);
-            txtNumeroPlano.BorderStyle = BorderStyle.FixedSingle;
-            txtNumeroPlano.CharacterCasing = CharacterCasing.Upper;
-            txtNumeroPlano.Font = new Font("Segoe UI", 12F);
-            txtNumeroPlano.ForeColor = Color.White;
-            txtNumeroPlano.Location = new Point(15, 281);
-            txtNumeroPlano.Name = "txtNumeroPlano";
-            txtNumeroPlano.Size = new Size(300, 29);
-            txtNumeroPlano.TabIndex = 23;
-            // 
-            // lblConfianzaNumeroPlano
-            // 
-            lblConfianzaNumeroPlano.AutoSize = true;
-            lblConfianzaNumeroPlano.ForeColor = Color.Yellow;
-            lblConfianzaNumeroPlano.Location = new Point(325, 284);
-            lblConfianzaNumeroPlano.Name = "lblConfianzaNumeroPlano";
-            lblConfianzaNumeroPlano.Size = new Size(30, 15);
-            lblConfianzaNumeroPlano.TabIndex = 24;
-            lblConfianzaNumeroPlano.Text = "-- %";
-            // 
-            // lblNumeroPlanoCampo
-            // 
-            lblNumeroPlanoCampo.AutoSize = true;
-            lblNumeroPlanoCampo.ForeColor = Color.White;
-            lblNumeroPlanoCampo.Location = new Point(15, 263);
-            lblNumeroPlanoCampo.Name = "lblNumeroPlanoCampo";
-            lblNumeroPlanoCampo.Size = new Size(110, 15);
-            lblNumeroPlanoCampo.TabIndex = 25;
-            lblNumeroPlanoCampo.Text = "Número de Plano:";
-            // 
             // cboTipoPlanoDetalle
             // 
             cboTipoPlanoDetalle.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             cboTipoPlanoDetalle.AutoCompleteSource = AutoCompleteSource.ListItems;
             cboTipoPlanoDetalle.BackColor = Color.FromArgb(30, 30, 30);
-            cboTipoPlanoDetalle.DropDownStyle = ComboBoxStyle.DropDown;
             cboTipoPlanoDetalle.DropDownWidth = 500;
             cboTipoPlanoDetalle.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             cboTipoPlanoDetalle.ForeColor = Color.White;
@@ -941,9 +910,41 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCategoriaPlanoCampo.ForeColor = Color.White;
             lblCategoriaPlanoCampo.Location = new Point(15, 145);
             lblCategoriaPlanoCampo.Name = "lblCategoriaPlanoCampo";
-            lblCategoriaPlanoCampo.Size = new Size(140, 15);
+            lblCategoriaPlanoCampo.Size = new Size(126, 15);
             lblCategoriaPlanoCampo.TabIndex = 19;
             lblCategoriaPlanoCampo.Text = "Categoría de Plano (*):";
+            // 
+            // txtNumeroPlano
+            // 
+            txtNumeroPlano.BackColor = Color.FromArgb(30, 30, 30);
+            txtNumeroPlano.BorderStyle = BorderStyle.FixedSingle;
+            txtNumeroPlano.CharacterCasing = CharacterCasing.Upper;
+            txtNumeroPlano.Font = new Font("Segoe UI", 12F);
+            txtNumeroPlano.ForeColor = Color.White;
+            txtNumeroPlano.Location = new Point(15, 281);
+            txtNumeroPlano.Name = "txtNumeroPlano";
+            txtNumeroPlano.Size = new Size(300, 29);
+            txtNumeroPlano.TabIndex = 23;
+            // 
+            // lblConfianzaNumeroPlano
+            // 
+            lblConfianzaNumeroPlano.AutoSize = true;
+            lblConfianzaNumeroPlano.ForeColor = Color.Yellow;
+            lblConfianzaNumeroPlano.Location = new Point(325, 284);
+            lblConfianzaNumeroPlano.Name = "lblConfianzaNumeroPlano";
+            lblConfianzaNumeroPlano.Size = new Size(30, 15);
+            lblConfianzaNumeroPlano.TabIndex = 24;
+            lblConfianzaNumeroPlano.Text = "-- %";
+            // 
+            // lblNumeroPlanoCampo
+            // 
+            lblNumeroPlanoCampo.AutoSize = true;
+            lblNumeroPlanoCampo.ForeColor = Color.White;
+            lblNumeroPlanoCampo.Location = new Point(15, 263);
+            lblNumeroPlanoCampo.Name = "lblNumeroPlanoCampo";
+            lblNumeroPlanoCampo.Size = new Size(103, 15);
+            lblNumeroPlanoCampo.TabIndex = 25;
+            lblNumeroPlanoCampo.Text = "Número de Plano:";
             // 
             // lblSnPosibleBlanca
             // 
@@ -1004,7 +1005,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelDerecho.Dock = DockStyle.Fill;
             panelDerecho.Location = new Point(0, 0);
             panelDerecho.Name = "panelDerecho";
-            panelDerecho.Size = new Size(473, 808);
+            panelDerecho.Size = new Size(473, 690);
             panelDerecho.TabIndex = 0;
             // 
             // panelImagenScroll
@@ -1150,17 +1151,77 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // panelBotones
             // 
             panelBotones.BackColor = Color.FromArgb(45, 45, 48);
-            panelBotones.Controls.Add(btnGuardarControlada);
             panelBotones.Controls.Add(btnMarcarPaginaIlegible);
             panelBotones.Controls.Add(btnMarcarDatosIlegible);
             panelBotones.Controls.Add(btnMarcarLoteCompletado);
             panelBotones.Controls.Add(btnCerrar);
+            panelBotones.Controls.Add(btnGuardarControlada);
             panelBotones.Dock = DockStyle.Bottom;
             panelBotones.Location = new Point(0, 750);
             panelBotones.Name = "panelBotones";
             panelBotones.Padding = new Padding(10);
             panelBotones.Size = new Size(1400, 56);
             panelBotones.TabIndex = 2;
+            // 
+            // btnMarcarPaginaIlegible
+            // 
+            btnMarcarPaginaIlegible.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnMarcarPaginaIlegible.BackColor = Color.FromArgb(180, 90, 0);
+            btnMarcarPaginaIlegible.FlatStyle = FlatStyle.Flat;
+            btnMarcarPaginaIlegible.ForeColor = Color.White;
+            btnMarcarPaginaIlegible.Location = new Point(727, 13);
+            btnMarcarPaginaIlegible.Margin = new Padding(3, 3, 8, 3);
+            btnMarcarPaginaIlegible.Name = "btnMarcarPaginaIlegible";
+            btnMarcarPaginaIlegible.Size = new Size(170, 34);
+            btnMarcarPaginaIlegible.TabIndex = 4;
+            btnMarcarPaginaIlegible.Text = "Marcar Página ILEGIBLE";
+            btnMarcarPaginaIlegible.UseVisualStyleBackColor = false;
+            btnMarcarPaginaIlegible.Click += btnMarcarPaginaIlegible_Click;
+            // 
+            // btnMarcarDatosIlegible
+            // 
+            btnMarcarDatosIlegible.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnMarcarDatosIlegible.BackColor = Color.FromArgb(180, 90, 0);
+            btnMarcarDatosIlegible.FlatStyle = FlatStyle.Flat;
+            btnMarcarDatosIlegible.ForeColor = Color.White;
+            btnMarcarDatosIlegible.Location = new Point(907, 13);
+            btnMarcarDatosIlegible.Margin = new Padding(3, 3, 8, 3);
+            btnMarcarDatosIlegible.Name = "btnMarcarDatosIlegible";
+            btnMarcarDatosIlegible.Size = new Size(170, 34);
+            btnMarcarDatosIlegible.TabIndex = 5;
+            btnMarcarDatosIlegible.Text = "Marcar Datos ILEGIBLE";
+            btnMarcarDatosIlegible.UseVisualStyleBackColor = false;
+            btnMarcarDatosIlegible.Click += btnMarcarDatosIlegible_Click;
+            // 
+            // btnMarcarLoteCompletado
+            // 
+            btnMarcarLoteCompletado.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnMarcarLoteCompletado.BackColor = Color.FromArgb(0, 122, 204);
+            btnMarcarLoteCompletado.FlatStyle = FlatStyle.Flat;
+            btnMarcarLoteCompletado.ForeColor = Color.White;
+            btnMarcarLoteCompletado.Location = new Point(1087, 13);
+            btnMarcarLoteCompletado.Margin = new Padding(3, 3, 8, 3);
+            btnMarcarLoteCompletado.Name = "btnMarcarLoteCompletado";
+            btnMarcarLoteCompletado.Size = new Size(170, 34);
+            btnMarcarLoteCompletado.TabIndex = 6;
+            btnMarcarLoteCompletado.Text = "Marcar Lote Completado";
+            btnMarcarLoteCompletado.UseVisualStyleBackColor = false;
+            btnMarcarLoteCompletado.Click += btnMarcarLoteCompletado_Click;
+            // 
+            // btnCerrar
+            // 
+            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCerrar.BackColor = Color.FromArgb(150, 30, 30);
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.Location = new Point(1267, 13);
+            btnCerrar.Margin = new Padding(3, 3, 8, 3);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(120, 34);
+            btnCerrar.TabIndex = 7;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
+            btnCerrar.Click += btnCerrar_Click;
             // 
             // btnGuardarControlada
             // 
@@ -1175,62 +1236,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnGuardarControlada.Text = "Guardar y Marcar Controlada";
             btnGuardarControlada.UseVisualStyleBackColor = false;
             btnGuardarControlada.Click += btnGuardarControlada_Click;
-            // 
-            // btnMarcarPaginaIlegible
-            // 
-            btnMarcarPaginaIlegible.BackColor = Color.FromArgb(180, 90, 0);
-            btnMarcarPaginaIlegible.FlatStyle = FlatStyle.Flat;
-            btnMarcarPaginaIlegible.ForeColor = Color.White;
-            btnMarcarPaginaIlegible.Location = new Point(214, 13);
-            btnMarcarPaginaIlegible.Margin = new Padding(3, 3, 8, 3);
-            btnMarcarPaginaIlegible.Name = "btnMarcarPaginaIlegible";
-            btnMarcarPaginaIlegible.Size = new Size(170, 34);
-            btnMarcarPaginaIlegible.TabIndex = 4;
-            btnMarcarPaginaIlegible.Text = "Marcar Página ILEGIBLE";
-            btnMarcarPaginaIlegible.UseVisualStyleBackColor = false;
-            btnMarcarPaginaIlegible.Click += btnMarcarPaginaIlegible_Click;
-            // 
-            // btnMarcarDatosIlegible
-            // 
-            btnMarcarDatosIlegible.BackColor = Color.FromArgb(180, 90, 0);
-            btnMarcarDatosIlegible.FlatStyle = FlatStyle.Flat;
-            btnMarcarDatosIlegible.ForeColor = Color.White;
-            btnMarcarDatosIlegible.Location = new Point(395, 13);
-            btnMarcarDatosIlegible.Margin = new Padding(3, 3, 8, 3);
-            btnMarcarDatosIlegible.Name = "btnMarcarDatosIlegible";
-            btnMarcarDatosIlegible.Size = new Size(170, 34);
-            btnMarcarDatosIlegible.TabIndex = 5;
-            btnMarcarDatosIlegible.Text = "Marcar Datos ILEGIBLE";
-            btnMarcarDatosIlegible.UseVisualStyleBackColor = false;
-            btnMarcarDatosIlegible.Click += btnMarcarDatosIlegible_Click;
-            // 
-            // btnMarcarLoteCompletado
-            // 
-            btnMarcarLoteCompletado.BackColor = Color.FromArgb(0, 122, 204);
-            btnMarcarLoteCompletado.FlatStyle = FlatStyle.Flat;
-            btnMarcarLoteCompletado.ForeColor = Color.White;
-            btnMarcarLoteCompletado.Location = new Point(576, 13);
-            btnMarcarLoteCompletado.Margin = new Padding(3, 3, 8, 3);
-            btnMarcarLoteCompletado.Name = "btnMarcarLoteCompletado";
-            btnMarcarLoteCompletado.Size = new Size(170, 34);
-            btnMarcarLoteCompletado.TabIndex = 6;
-            btnMarcarLoteCompletado.Text = "Marcar Lote Completado";
-            btnMarcarLoteCompletado.UseVisualStyleBackColor = false;
-            btnMarcarLoteCompletado.Click += btnMarcarLoteCompletado_Click;
-            // 
-            // btnCerrar
-            // 
-            btnCerrar.BackColor = Color.FromArgb(150, 30, 30);
-            btnCerrar.FlatStyle = FlatStyle.Flat;
-            btnCerrar.ForeColor = Color.White;
-            btnCerrar.Location = new Point(757, 13);
-            btnCerrar.Margin = new Padding(3, 3, 8, 3);
-            btnCerrar.Name = "btnCerrar";
-            btnCerrar.Size = new Size(120, 34);
-            btnCerrar.TabIndex = 7;
-            btnCerrar.Text = "Cerrar";
-            btnCerrar.UseVisualStyleBackColor = false;
-            btnCerrar.Click += btnCerrar_Click;
             // 
             // FrmVerLote
             // 
@@ -1358,7 +1363,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Button btnZoomAjustar;
         private Label lblZoom;
         private PictureBox pictureBoxPdf;
-        private FlowLayoutPanel panelBotones;
+        private Panel panelBotones;
         private Button btnVerImagenPDF;
         private Button btnGuardarControlada;
         private Button btnGirarIzquierda;

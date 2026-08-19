@@ -23,9 +23,20 @@ namespace IndexadorIA.Negocio
         public const int EstadoLotePendienteFinalizar = 7;
 
         /// <summary>
+        /// Nombre de la subcarpeta donde se generan los archivos originales separados
+        /// (creada por la pantalla de Separación de Imágenes).
+        /// </summary>
+        public const string CarpetaOriginales = "Planos Originales";
+
+        /// <summary>
+        /// Nombre de la subcarpeta donde se mueven los archivos finalizados correctamente.
+        /// </summary>
+        public const string CarpetaProcesados = "Planos Procesados";
+
+        /// <summary>
         /// Nombre de la subcarpeta donde se mueven los archivos ilegibles.
         /// </summary>
-        public const string CarpetaIlegibles = "ILEGIBLES";
+        public const string CarpetaIlegibles = "Planos ILEGIBLES";
 
         private readonly LoteDAL _loteDAL;
         private readonly LogDAL _logDAL;
@@ -156,6 +167,26 @@ namespace IndexadorIA.Negocio
         /// nomenclatura por categoría de plano, y persiste el nombre final en
         /// TD_ARCHIVOS_PAGINAS.dsNombreArchivoFinal.
         /// </summary>
+        /// <summary>
+        /// Dada la carpeta donde reside actualmente el PDF de origen (normalmente la
+        /// subcarpeta "Planos Originales" creada en la separación de imágenes), obtiene
+        /// la carpeta base de la entrega, es decir, la carpeta padre de "Planos Originales".
+        /// Si el archivo no está dentro de una carpeta "Planos Originales", se usa la
+        /// carpeta de origen como base (comportamiento de respaldo).
+        /// </summary>
+        private static string ObtenerCarpetaBase(string carpetaOrigen)
+        {
+            var directorioOrigen = new DirectoryInfo(carpetaOrigen);
+
+            if (string.Equals(directorioOrigen.Name, CarpetaOriginales, StringComparison.OrdinalIgnoreCase)
+                && directorioOrigen.Parent != null)
+            {
+                return directorioOrigen.Parent.FullName;
+            }
+
+            return carpetaOrigen;
+        }
+
         public List<RegistroMovimiento> MoverYRenombrarArchivos(List<FilaFinalizacion> filas)
         {
             var movimientos = new List<RegistroMovimiento>();
@@ -168,13 +199,12 @@ namespace IndexadorIA.Negocio
                     throw new FileNotFoundException($"No se encontró el archivo físico: {rutaOrigen}");
 
                 string carpetaOrigen = Path.GetDirectoryName(rutaOrigen) ?? string.Empty;
+                string carpetaBase = ObtenerCarpetaBase(carpetaOrigen);
                 bool esIlegible = EsIlegible(fila.Resultado);
 
-                string carpetaDestino = esIlegible
-                    ? Path.Combine(carpetaOrigen, CarpetaIlegibles)
-                    : carpetaOrigen;
+                string carpetaDestino = Path.Combine(carpetaBase, esIlegible ? CarpetaIlegibles : CarpetaProcesados);
 
-                if (esIlegible && !Directory.Exists(carpetaDestino))
+                if (!Directory.Exists(carpetaDestino))
                     Directory.CreateDirectory(carpetaDestino);
 
                 string nombreNuevo = esIlegible
@@ -262,26 +292,29 @@ namespace IndexadorIA.Negocio
         {
             var porCarpeta = filas
                 .Where(f => !string.IsNullOrWhiteSpace(f.DsRutaCompleta))
-                .GroupBy(f => Path.GetDirectoryName(f.DsRutaCompleta) ?? string.Empty);
+                .GroupBy(f => ObtenerCarpetaBase(Path.GetDirectoryName(f.DsRutaCompleta) ?? string.Empty));
 
             foreach (var grupo in porCarpeta)
             {
-                string carpetaOrigen = grupo.Key;
-                string nombreCarpetaOrigen = new DirectoryInfo(carpetaOrigen).Name;
+                string carpetaBase = grupo.Key;
+                string nombreCarpetaBase = new DirectoryInfo(carpetaBase).Name;
 
-                string carpetaCsv = esIlegible ? Path.Combine(carpetaOrigen, CarpetaIlegibles) : carpetaOrigen;
+                string carpetaCsv = Path.Combine(carpetaBase, esIlegible ? CarpetaIlegibles : CarpetaProcesados);
 
-                if (esIlegible && !Directory.Exists(carpetaCsv))
+                if (!Directory.Exists(carpetaCsv))
                     Directory.CreateDirectory(carpetaCsv);
 
                 string nombreCsv = esIlegible
-                    ? $"{nombreCarpetaOrigen}_ILEGIBLE.csv"
-                    : $"{nombreCarpetaOrigen}.csv";
+                    ? $"{nombreCarpetaBase}_ILEGIBLE.csv"
+                    : $"{nombreCarpetaBase}.csv";
 
                 string rutaCsv = Path.Combine(carpetaCsv, nombreCsv);
+                bool archivoExiste = File.Exists(rutaCsv);
 
-                using var writer = new StreamWriter(rutaCsv, append: false, System.Text.Encoding.UTF8);
-                writer.WriteLine(string.Join(";", EncabezadosCsv));
+                using var writer = new StreamWriter(rutaCsv, append: true, System.Text.Encoding.UTF8);
+
+                if (!archivoExiste)
+                    writer.WriteLine(string.Join(";", EncabezadosCsv));
 
                 foreach (var f in grupo)
                 {

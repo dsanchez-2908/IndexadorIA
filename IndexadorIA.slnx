@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="IndexadorIA.Api/IndexadorIA.Api.csproj" />
   <Project Path="IndexadorIA.Core/IndexadorIA.Core.csproj" />
   <Project Path="IndexadorIA/IndexadorIA.csproj" />
 </Solution>

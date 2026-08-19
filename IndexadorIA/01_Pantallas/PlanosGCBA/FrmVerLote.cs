@@ -72,6 +72,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             pictureBoxImagen.MouseDown += pictureBoxImagen_MouseDown;
             pictureBoxImagen.MouseMove += pictureBoxImagen_MouseMove;
             pictureBoxImagen.MouseUp += pictureBoxImagen_MouseUp;
+
+            KeyPreview = true;
+            KeyDown += FrmVerLote_KeyDown;
+        }
+
+        private void FrmVerLote_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.G && e.Alt)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                btnGuardarControlada_Click(this, EventArgs.Empty);
+            }
         }
 
         private void FrmVerLote_Load(object sender, EventArgs e)
@@ -439,12 +452,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         /// </summary>
         private void CargarExpedienteEnCampos(string? dsExpediente)
         {
+            txtExpedienteEx.Text = "EX";
+            txtExpedienteGcaba.Text = "GCABA";
+
             if (string.IsNullOrWhiteSpace(dsExpediente))
             {
-                txtExpedienteEx.Text = string.Empty;
                 txtExpedienteAnio.Text = string.Empty;
                 txtExpedienteNumero.Text = string.Empty;
-                txtExpedienteGcaba.Text = string.Empty;
                 txtExpedienteReparticion.Text = string.Empty;
                 return;
             }
@@ -453,18 +467,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             if (partes.Length == 5)
             {
-                txtExpedienteEx.Text = partes[0].Trim();
                 txtExpedienteAnio.Text = partes[1].Trim();
                 txtExpedienteNumero.Text = partes[2].Trim();
-                txtExpedienteGcaba.Text = partes[3].Trim();
                 txtExpedienteReparticion.Text = partes[4].Trim();
             }
             else
             {
-                txtExpedienteEx.Text = string.Empty;
                 txtExpedienteAnio.Text = string.Empty;
                 txtExpedienteNumero.Text = string.Empty;
-                txtExpedienteGcaba.Text = string.Empty;
                 txtExpedienteReparticion.Text = dsExpediente.Trim();
             }
         }
@@ -478,14 +488,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             reparticionValida = true;
 
-            string ex = txtExpedienteEx.Text.Trim();
+            const string ex = "EX";
             string anio = txtExpedienteAnio.Text.Trim();
             string numero = txtExpedienteNumero.Text.Trim();
-            string gcaba = txtExpedienteGcaba.Text.Trim();
+            const string gcaba = "GCABA";
             string reparticion = txtExpedienteReparticion.Text.Trim();
 
-            if (string.IsNullOrEmpty(ex) && string.IsNullOrEmpty(anio) && string.IsNullOrEmpty(numero)
-                && string.IsNullOrEmpty(gcaba) && string.IsNullOrEmpty(reparticion))
+            if (string.IsNullOrEmpty(anio) && string.IsNullOrEmpty(numero) && string.IsNullOrEmpty(reparticion))
             {
                 return null;
             }
@@ -736,9 +745,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     modificoDatos ? "SI" : "NO",
                     cdUsuario);
 
-                MessageBox.Show("Registro guardado y marcado como Controlado.", "Guardar y Marcar como controlada",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                 CargarDatosGrilla();
             }
             catch (Exception ex)
@@ -938,11 +944,25 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnMarcarPaginaIlegible_Click(object sender, EventArgs e)
         {
+            var confirmacion = MessageBox.Show(
+                "¿Confirma que desea marcar la página como ILEGIBLE?",
+                "Marcar Página como ILEGIBLE", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (confirmacion != DialogResult.Yes)
+                return;
+
             MarcarEstadoControl(ResultadoIA.EstadosControl.PaginaIlegible, "Marcar Página como ILEGIBLE");
         }
 
         private void btnMarcarDatosIlegible_Click(object sender, EventArgs e)
         {
+            var confirmacion = MessageBox.Show(
+                "¿Confirma que desea marcar los datos como ILEGIBLES?",
+                "Marcar Datos ILEGIBLE", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (confirmacion != DialogResult.Yes)
+                return;
+
             MarcarEstadoControl(ResultadoIA.EstadosControl.DatosIlegibles, "Marcar Datos ILEGIBLE");
         }
 
