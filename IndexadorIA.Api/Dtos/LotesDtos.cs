@@ -16,6 +16,7 @@ namespace IndexadorIA.Api.Dtos
         public int CdEstadoLote { get; set; }
         public string? DsEstado { get; set; }
         public DateTime FeAltaLote { get; set; }
+        public DateTime? FeProcesamientoIA { get; set; }
 
         public static LoteResumenDto DesdeEntidad(Lote lote) => new()
         {
@@ -42,6 +43,14 @@ namespace IndexadorIA.Api.Dtos
         public string? DsParcela { get; set; }
         public string? DsDireccion { get; set; }
         public int CdEstadoControl { get; set; }
+        public decimal? NuConfianzaCategoriaPlano { get; set; }
+        public decimal? NuConfianzaTipoPlano { get; set; }
+        public decimal? NuConfianzaNumeroPlano { get; set; }
+        public decimal? NuConfianzaExpediente { get; set; }
+        public decimal? NuConfianzaSeccion { get; set; }
+        public decimal? NuConfianzaManzana { get; set; }
+        public decimal? NuConfianzaParcela { get; set; }
+        public decimal? NuConfianzaDireccion { get; set; }
 
         public static ResultadoIADto DesdeEntidad(ResultadoIA r) => new()
         {
@@ -56,7 +65,15 @@ namespace IndexadorIA.Api.Dtos
             DsManzana = r.DsManzana,
             DsParcela = r.DsParcela,
             DsDireccion = r.DsDireccion,
-            CdEstadoControl = r.CdEstadoControl
+            CdEstadoControl = r.CdEstadoControl,
+            NuConfianzaCategoriaPlano = r.NuConfianzaCategoriaPlano,
+            NuConfianzaTipoPlano = r.NuConfianzaTipoPlano,
+            NuConfianzaNumeroPlano = r.NuConfianzaNumeroPlano,
+            NuConfianzaExpediente = r.NuConfianzaExpediente,
+            NuConfianzaSeccion = r.NuConfianzaSeccion,
+            NuConfianzaManzana = r.NuConfianzaManzana,
+            NuConfianzaParcela = r.NuConfianzaParcela,
+            NuConfianzaDireccion = r.NuConfianzaDireccion
         };
     }
 

@@ -9,11 +9,18 @@ using IndexadorIA.Entidades;
 namespace IndexadorIA.Negocio
 {
     /// <summary>
-    /// Lógica de negocio para procesamiento de lotes con OpenAI Batch API
+    /// Lï¿½gica de negocio para procesamiento de lotes con OpenAI Batch API
     /// </summary>
     public static class OpenAIBL
     {
-        private static readonly HttpClient _httpClient = new HttpClient();
+        // Limite real de OpenAI para gpt-4o-2024-08-06: 209.715.200 bytes (200MB) por archivo de batch
+        // (error "maximum_input_file_size_exceeded"). Se deja margen de seguridad para el overhead de JSON/prompt.
+        private const long TAMANIO_MAXIMO_ARCHIVO_BATCH_BYTES = 180L * 1024 * 1024;
+
+        // Timeout ampliado: con archivos JSONL de cientos de MB (batches grandes con imagenes en Base64),
+        // el timeout por defecto de 100s de HttpClient se agota durante la subida y aborta la operacion
+        // aunque la transferencia siga en curso. Ver OpenAIBL.SubirArchivoAsync.
+        private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(20) };
 
         /// <summary>
         /// Normaliza un texto para comparaciones: quita acentos, espacios extra y pasa a mayusculas.
@@ -118,7 +125,7 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
-        /// Normaliza el campo dsDireccion: mayusculas, quita ° , . y reemplaza / por &#8211;
+        /// Normaliza el campo dsDireccion: mayusculas, quita ï¿½ , . y reemplaza / por &#8211;
         /// </summary>
         private static string? NormalizarDireccion(string? dsDireccion)
         {
@@ -128,7 +135,7 @@ namespace IndexadorIA.Negocio
             }
 
             string resultado = dsDireccion.Trim().ToUpperInvariant();
-            resultado = resultado.Replace("°", string.Empty)
+            resultado = resultado.Replace("ï¿½", string.Empty)
                                   .Replace(",", string.Empty)
                                   .Replace(".", string.Empty)
                                   .Replace("/", "\u2013");
@@ -254,49 +261,69 @@ namespace IndexadorIA.Negocio
 
                 if (prompt == null)
                 {
-                    throw new Exception("No se encontró un prompt configurado para el proyecto");
+                    throw new Exception("No se encontrï¿½ un prompt configurado para el proyecto");
                 }
 
-                // 2. Obtener las páginas del lote
-                progreso?.Report("Obteniendo páginas del lote");
+                // 2. Obtener las pï¿½ginas del lote
+                progreso?.Report("Obteniendo pï¿½ginas del lote");
                 var paginas = loteDAL.ObtenerArchivosPaginasPorLote(cdLote);
 
                 if (paginas.Count == 0)
                 {
-                    throw new Exception("No se encontraron páginas para procesar en el lote");
+                    throw new Exception("No se encontraron pï¿½ginas para procesar en el lote");
                 }
 
-                // 3. Crear archivo JSONL para batch
-                progreso?.Report($"Creando archivo batch con {paginas.Count} página(s)");
-                string batchFilePath = await CrearArchivoBatchAsync(paginas, prompt.DsPrompt, cdProyecto);
 
-                // 4. Subir archivo a OpenAI
-                progreso?.Report("Subiendo archivo a OpenAI");
-                string fileId = await SubirArchivoAsync(batchFilePath);
+                // 3. Trocear el lote en sub-lotes cuyo archivo JSONL no supere el limite de OpenAI
+                // (209.715.200 bytes / 200MB para gpt-4o-2024-08-06, ver error "maximum_input_file_size_exceeded").
+                // Se usa un margen de seguridad (180MB) porque el JSONL final agrega overhead de JSON/prompt
+                // sobre el tamano puro de los .b64.
+                var subLotes = DividirEnSubLotesPorTamano(paginas, TAMANIO_MAXIMO_ARCHIVO_BATCH_BYTES);
 
-                // 5. Crear batch job
-                progreso?.Report("Creando batch job en OpenAI");
-                string batchId = await CrearBatchJobAsync(fileId);
-
-                // 5.1 Guardar batch tracking en BD
-                GuardarBatchTracking(cdLote, batchId, fileId);
-
-                // 6. Esperar resultados
-                progreso?.Report($"Esperando resultados del batch {batchId} (esto puede tardar varios minutos)");
-                string resultFileId = await EsperarResultadosAsync(batchId, progreso, cancellationToken);
-
-                // 7. Procesar resultados
-                progreso?.Report("Descargando y procesando resultados");
-                await ProcesarResultadosAsync(resultFileId, paginas, cdLote, cdProyecto, cdUsuario);
-
-                // 8. Cambiar estado del lote a "Procesado IA (4)"
-                loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
-
-                // Limpiar archivo temporal
-                if (File.Exists(batchFilePath))
+                logDAL.Insertar(new LogRegistro
                 {
-                    File.Delete(batchFilePath);
+                    DsNivel = LogRegistro.Niveles.INFO,
+                    DsModulo = "OpenAIBL.ProcesarLoteAsync",
+                    DsMensaje = $"Lote {cdLote}: {paginas.Count} paginas divididas en {subLotes.Count} sub-lote(s) por tamano"
+                });
+
+                for (int i = 0; i < subLotes.Count; i++)
+                {
+                    var subPaginas = subLotes[i];
+                    string subLoteDesc = subLotes.Count > 1 ? $" (sub-lote {i + 1}/{subLotes.Count})" : "";
+
+                    // 3.1 Crear archivo JSONL para el sub-lote
+                    progreso?.Report($"Creando archivo batch con {subPaginas.Count} paginas{subLoteDesc}");
+                    string batchFilePath = await CrearArchivoBatchAsync(subPaginas, prompt.DsPrompt, cdProyecto);
+
+                    // 3.2 Subir archivo a OpenAI
+                    progreso?.Report($"Subiendo archivo a OpenAI{subLoteDesc}");
+                    string fileId = await SubirArchivoAsync(batchFilePath);
+
+                    // 3.3 Crear batch job
+                    progreso?.Report($"Creando batch job en OpenAI{subLoteDesc}");
+                    string batchId = await CrearBatchJobAsync(fileId);
+
+                    // 3.4 Guardar batch tracking en BD
+                    GuardarBatchTracking(cdLote, batchId, fileId);
+
+                    // 3.5 Esperar resultados
+                    progreso?.Report($"Esperando resultados del batch {batchId}{subLoteDesc} (esto puede tardar varios minutos)");
+                    string resultFileId = await EsperarResultadosAsync(batchId, progreso, cancellationToken);
+
+                    // 3.6 Procesar resultados
+                    progreso?.Report($"Descargando y procesando resultados{subLoteDesc}");
+                    await ProcesarResultadosAsync(resultFileId, subPaginas, cdLote, cdProyecto, cdUsuario);
+
+                    // Limpiar archivo temporal del sub-lote
+                    if (File.Exists(batchFilePath))
+                    {
+                        File.Delete(batchFilePath);
+                    }
                 }
+
+                // 4. Cambiar estado del lote a "Procesado IA (4)"
+                loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
 
                 logDAL.Insertar(new LogRegistro
                 {
@@ -310,7 +337,7 @@ namespace IndexadorIA.Negocio
             }
             catch (TimeoutException timeoutEx)
             {
-                // El batch fue enviado exitosamente pero aún está procesándose
+                // El batch fue enviado exitosamente pero aï¿½n estï¿½ procesï¿½ndose
                 // NO revertir el estado del lote - dejarlo en estado 3 (Procesando)
 
                 logDAL.Insertar(new LogRegistro
@@ -321,22 +348,22 @@ namespace IndexadorIA.Negocio
                 });
 
                 progreso?.Report($"Lote enviado a OpenAI - Procesando en segundo plano");
-                return true; // Retornar true porque el batch SÍ fue creado exitosamente
+                return true; // Retornar true porque el batch Sï¿½ fue creado exitosamente
             }
             catch (HttpRequestException httpEx)
             {
-                // Error de red/conexión DESPUÉS de que el batch fue creado
-                // Si llegamos aquí después de GuardarBatchTracking, el batch SÍ existe en OpenAI
+                // Error de red/conexiï¿½n DESPUï¿½S de que el batch fue creado
+                // Si llegamos aquï¿½ despuï¿½s de GuardarBatchTracking, el batch Sï¿½ existe en OpenAI
                 // NO revertir el estado del lote - dejarlo en estado 3 (Procesando)
 
                 logDAL.Insertar(new LogRegistro
                 {
                     DsNivel = LogRegistro.Niveles.WARNING,
                     DsModulo = "OpenAIBL.ProcesarLoteAsync",
-                    DsMensaje = $"Lote {cdLote} enviado a OpenAI pero ocurrió error de red al consultar estado. El batch continúa procesándose en segundo plano. Error: {httpEx.Message}"
+                    DsMensaje = $"Lote {cdLote} enviado a OpenAI pero ocurriï¿½ error de red al consultar estado. El batch continï¿½a procesï¿½ndose en segundo plano. Error: {httpEx.Message}"
                 });
 
-                progreso?.Report($"Lote enviado a OpenAI - Error de red al consultar estado, pero el batch sigue procesándose");
+                progreso?.Report($"Lote enviado a OpenAI - Error de red al consultar estado, pero el batch sigue procesï¿½ndose");
                 return true; // Retornar true porque el batch fue creado exitosamente
             }
             catch (OperationCanceledException)
@@ -371,30 +398,93 @@ namespace IndexadorIA.Negocio
             }
         }
 
+        /// <summary>
+        /// Divide la lista de paginas en sub-lotes cuyo tamano acumulado de archivos .b64 no supere
+        /// maxBytesPorSubLote, para evitar el error "maximum_input_file_size_exceeded" de OpenAI
+        /// cuando el lote completo genera un JSONL demasiado grande.
+        /// </summary>
+        private static List<List<ArchivoPagina>> DividirEnSubLotesPorTamano(List<ArchivoPagina> paginas, long maxBytesPorSubLote)
+        {
+            var resultado = new List<List<ArchivoPagina>>();
+            var subLoteActual = new List<ArchivoPagina>();
+            long tamanioAcumulado = 0;
+
+            foreach (var pagina in paginas)
+            {
+                long tamanioPagina = 0;
+                if (!string.IsNullOrEmpty(pagina.RutaBase64) && File.Exists(pagina.RutaBase64))
+                {
+                    tamanioPagina = new FileInfo(pagina.RutaBase64).Length;
+                }
+
+                if (subLoteActual.Count > 0 && tamanioAcumulado + tamanioPagina > maxBytesPorSubLote)
+                {
+                    resultado.Add(subLoteActual);
+                    subLoteActual = new List<ArchivoPagina>();
+                    tamanioAcumulado = 0;
+                }
+
+                subLoteActual.Add(pagina);
+                tamanioAcumulado += tamanioPagina;
+            }
+
+            if (subLoteActual.Count > 0)
+            {
+                resultado.Add(subLoteActual);
+            }
+
+            return resultado;
+        }
+
         private static async Task<string> CrearArchivoBatchAsync(List<ArchivoPagina> paginas, string promptTemplate, int cdProyecto)
         {
             var jsonlLines = new List<string>();
             var logDAL = new LogDAL();
 
+            // Validaciï¿½n previa: si falta algï¿½n .b64 (p.ej. el lote quedï¿½ marcado como "preparado"
+            // pero alguna pï¿½gina fallï¿½ en PreparacionImagenesBL), fallar rï¿½pido con el listado
+            // completo de pï¿½ginas faltantes en vez de descubrirlo reciï¿½n al llegar a esa pï¿½gina
+            // luego de haber generado/serializado el resto del lote (desperdicio de CPU/memoria).
+            var paginasFaltantes = paginas
+                .Where(p => string.IsNullOrEmpty(p.RutaBase64) || !File.Exists(p.RutaBase64))
+                .Select(p => p.CdArchivoPagina)
+                .ToList();
+
+            if (paginasFaltantes.Count > 0)
+            {
+                string mensaje = $"Faltan {paginasFaltantes.Count} archivo(s) Base64 de {paginas.Count} pï¿½ginas del lote. " +
+                    $"Pï¿½ginas: {string.Join(", ", paginasFaltantes.Take(20))}" +
+                    (paginasFaltantes.Count > 20 ? ", ..." : "");
+
+                logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.ERROR,
+                    DsModulo = "OpenAIBL.CrearArchivoBatchAsync",
+                    DsMensaje = mensaje
+                });
+
+                throw new Exception(mensaje + ". Vuelva a ejecutar la preparaciï¿½n de imï¿½genes para este lote.");
+            }
+
             foreach (var pagina in paginas)
             {
-                // Log de diagnóstico: ruta del archivo Base64
+                // Log de diagnï¿½stico: ruta del archivo Base64
                 logDAL.Insertar(new LogRegistro
                 {
                     DsNivel = LogRegistro.Niveles.INFO,
                     DsModulo = "OpenAIBL.CrearArchivoBatchAsync",
-                    DsMensaje = $"Página {pagina.CdArchivoPagina}: Ruta Base64 = {pagina.RutaBase64}"
+                    DsMensaje = $"Pï¿½gina {pagina.CdArchivoPagina}: Ruta Base64 = {pagina.RutaBase64}"
                 });
 
                 // Leer Base64 desde archivo
                 if (string.IsNullOrEmpty(pagina.RutaBase64) || !File.Exists(pagina.RutaBase64))
                 {
-                    throw new Exception($"No se encontró el archivo Base64 para la página {pagina.CdArchivoPagina}");
+                    throw new Exception($"No se encontrï¿½ el archivo Base64 para la pï¿½gina {pagina.CdArchivoPagina}");
                 }
 
                 string base64Content = await File.ReadAllTextAsync(pagina.RutaBase64);
 
-                // Log del tamaño del Base64
+                // Log del tamaï¿½o del Base64
                 long base64SizeBytes = base64Content.Length;
                 long base64SizeMB = base64SizeBytes / (1024 * 1024);
 
@@ -402,10 +492,10 @@ namespace IndexadorIA.Negocio
                 {
                     DsNivel = LogRegistro.Niveles.INFO,
                     DsModulo = "OpenAIBL.CrearArchivoBatchAsync",
-                    DsMensaje = $"Página {pagina.CdArchivoPagina}: Tamaño Base64 = {base64SizeBytes:N0} bytes ({base64SizeMB} MB)"
+                    DsMensaje = $"Pï¿½gina {pagina.CdArchivoPagina}: Tamaï¿½o Base64 = {base64SizeBytes:N0} bytes ({base64SizeMB} MB)"
                 });
 
-                // Validar tamaño (OpenAI limita a 20MB por imagen)
+                // Validar tamaï¿½o (OpenAI limita a 20MB por imagen)
                 const long MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
                 string imageDetail = "auto"; // Por defecto "auto"
 
@@ -415,26 +505,26 @@ namespace IndexadorIA.Negocio
                     {
                         DsNivel = LogRegistro.Niveles.WARNING,
                         DsModulo = "OpenAIBL.CrearArchivoBatchAsync",
-                        DsMensaje = $"ADVERTENCIA: Página {pagina.CdArchivoPagina} excede 20MB ({base64SizeMB} MB). Esto puede causar errores 500 en OpenAI."
+                        DsMensaje = $"ADVERTENCIA: Pï¿½gina {pagina.CdArchivoPagina} excede 20MB ({base64SizeMB} MB). Esto puede causar errores 500 en OpenAI."
                     });
-                    imageDetail = "low"; // Forzar detalle bajo para imágenes grandes
+                    imageDetail = "low"; // Forzar detalle bajo para imï¿½genes grandes
                 }
                 else if (base64SizeBytes > 5 * 1024 * 1024) // Mayor a 5MB
                 {
-                    // Para imágenes entre 5MB y 20MB, usar detalle bajo por seguridad
+                    // Para imï¿½genes entre 5MB y 20MB, usar detalle bajo por seguridad
                     imageDetail = "low";
                     logDAL.Insertar(new LogRegistro
                     {
                         DsNivel = LogRegistro.Niveles.INFO,
                         DsModulo = "OpenAIBL.CrearArchivoBatchAsync",
-                        DsMensaje = $"Página {pagina.CdArchivoPagina}: Usando detail='low' debido al tamaño ({base64SizeMB} MB)"
+                        DsMensaje = $"Pï¿½gina {pagina.CdArchivoPagina}: Usando detail='low' debido al tamaï¿½o ({base64SizeMB} MB)"
                     });
                 }
 
-                // Usar el prompt tal cual (sin reemplazos por ahora, se pueden agregar después)
+                // Usar el prompt tal cual (sin reemplazos por ahora, se pueden agregar despuï¿½s)
                 string promptFinal = promptTemplate;
 
-                // Crear objeto de request según formato Batch API
+                // Crear objeto de request segï¿½n formato Batch API
                 var batchItem = new
                 {
                     custom_id = $"page_{pagina.CdArchivoPagina}",
@@ -442,7 +532,7 @@ namespace IndexadorIA.Negocio
                     url = "/v1/chat/completions",
                     body = new
                     {
-                        model = "gpt-4o-2024-08-06",  // Modelo con fecha específica (requerido para Batch API)
+                        model = "gpt-4o-2024-08-06",  // Modelo con fecha especï¿½fica (requerido para Batch API)
                         messages = new[]
                         {
                             new
@@ -477,10 +567,10 @@ namespace IndexadorIA.Negocio
 
             // UTF-8 sin BOM
             var utf8WithoutBom = new System.Text.UTF8Encoding(false);
-            // Escribir cada línea con \n (Unix line ending) en lugar de \r\n (Windows)
+            // Escribir cada lï¿½nea con \n (Unix line ending) en lugar de \r\n (Windows)
             await File.WriteAllTextAsync(tempPath, string.Join("\n", jsonlLines) + "\n", utf8WithoutBom);
 
-            // Log del contenido para diagnóstico (solo primera línea)
+            // Log del contenido para diagnï¿½stico (solo primera lï¿½nea)
             if (jsonlLines.Count > 0)
             {
                 string primeraLinea = jsonlLines[0];
@@ -492,7 +582,7 @@ namespace IndexadorIA.Negocio
                 {
                     DsNivel = LogRegistro.Niveles.INFO,
                     DsModulo = "OpenAIBL.CrearArchivoBatchAsync",
-                    DsMensaje = $"Archivo JSONL creado con {jsonlLines.Count} líneas. Primera línea: {primeraLinea}"
+                    DsMensaje = $"Archivo JSONL creado con {jsonlLines.Count} lï¿½neas. Primera lï¿½nea: {primeraLinea}"
                 });
             }
 
@@ -503,9 +593,9 @@ namespace IndexadorIA.Negocio
         {
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
-                ?? throw new Exception("No se encontró la API Key de OpenAI en parámetros");
+                ?? throw new Exception("No se encontrï¿½ la API Key de OpenAI en parï¿½metros");
 
-            // Log de diagnóstico PRE-subida
+            // Log de diagnï¿½stico PRE-subida
             var logDAL = new LogDAL();
             var fileInfo = new FileInfo(filePath);
             string fileName = Path.GetFileName(filePath);
@@ -514,21 +604,40 @@ namespace IndexadorIA.Negocio
             {
                 DsNivel = LogRegistro.Niveles.INFO,
                 DsModulo = "OpenAIBL.SubirArchivoAsync",
-                DsMensaje = $"Preparando subida - Archivo: {fileName}, Tamaño: {fileInfo.Length} bytes, Existe: {fileInfo.Exists}"
+                DsMensaje = $"Preparando subida - Archivo: {fileName}, Tamaï¿½o: {fileInfo.Length} bytes, Existe: {fileInfo.Exists}"
             });
 
-            // Leer contenido para validar
-            string[] lines = await File.ReadAllLinesAsync(filePath);
+            // Diagnostico liviano: solo se lee la primera linea (sin cargar los ~646MB completos en memoria,
+            // como hacia File.ReadAllLinesAsync/ReadAllBytesAsync previamente).
+            int lineCount = 0;
+            string primeraLinea = "VACï¿½O";
+            using (var reader = new StreamReader(filePath))
+            {
+                string? linea = await reader.ReadLineAsync();
+                if (linea != null)
+                {
+                    primeraLinea = linea.Substring(0, Math.Min(200, linea.Length));
+                    lineCount = 1;
+                    while (await reader.ReadLineAsync() != null)
+                    {
+                        lineCount++;
+                    }
+                }
+            }
+
             logDAL.Insertar(new LogRegistro
             {
                 DsNivel = LogRegistro.Niveles.INFO,
                 DsModulo = "OpenAIBL.SubirArchivoAsync",
-                DsMensaje = $"Contenido JSONL - Líneas: {lines.Length}, Primera línea (primeros 200 chars): {(lines.Length > 0 ? lines[0].Substring(0, Math.Min(200, lines[0].Length)) : "VACÍO")}"
+                DsMensaje = $"Contenido JSONL - Lï¿½neas: {lineCount}, Primera lï¿½nea (primeros 200 chars): {primeraLinea}"
             });
 
             using var formContent = new MultipartFormDataContent();
 
-            var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(filePath));
+            // Subida en streaming directo desde disco: evita duplicar el archivo completo en memoria
+            // (antes: ByteArrayContent + File.ReadAllBytesAsync cargaba ~646MB adicionales en RAM).
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
+            var fileContent = new StreamContent(fileStream);
             // OpenAI batch API espera text/plain para archivos .jsonl
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
 
@@ -562,7 +671,7 @@ namespace IndexadorIA.Negocio
         {
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
-                ?? throw new Exception("No se encontró la API Key de OpenAI en parámetros");
+                ?? throw new Exception("No se encontrï¿½ la API Key de OpenAI en parï¿½metros");
 
             var requestBody = new
             {
@@ -581,7 +690,7 @@ namespace IndexadorIA.Negocio
             var response = await _httpClient.SendAsync(request);
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            // Log de diagnóstico
+            // Log de diagnï¿½stico
             var logDAL = new LogDAL();
             logDAL.Insertar(new LogRegistro
             {
@@ -605,7 +714,7 @@ namespace IndexadorIA.Negocio
         {
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
-                ?? throw new Exception("No se encontró la API Key de OpenAI en parámetros");
+                ?? throw new Exception("No se encontrï¿½ la API Key de OpenAI en parï¿½metros");
 
             var logDAL = new LogDAL();
             int intentos = 0;
@@ -620,10 +729,10 @@ namespace IndexadorIA.Negocio
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
 
-                // Registrar toda la respuesta para diagnóstico
+                // Registrar toda la respuesta para diagnï¿½stico
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                // Log para diagnóstico - solo en los primeros 3 intentos
+                // Log para diagnï¿½stico - solo en los primeros 3 intentos
                 if (intentos < 3)
                 {
                     logDAL.Insertar(new LogRegistro
@@ -641,7 +750,7 @@ namespace IndexadorIA.Negocio
                 int tiempoTranscurrido = (intentos + 1) * 5; // segundos
                 int minutos = tiempoTranscurrido / 60;
                 int segundos = tiempoTranscurrido % 60;
-                progreso?.Report($"Estado del batch: {status} - Tiempo: {minutos}m {segundos}s (máx: 5min)");
+                progreso?.Report($"Estado del batch: {status} - Tiempo: {minutos}m {segundos}s (mï¿½x: 5min)");
 
                 if (status == "completed")
                 {
@@ -655,10 +764,10 @@ namespace IndexadorIA.Negocio
                     {
                         DsNivel = LogRegistro.Niveles.ERROR,
                         DsModulo = "OpenAIBL.EsperarResultadosAsync",
-                        DsMensaje = $"Batch {batchId} falló. Respuesta completa: {responseContent}"
+                        DsMensaje = $"Batch {batchId} fallï¿½. Respuesta completa: {responseContent}"
                     });
 
-                    throw new Exception($"El batch falló con estado: {status}");
+                    throw new Exception($"El batch fallï¿½ con estado: {status}");
                 }
 
                 // Esperar 5 segundos antes de volver a consultar
@@ -666,18 +775,18 @@ namespace IndexadorIA.Negocio
                 intentos++;
             }
 
-            // Si llegamos aquí, el batch aún está procesándose pero se agotó el timeout
+            // Si llegamos aquï¿½, el batch aï¿½n estï¿½ procesï¿½ndose pero se agotï¿½ el timeout
             // Guardar el batch_id en log para seguimiento manual
             logDAL.Insertar(new LogRegistro
             {
                 DsNivel = LogRegistro.Niveles.INFO,
                 DsModulo = "OpenAIBL.EsperarResultadosAsync",
-                DsMensaje = $"Timeout alcanzado. Batch {batchId} aún en proceso. Estado: in_progress. " +
-                           $"Puede consultar el estado manualmente en OpenAI o esperar notificación."
+                DsMensaje = $"Timeout alcanzado. Batch {batchId} aï¿½n en proceso. Estado: in_progress. " +
+                           $"Puede consultar el estado manualmente en OpenAI o esperar notificaciï¿½n."
             });
 
-            throw new TimeoutException($"El batch {batchId} no completó en 5 minutos. " +
-                                     $"El proceso continúa en OpenAI. Consulte el batch_id: {batchId}");
+            throw new TimeoutException($"El batch {batchId} no completï¿½ en 5 minutos. " +
+                                     $"El proceso continï¿½a en OpenAI. Consulte el batch_id: {batchId}");
         }
 
         private static async Task ProcesarResultadosAsync(
@@ -689,7 +798,7 @@ namespace IndexadorIA.Negocio
         {
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
-                ?? throw new Exception("No se encontró la API Key de OpenAI en parámetros");
+                ?? throw new Exception("No se encontrï¿½ la API Key de OpenAI en parï¿½metros");
 
             // Descargar archivo de resultados
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.openai.com/v1/files/{resultFileId}/content");
@@ -745,7 +854,7 @@ namespace IndexadorIA.Negocio
                     FeAlta = DateTime.Now
                 });
 
-                // Actualizar estado de la página a "Procesado IA (4)"
+                // Actualizar estado de la pï¿½gina a "Procesado IA (4)"
                 archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 4, cdUsuario);
             }
         }
@@ -783,7 +892,7 @@ namespace IndexadorIA.Negocio
             try
             {
                 string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
-                    ?? throw new Exception("No se encontró la API Key de OpenAI en parámetros");
+                    ?? throw new Exception("No se encontrï¿½ la API Key de OpenAI en parï¿½metros");
 
                 string url = $"https://api.openai.com/v1/batches/{batchId}";
 
@@ -879,7 +988,7 @@ namespace IndexadorIA.Negocio
             try
             {
                 string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
-                    ?? throw new Exception("No se encontró la API Key de OpenAI en parámetros");
+                    ?? throw new Exception("No se encontrï¿½ la API Key de OpenAI en parï¿½metros");
 
                 // 1. Intentar obtener output_file_id de la BD primero
                 string? outputFileId = null;
@@ -893,7 +1002,7 @@ namespace IndexadorIA.Negocio
                     outputFileId = result?.ToString();
                 }
 
-                // Si no está en BD, obtenerlo de la API
+                // Si no estï¿½ en BD, obtenerlo de la API
                 if (string.IsNullOrEmpty(outputFileId))
                 {
                     logDAL.Insertar(new LogRegistro
@@ -926,7 +1035,7 @@ namespace IndexadorIA.Negocio
 
                     if (estado != "completed")
                     {
-                        throw new Exception($"El batch no está completado. Estado actual: {estado}");
+                        throw new Exception($"El batch no estï¿½ completado. Estado actual: {estado}");
                     }
 
                     // Obtener errorFileId si existe
@@ -1000,7 +1109,7 @@ namespace IndexadorIA.Negocio
                             throw new Exception($"El batch no tiene resultados exitosos. Todas las requests fallaron ({failedRequests ?? 0} de {totalRequests ?? 0}). Revise los logs para ver los detalles de los errores.");
                         }
 
-                        throw new Exception("El batch no tiene archivo de salida disponible. Verifique los logs para más detalles.");
+                        throw new Exception("El batch no tiene archivo de salida disponible. Verifique los logs para mï¿½s detalles.");
                     }
 
                     // Actualizar BD con el output_file_id
@@ -1032,7 +1141,7 @@ namespace IndexadorIA.Negocio
 
                 string resultContent = await downloadResponse.Content.ReadAsStringAsync();
 
-                // LOG: Guardar archivo de salida completo para diagnóstico
+                // LOG: Guardar archivo de salida completo para diagnï¿½stico
                 string outputFilePath = Path.Combine(Path.GetTempPath(), $"openai_batch_{batchId}_output.jsonl");
                 await File.WriteAllTextAsync(outputFilePath, resultContent);
 
@@ -1043,7 +1152,7 @@ namespace IndexadorIA.Negocio
                     DsMensaje = $"Archivo de salida guardado en: {outputFilePath}"
                 });
 
-                // 3. Procesar cada línea del archivo JSONL
+                // 3. Procesar cada lï¿½nea del archivo JSONL
                 var lineas = resultContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
                 logDAL.Insertar(new LogRegistro
@@ -1060,7 +1169,7 @@ namespace IndexadorIA.Negocio
                     // Obtener custom_id que contiene el cdArchivoPagina: "page_1234" -> 1234
                     string customId = resultado.RootElement.GetProperty("custom_id").GetString() ?? "";
 
-                    // Extraer solo el número del custom_id (formato: "page_XXXX")
+                    // Extraer solo el nï¿½mero del custom_id (formato: "page_XXXX")
                     string numeroStr = customId.Replace("page_", "").Replace("request-", "");
                     int cdArchivoPagina = int.Parse(numeroStr);
 
@@ -1073,7 +1182,7 @@ namespace IndexadorIA.Negocio
                         {
                             DsNivel = LogRegistro.Niveles.WARNING,
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
-                            DsMensaje = $"Error en página {cdArchivoPagina} del batch {batchId}: {errorMessage}"
+                            DsMensaje = $"Error en pï¿½gina {cdArchivoPagina} del batch {batchId}: {errorMessage}"
                         });
                         continue;
                     }
@@ -1086,7 +1195,7 @@ namespace IndexadorIA.Negocio
                     var message = firstChoice.GetProperty("message");
                     string respuestaIA = message.GetProperty("content").GetString() ?? "";
 
-                    // Verificar si la respuesta fue truncada por límite de tokens
+                    // Verificar si la respuesta fue truncada por lï¿½mite de tokens
                     if (firstChoice.TryGetProperty("finish_reason", out var finishReasonElement) &&
                         finishReasonElement.GetString() == "length")
                     {
@@ -1094,7 +1203,7 @@ namespace IndexadorIA.Negocio
                         {
                             DsNivel = LogRegistro.Niveles.WARNING,
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
-                            DsMensaje = $"La respuesta de la página {cdArchivoPagina} fue truncada por límite de max_tokens (finish_reason=length). El JSON puede estar incompleto."
+                            DsMensaje = $"La respuesta de la pï¿½gina {cdArchivoPagina} fue truncada por lï¿½mite de max_tokens (finish_reason=length). El JSON puede estar incompleto."
                         });
                     }
 
@@ -1103,10 +1212,10 @@ namespace IndexadorIA.Negocio
                     {
                         DsNivel = LogRegistro.Niveles.INFO,
                         DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
-                        DsMensaje = $"Página {cdArchivoPagina} - Respuesta RAW (primeros 500 chars): {respuestaIA.Substring(0, Math.Min(500, respuestaIA.Length))}"
+                        DsMensaje = $"Pï¿½gina {cdArchivoPagina} - Respuesta RAW (primeros 500 chars): {respuestaIA.Substring(0, Math.Min(500, respuestaIA.Length))}"
                     });
 
-                    // Limpiar markdown code fences si están presentes
+                    // Limpiar markdown code fences si estï¿½n presentes
                     respuestaIA = respuestaIA.Trim();
                     if (respuestaIA.StartsWith("```json"))
                     {
@@ -1134,7 +1243,7 @@ namespace IndexadorIA.Negocio
                         {
                             DsNivel = LogRegistro.Niveles.ERROR,
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
-                            DsMensaje = $"Error al parsear JSON de página {cdArchivoPagina}: {ex.Message}. JSON: {respuestaIA.Substring(0, Math.Min(500, respuestaIA.Length))}"
+                            DsMensaje = $"Error al parsear JSON de pï¿½gina {cdArchivoPagina}: {ex.Message}. JSON: {respuestaIA.Substring(0, Math.Min(500, respuestaIA.Length))}"
                         });
                         continue;
                     }
@@ -1145,7 +1254,7 @@ namespace IndexadorIA.Negocio
                         {
                             DsNivel = LogRegistro.Niveles.WARNING,
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
-                            DsMensaje = $"JSON deserializado es null para página {cdArchivoPagina}"
+                            DsMensaje = $"JSON deserializado es null para pï¿½gina {cdArchivoPagina}"
                         });
                         continue;
                     }
@@ -1224,7 +1333,7 @@ namespace IndexadorIA.Negocio
                         FeAlta = DateTime.Now
                     });
 
-                    // Actualizar estado de la página
+                    // Actualizar estado de la pï¿½gina
                     archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 4, cdUsuario);
                 }
 

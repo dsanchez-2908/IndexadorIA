@@ -27,7 +27,11 @@ namespace IndexadorIA.Datos
                         e.dsEstado AS DsEstado
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
-                    WHERE l.cdEstadoLote = 1"; // Estado: Pendiente de Preparar imágenes
+                    WHERE l.cdEstadoLote IN (1, 2)"; // Estado 1: Pendiente de preparar imágenes.
+                    // Estado 2: ya "preparado", pero se incluye para permitir reprocesar lotes cuyas
+                    // páginas Base64 falten o se hayan eliminado externamente (ver validación en
+                    // OpenAIBL.CrearArchivoBatchAsync). ProcesarLote es idempotente: sobreescribe
+                    // JPG/Base64 existentes y solo vuelve a marcar el lote como estado 2 si no hubo errores.
 
                 // Agregar filtros opcionales
                 if (!string.IsNullOrWhiteSpace(filtroNombre))

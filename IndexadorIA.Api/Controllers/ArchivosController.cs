@@ -37,5 +37,29 @@ namespace IndexadorIA.Api.Controllers
 
             return File(bytes, "application/pdf", nombreArchivo);
         }
+
+        /// <summary>
+        /// Devuelve los bytes del recorte JPG de un archivo/p&#225;gina, para el visor
+        /// embebido remoto de FrmVerLote.
+        /// </summary>
+        [HttpGet("lotes/{cdLote:int}/paginas/{cdArchivoPagina:int}/jpg")]
+        public IActionResult ObtenerJpg(int cdLote, int cdArchivoPagina)
+        {
+            var archivo = _loteDAL.ObtenerArchivosPaginasPorLote(cdLote)
+                .FirstOrDefault(a => a.CdArchivoPagina == cdArchivoPagina);
+
+            if (archivo == null)
+                return NotFound(new { mensaje = "Archivo no encontrado en el lote indicado" });
+
+            string rutaJpg = System.IO.Path.ChangeExtension(archivo.DsRutaCompleta, ".jpg");
+
+            if (!System.IO.File.Exists(rutaJpg))
+                return NotFound(new { mensaje = "El archivo JPG no existe en el servidor" });
+
+            byte[] bytes = System.IO.File.ReadAllBytes(rutaJpg);
+            string nombreArchivo = System.IO.Path.ChangeExtension(archivo.DsNombreArchivoPagina, ".jpg");
+
+            return File(bytes, "image/jpeg", nombreArchivo);
+        }
     }
 }

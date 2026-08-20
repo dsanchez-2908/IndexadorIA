@@ -1,6 +1,7 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 
 namespace IndexadorIA.Pantallas.PlanosGCBA
 {
@@ -84,15 +85,35 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
-                var loteDAL = new LoteDAL();
-
                 string? dsNombreLote = string.IsNullOrWhiteSpace(txtNombreLote.Text) ? null : txtNombreLote.Text.Trim();
                 DateTime? feAltaDesde = chkFiltrarFecha.Checked ? dtpFechaDesde.Value : null;
                 DateTime? feAltaHasta = chkFiltrarFecha.Checked ? dtpFechaHasta.Value : null;
-                int? cdUsuarioAsignado = SesionActual.UsuarioActual?.CdUsuario;
 
-                _lotesActuales = loteDAL.ObtenerLotesPorEstadoFiltrado(
-                    CD_ESTADO_CONTROLANDO, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuarioAsignado);
+                if (SesionApi.ModoRemoto)
+                {
+                    var apiCliente = new ApiClienteServicio();
+                    List<LoteResumenApiDto> lotesRemotos = apiCliente
+                        .ObtenerLotesEnControlAsync(dsNombreLote, feAltaDesde, feAltaHasta)
+                        .GetAwaiter().GetResult();
+
+                    _lotesActuales = lotesRemotos.Select(l => new Lote
+                    {
+                        CdLote = l.CdLote,
+                        DsNombreLote = l.DsNombreLote,
+                        NuCantidadArchivos = l.NuCantidadArchivos,
+                        CdEstadoLote = l.CdEstadoLote,
+                        DsEstado = l.DsEstado,
+                        FeAltaLote = l.FeAltaLote
+                    }).ToList();
+                }
+                else
+                {
+                    var loteDAL = new LoteDAL();
+                    int? cdUsuarioAsignado = SesionActual.UsuarioActual?.CdUsuario;
+
+                    _lotesActuales = loteDAL.ObtenerLotesPorEstadoFiltrado(
+                        CD_ESTADO_CONTROLANDO, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuarioAsignado);
+                }
 
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotesActuales;

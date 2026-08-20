@@ -76,6 +76,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteGuion4 = new Label();
             txtExpedienteReparticion = new TextBox();
             lblConfianzaExpediente = new Label();
+            btnParsearExpedienteDeArchivo = new Button();
             lblExpedienteCampo = new Label();
             cboTipoPlanoDetalle = new ComboBox();
             lblConfianzaTipoPlano = new Label();
@@ -568,6 +569,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.Controls.Add(lblExpedienteGuion4);
             groupBoxDetalle.Controls.Add(txtExpedienteReparticion);
             groupBoxDetalle.Controls.Add(lblConfianzaExpediente);
+            groupBoxDetalle.Controls.Add(btnParsearExpedienteDeArchivo);
             groupBoxDetalle.Controls.Add(lblExpedienteCampo);
             groupBoxDetalle.Controls.Add(cboTipoPlanoDetalle);
             groupBoxDetalle.Controls.Add(lblConfianzaTipoPlano);
@@ -836,6 +838,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblConfianzaExpediente.Size = new Size(30, 15);
             lblConfianzaExpediente.TabIndex = 18;
             lblConfianzaExpediente.Text = "-- %";
+            // 
+            // btnParsearExpedienteDeArchivo
+            // 
+            btnParsearExpedienteDeArchivo.BackColor = Color.FromArgb(60, 60, 60);
+            btnParsearExpedienteDeArchivo.FlatStyle = FlatStyle.Flat;
+            btnParsearExpedienteDeArchivo.ForeColor = Color.White;
+            btnParsearExpedienteDeArchivo.Location = new Point(458, 332);
+            btnParsearExpedienteDeArchivo.Name = "btnParsearExpedienteDeArchivo";
+            btnParsearExpedienteDeArchivo.Size = new Size(30, 30);
+            btnParsearExpedienteDeArchivo.TabIndex = 19;
+            btnParsearExpedienteDeArchivo.Text = "E";
+            btnParsearExpedienteDeArchivo.UseVisualStyleBackColor = false;
+            btnParsearExpedienteDeArchivo.Click += btnParsearExpedienteDeArchivo_Click;
             // 
             // lblExpedienteCampo
             // 
@@ -1339,6 +1354,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblExpedienteGuion4;
         private TextBox txtExpedienteReparticion;
         private Label lblConfianzaExpediente;
+        private Button btnParsearExpedienteDeArchivo;
         private Label lblExpedienteCampo;
         private ComboBox cboTipoPlanoDetalle;
         private Label lblConfianzaTipoPlano;

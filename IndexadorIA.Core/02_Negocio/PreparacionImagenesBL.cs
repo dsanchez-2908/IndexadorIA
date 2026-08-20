@@ -117,6 +117,7 @@ namespace IndexadorIA.Negocio
             ReportarProgresoHandler? reportarProgreso)
         {
             var archivos = _dal.ObtenerArchivosDeLote(lote.CdLote);
+            var archivosConError = new List<string>();
 
             foreach (var archivo in archivos)
             {
@@ -134,6 +135,8 @@ namespace IndexadorIA.Negocio
                 }
                 catch (Exception ex)
                 {
+                    archivosConError.Add(archivo.DsNombreArchivoPagina);
+
                     _logDAL.Insertar(new LogRegistro
                     {
                         DsNivel = LogRegistro.Niveles.ERROR,
@@ -149,8 +152,27 @@ namespace IndexadorIA.Negocio
                 }
             }
 
-            // Actualizar estado del lote a "Imágenes preparadas" (cdEstado=2)
-            _dal.ActualizarEstadoLote(lote.CdLote, 2);
+            if (archivosConError.Count > 0)
+            {
+                // NO marcar el lote como "Imágenes preparadas" (cdEstado=2): si se hiciera,
+                // FrmProcesamientoIA lo tomaría como disponible para IA y fallaría al no
+                // encontrar el .b64 de las páginas que quedaron sin procesar (ver bug reportado
+                // con la página 1000 del lote 1). El lote queda pendiente para reintentar.
+                _logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.ERROR,
+                    DsModulo = "PreparacionImagenesBL",
+                    DsMensaje = $"Lote {lote.CdLote} quedó INCOMPLETO: {archivosConError.Count} archivo(s) con error. " +
+                                $"No se marca como 'Imágenes preparadas' para evitar que el procesamiento IA falle.",
+                    DsExcepcion = string.Join(", ", archivosConError),
+                    DsUsuario = SesionActual.UsuarioActual?.DsNombreCompleto ?? "Sistema"
+                });
+            }
+            else
+            {
+                // Actualizar estado del lote a "Imágenes preparadas" (cdEstado=2)
+                _dal.ActualizarEstadoLote(lote.CdLote, 2);
+            }
         }
 
         /// <summary>

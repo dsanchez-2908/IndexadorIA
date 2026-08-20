@@ -1,6 +1,7 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 using IndexadorIA.Utilidades;
 
 namespace IndexadorIA.Pantallas.PlanosGCBA
@@ -22,6 +23,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private float _factorZoom = 1.0f;
         private bool _arrastrandoImagen = false;
         private Point _puntoInicialArrastre;
+        private readonly ApiClienteServicio? _apiCliente;
+        private LoteDetalleApiDto? _detalleRemoto;
 
         /// <summary>
         /// Combina la información de ArchivoPagina + ResultadoIA para mostrar en la grilla
@@ -59,7 +62,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         Resultado.NuConfianzaDireccion
                     }.Where(v => v.HasValue).Select(v => v!.Value).ToList();
 
-                    return valores.Count == 0 ? 0 : Math.Round(valores.Average(), 1);
+                    return valores.Count == 0 ? 0 : Math.Round(valores.Average() * 100m, 1);
                 }
             }
         }
@@ -68,10 +71,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             InitializeComponent();
             _cdLote = cdLote;
+            _apiCliente = SesionApi.ModoRemoto ? new ApiClienteServicio() : null;
 
             pictureBoxImagen.MouseDown += pictureBoxImagen_MouseDown;
             pictureBoxImagen.MouseMove += pictureBoxImagen_MouseMove;
             pictureBoxImagen.MouseUp += pictureBoxImagen_MouseUp;
+            panelImagenScroll.MouseDown += pictureBoxImagen_MouseDown;
+            panelImagenScroll.MouseMove += pictureBoxImagen_MouseMove;
+            panelImagenScroll.MouseUp += pictureBoxImagen_MouseUp;
+            // Ajuste 2 (posicionar imagen en esquina inferior derecha) comentado temporalmente.
+            // panelImagenScroll.Resize += (s, e) => PosicionarImagenEnEsquinaInferiorDerecha();
 
             KeyPreview = true;
             KeyDown += FrmVerLote_KeyDown;
@@ -91,6 +100,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
+                if (SesionApi.ModoRemoto)
+                {
+                    _detalleRemoto = _apiCliente!.ObtenerDetalleLoteAsync(_cdLote, chkMostrarTodos.Checked)
+                        .GetAwaiter().GetResult();
+                }
+
                 CargarEncabezadoLote();
                 CargarCategoriasYTiposPlano();
                 LimpiarPanelDetalle();
@@ -107,6 +122,25 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void CargarEncabezadoLote()
         {
+            if (SesionApi.ModoRemoto)
+            {
+                var loteRemoto = _detalleRemoto?.Lote;
+                if (loteRemoto == null)
+                {
+                    MessageBox.Show("No se encontró el lote solicitado.", "Aviso",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                lblNombreLote.Text = loteRemoto.DsNombreLote;
+                lblCantidadArchivos.Text = loteRemoto.NuCantidadArchivos.ToString();
+                lblFechaCreacion.Text = loteRemoto.FeAltaLote.ToString("dd/MM/yyyy HH:mm");
+                lblFechaProcesamientoIA.Text = loteRemoto.FeProcesamientoIA.HasValue
+                    ? loteRemoto.FeProcesamientoIA.Value.ToString("dd/MM/yyyy HH:mm")
+                    : "N/D";
+                return;
+            }
+
             var loteDAL = new LoteDAL();
             var lote = loteDAL.ObtenerPorId(_cdLote);
 
@@ -129,12 +163,27 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void CargarCategoriasYTiposPlano()
         {
-            var categoriaPlanoDAL = new CategoriaPlanoDAL();
-            var tipoPlanoDAL = new TipoPlanoDAL();
-            var reparticionDAL = new ReparticionDAL();
-            _categoriasPlano = categoriaPlanoDAL.ObtenerTodos();
-            _tiposPlano = tipoPlanoDAL.ObtenerTodos();
-            _reparticiones = reparticionDAL.ObtenerTodos();
+            if (SesionApi.ModoRemoto)
+            {
+                _categoriasPlano = _apiCliente!.ObtenerCategoriasPlanoAsync().GetAwaiter().GetResult()
+                    .Select(c => new CategoriaPlano { CdCategoriaPlano = c.CdCategoriaPlano, DsCategoriaPlano = c.DsCategoriaPlano })
+                    .ToList();
+                _tiposPlano = _apiCliente!.ObtenerTiposPlanoAsync().GetAwaiter().GetResult()
+                    .Select(t => new TipoPlano { CdTipoPlano = t.CdTipoPlano, CdCategoriaPlano = t.CdCategoriaPlano, DsTipoPlano = t.DsTipoPlano })
+                    .ToList();
+                _reparticiones = _apiCliente!.ObtenerReparticionesAsync().GetAwaiter().GetResult()
+                    .Select(r => new Reparticion { CdReparticion = r.CdReparticion, DsReparticion = r.DsReparticion })
+                    .ToList();
+            }
+            else
+            {
+                var categoriaPlanoDAL = new CategoriaPlanoDAL();
+                var tipoPlanoDAL = new TipoPlanoDAL();
+                var reparticionDAL = new ReparticionDAL();
+                _categoriasPlano = categoriaPlanoDAL.ObtenerTodos();
+                _tiposPlano = tipoPlanoDAL.ObtenerTodos();
+                _reparticiones = reparticionDAL.ObtenerTodos();
+            }
 
             cboCategoriaPlanoFiltro.DisplayMember = "DsCategoriaPlano";
             cboCategoriaPlanoFiltro.ValueMember = "CdCategoriaPlano";
@@ -188,20 +237,68 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void CargarDatosGrilla()
         {
-            var loteDAL = new LoteDAL();
-            var resultadoIADAL = new ResultadoIADAL();
+            if (SesionApi.ModoRemoto)
+            {
+                _detalleRemoto = _apiCliente!.ObtenerDetalleLoteAsync(_cdLote, chkMostrarTodos.Checked)
+                    .GetAwaiter().GetResult();
 
-            var archivos = loteDAL.ObtenerArchivosPaginasPorLote(_cdLote);
-            var resultados = resultadoIADAL.ObtenerPorLote(_cdLote, chkMostrarTodos.Checked);
-            var resultadosPorPagina = resultados.ToDictionary(r => r.CdArchivoPagina, r => r);
+                _filasCompletas = _detalleRemoto.Filas
+                    .Where(f => f.Resultado != null)
+                    .Select(f => new FilaArchivoPagina
+                    {
+                        Archivo = new ArchivoPagina
+                        {
+                            CdArchivoPagina = f.Archivo.CdArchivoPagina,
+                            NuPagina = f.Archivo.NuPagina,
+                            DsNombreArchivoPagina = f.Archivo.DsNombreArchivoPagina,
+                            NombreArchivo = f.Archivo.NombreArchivo,
+                            SnGirada = f.Archivo.SnGirada,
+                            SnPosibleBlanca = f.Archivo.SnPosibleBlanca
+                        },
+                        Resultado = new ResultadoIA
+                        {
+                            CdResultado = f.Resultado!.CdResultado,
+                            CdLote = f.Resultado.CdLote,
+                            CdArchivoPagina = f.Resultado.CdArchivoPagina,
+                            CdCategoriaPlano = f.Resultado.CdCategoriaPlano,
+                            CdTipoPlano = f.Resultado.CdTipoPlano,
+                            DsNumeroPlano = f.Resultado.DsNumeroPlano,
+                            DsExpediente = f.Resultado.DsExpediente,
+                            DsSeccion = f.Resultado.DsSeccion,
+                            DsManzana = f.Resultado.DsManzana,
+                            DsParcela = f.Resultado.DsParcela,
+                            DsDireccion = f.Resultado.DsDireccion,
+                            CdEstadoControl = f.Resultado.CdEstadoControl,
+                            NuConfianzaCategoriaPlano = f.Resultado.NuConfianzaCategoriaPlano,
+                            NuConfianzaTipoPlano = f.Resultado.NuConfianzaTipoPlano,
+                            NuConfianzaNumeroPlano = f.Resultado.NuConfianzaNumeroPlano,
+                            NuConfianzaExpediente = f.Resultado.NuConfianzaExpediente,
+                            NuConfianzaSeccion = f.Resultado.NuConfianzaSeccion,
+                            NuConfianzaManzana = f.Resultado.NuConfianzaManzana,
+                            NuConfianzaParcela = f.Resultado.NuConfianzaParcela,
+                            NuConfianzaDireccion = f.Resultado.NuConfianzaDireccion,
+                            DsCategoriaPlano = _categoriasPlano.FirstOrDefault(c => c.CdCategoriaPlano == f.Resultado.CdCategoriaPlano)?.DsCategoriaPlano,
+                            DsTipoPlano = _tiposPlano.FirstOrDefault(t => t.CdTipoPlano == f.Resultado.CdTipoPlano)?.DsTipoPlano
+                        }
+                    }).ToList();
+            }
+            else
+            {
+                var loteDAL = new LoteDAL();
+                var resultadoIADAL = new ResultadoIADAL();
 
-            _filasCompletas = archivos
-                .Where(a => resultadosPorPagina.ContainsKey(a.CdArchivoPagina))
-                .Select(a => new FilaArchivoPagina
-                {
-                    Archivo = a,
-                    Resultado = resultadosPorPagina[a.CdArchivoPagina]
-                }).ToList();
+                var archivos = loteDAL.ObtenerArchivosPaginasPorLote(_cdLote);
+                var resultados = resultadoIADAL.ObtenerPorLote(_cdLote, chkMostrarTodos.Checked);
+                var resultadosPorPagina = resultados.ToDictionary(r => r.CdArchivoPagina, r => r);
+
+                _filasCompletas = archivos
+                    .Where(a => resultadosPorPagina.ContainsKey(a.CdArchivoPagina))
+                    .Select(a => new FilaArchivoPagina
+                    {
+                        Archivo = a,
+                        Resultado = resultadosPorPagina[a.CdArchivoPagina]
+                    }).ToList();
+            }
 
             ConfigurarDataGridView();
             AplicarFiltrosYRefrescar();
@@ -324,7 +421,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 filas = filas.Where(f => string.IsNullOrWhiteSpace(f.DsNumeroPlano));
 
             if (chkFaltaExpediente.Checked)
-                filas = filas.Where(f => string.IsNullOrWhiteSpace(f.DsExpediente));
+                filas = filas.Where(f => !EsExpedienteValido(f.DsExpediente));
 
             if (chkFaltaSeccion.Checked)
                 filas = filas.Where(f => string.IsNullOrWhiteSpace(f.DsSeccion));
@@ -405,7 +502,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblConfianzaDireccion.Text = FormatearConfianza(resultado?.NuConfianzaDireccion);
 
             MostrarVisorJPG();
-            CargarImagen(ObtenerRutaImagenJPG(fila.Archivo.DsRutaCompleta));
+            CargarImagenDeFila(fila);
         }
 
         private void LimpiarPanelDetalle()
@@ -442,7 +539,62 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private static string FormatearConfianza(decimal? confianza)
         {
-            return confianza.HasValue ? $"{confianza.Value:0.#} %" : "-- %";
+            return confianza.HasValue ? $"{confianza.Value * 100m:0.#} %" : "-- %";
+        }
+
+        /// <summary>
+        /// Valida que el expediente respete el formato EX-YYYY-NNNNNNNN-GCABA-REPARTICION
+        /// (EX literal, anio de 4 digitos, numero de 8 digitos, GCABA literal y reparticion no vacia).
+        /// Si no respeta este formato, se considera como si faltara el expediente.
+        /// </summary>
+        private static readonly System.Text.RegularExpressions.Regex _regexExpedienteValido =
+            new(@"^EX-\d{4}-\d{8}-GCABA-.+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        private static bool EsExpedienteValido(string? dsExpediente)
+        {
+            if (string.IsNullOrWhiteSpace(dsExpediente))
+                return false;
+
+            return _regexExpedienteValido.IsMatch(dsExpediente.Trim());
+        }
+
+        /// <summary>
+        /// Parsea el nombre del archivo original (formato EX-ANIO-NUMERO-XXX-REPARTICION-...)
+        /// y vuelca el anio, numero y reparticion en los campos de expediente, siempre
+        /// que las validaciones (anio entre 1900-2050, numero de 8 digitos) se cumplan.
+        /// Si el parseo o alguna validacion falla, no realiza ningun cambio.
+        /// </summary>
+        private void btnParsearExpedienteDeArchivo_Click(object sender, EventArgs e)
+        {
+            if (_filaSeleccionada == null)
+                return;
+
+            string? nombreArchivoOriginal = _filaSeleccionada.Archivo.NombreArchivo ?? _filaSeleccionada.Archivo.DsArchivoOriginal;
+            if (string.IsNullOrWhiteSpace(nombreArchivoOriginal))
+                return;
+
+            string nombreSinExtension = Path.GetFileNameWithoutExtension(nombreArchivoOriginal);
+            string[] partes = nombreSinExtension.Split('-', StringSplitOptions.None);
+
+            if (partes.Length < 6)
+                return;
+
+            string anio = partes[1].Trim();
+            string numero = partes[2].Trim();
+            string reparticion = partes[5].Trim();
+
+            if (!int.TryParse(anio, out int anioValor) || anioValor < 1900 || anioValor > 2050)
+                return;
+
+            if (numero.Length != 8 || !numero.All(char.IsDigit))
+                return;
+
+            if (string.IsNullOrWhiteSpace(reparticion))
+                return;
+
+            txtExpedienteAnio.Text = anio;
+            txtExpedienteNumero.Text = numero;
+            txtExpedienteReparticion.Text = reparticion;
         }
 
         /// <summary>
@@ -528,6 +680,34 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         #region Visor de imagen / zoom
 
+        /// <summary>
+        /// Carga la imagen JPG del visor para la fila indicada, obteniendo los bytes
+        /// desde la API (modo remoto, ya que el cliente no tiene acceso al storage)
+        /// o desde el archivo local (modo local).
+        /// </summary>
+        private void CargarImagenDeFila(FilaArchivoPagina fila)
+        {
+            if (SesionApi.ModoRemoto)
+            {
+                try
+                {
+                    byte[] bytes = _apiCliente!.ObtenerJpgAsync(_cdLote, fila.Archivo.CdArchivoPagina)
+                        .GetAwaiter().GetResult();
+                    CargarImagenDesdeBytes(bytes);
+                }
+                catch (Exception ex)
+                {
+                    LimpiarImagen();
+                    MessageBox.Show($"No se pudo cargar la imagen desde la API: {ex.Message}", "Aviso",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            else
+            {
+                CargarImagen(ObtenerRutaImagenJPG(fila.Archivo.DsRutaCompleta));
+            }
+        }
+
         private void CargarImagen(string rutaImagen)
         {
             LimpiarImagen();
@@ -539,7 +719,25 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             try
             {
-                using var stream = new MemoryStream(File.ReadAllBytes(rutaImagen));
+                CargarImagenDesdeBytes(File.ReadAllBytes(rutaImagen));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo cargar la imagen: {ex.Message}", "Aviso",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void CargarImagenDesdeBytes(byte[] bytes)
+        {
+            LimpiarImagen();
+
+            if (bytes == null || bytes.Length == 0)
+                return;
+
+            try
+            {
+                using var stream = new MemoryStream(bytes);
                 pictureBoxImagen.Image = Image.FromStream(stream);
                 _factorZoom = 1.0f;
                 AplicarZoom();
@@ -608,6 +806,32 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblZoom.Text = $"{(int)(_factorZoom * 100)} %";
         }
 
+        // Ajuste 2 (posicionar la imagen en la esquina inferior derecha) comentado temporalmente:
+        // aun no se comporta como se espera en todos los casos (paginas con distinta resolucion),
+        // se deja el codigo para retomarlo mas adelante.
+        // /// <summary>
+        // /// Ubica la imagen del visor en la esquina inferior derecha del area de scroll.
+        // /// Si la imagen es mas chica que el area visible, se alinea el control ahi.
+        // /// Si la imagen es mas grande (caso mas comun, con scrollbars), se desplaza el
+        // /// scroll para que la vista inicial muestre la esquina inferior derecha de la
+        // /// imagen, que es donde generalmente estan los datos a controlar.
+        // /// </summary>
+        // private void PosicionarImagenEnEsquinaInferiorDerecha()
+        // {
+        //     if (pictureBoxImagen.Image == null)
+        //         return;
+        //
+        //     int x = Math.Max(0, panelImagenScroll.ClientSize.Width - pictureBoxImagen.Width);
+        //     int y = Math.Max(0, panelImagenScroll.ClientSize.Height - pictureBoxImagen.Height);
+        //
+        //     pictureBoxImagen.Location = new Point(x, y);
+        //
+        //     int desplazamientoX = Math.Max(0, pictureBoxImagen.Width - panelImagenScroll.ClientSize.Width);
+        //     int desplazamientoY = Math.Max(0, pictureBoxImagen.Height - panelImagenScroll.ClientSize.Height);
+        //
+        //     panelImagenScroll.AutoScrollPosition = new Point(desplazamientoX, desplazamientoY);
+        // }
+
         private void btnZoomMas_Click(object sender, EventArgs e)
         {
             _factorZoom = Math.Min(_factorZoom + 0.25f, 5.0f);
@@ -634,24 +858,30 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         /// <summary>
         /// Permite arrastrar la imagen con el mouse para navegar cuando el zoom
         /// hace que sea más grande que el área visible de panelImagenScroll.
+        /// Se engancha tanto en pictureBoxImagen como en panelImagenScroll (para que
+        /// también funcione al hacer click en el fondo/borde negro alrededor de la imagen).
+        /// Las coordenadas se convierten a pantalla para que el arrastre sea consistente
+        /// sin importar cuál de los dos controles disparó el evento.
         /// </summary>
         private void pictureBoxImagen_MouseDown(object? sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left || pictureBoxImagen.Image == null)
+            if (e.Button != MouseButtons.Left || pictureBoxImagen.Image == null || sender is not Control control)
                 return;
 
             _arrastrandoImagen = true;
-            _puntoInicialArrastre = e.Location;
+            _puntoInicialArrastre = control.PointToScreen(e.Location);
             pictureBoxImagen.Cursor = Cursors.SizeAll;
         }
 
         private void pictureBoxImagen_MouseMove(object? sender, MouseEventArgs e)
         {
-            if (!_arrastrandoImagen)
+            if (!_arrastrandoImagen || sender is not Control control)
                 return;
 
-            int deltaX = e.Location.X - _puntoInicialArrastre.X;
-            int deltaY = e.Location.Y - _puntoInicialArrastre.Y;
+            Point puntoActual = control.PointToScreen(e.Location);
+            int deltaX = puntoActual.X - _puntoInicialArrastre.X;
+            int deltaY = puntoActual.Y - _puntoInicialArrastre.Y;
+            _puntoInicialArrastre = puntoActual;
 
             var posicionActual = panelImagenScroll.AutoScrollPosition;
             int nuevoX = -posicionActual.X - deltaX;
@@ -682,7 +912,42 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
-            AbrirPdfConAplicacionPredeterminada(_filaSeleccionada.Archivo.DsRutaCompleta);
+            if (SesionApi.ModoRemoto)
+            {
+                AbrirPdfRemoto(_filaSeleccionada.Archivo);
+            }
+            else
+            {
+                AbrirPdfConAplicacionPredeterminada(_filaSeleccionada.Archivo.DsRutaCompleta);
+            }
+        }
+
+        /// <summary>
+        /// Descarga el PDF de la página seleccionada desde la API y lo abre con la
+        /// aplicación predeterminada de Windows, ya que el cliente no tiene acceso
+        /// directo al storage del servidor en modo remoto.
+        /// </summary>
+        private void AbrirPdfRemoto(ArchivoPagina archivo)
+        {
+            try
+            {
+                byte[] bytes = _apiCliente!.ObtenerPdfAsync(_cdLote, archivo.CdArchivoPagina)
+                    .GetAwaiter().GetResult();
+
+                string rutaTemporal = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.pdf");
+                File.WriteAllBytes(rutaTemporal, bytes);
+
+                var psi = new System.Diagnostics.ProcessStartInfo(rutaTemporal)
+                {
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo obtener el PDF desde la API: {ex.Message}", "Aviso",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         private void btnGuardarControlada_Click(object sender, EventArgs e)
@@ -735,15 +1000,42 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 resultado.DsDireccion = txtDireccion.Text;
 
                 bool modificoDatos = DatosFueronModificados(resultado);
-                RegistrarCorreccionesSiCorresponde(resultado, cdUsuario);
 
-                var resultadoIADAL = new ResultadoIADAL();
-                resultadoIADAL.ActualizarDatos(resultado, cdUsuario);
-                resultadoIADAL.ActualizarEstadoControl(
-                    resultado.CdResultado,
-                    ResultadoIA.EstadosControl.Controlado,
-                    modificoDatos ? "SI" : "NO",
-                    cdUsuario);
+                if (SesionApi.ModoRemoto)
+                {
+                    var requestDatos = new ActualizarResultadoApiRequestDto
+                    {
+                        CdCategoriaPlano = resultado.CdCategoriaPlano,
+                        CdTipoPlano = resultado.CdTipoPlano,
+                        DsNumeroPlano = resultado.DsNumeroPlano,
+                        DsExpediente = resultado.DsExpediente,
+                        DsSeccion = resultado.DsSeccion,
+                        DsManzana = resultado.DsManzana,
+                        DsParcela = resultado.DsParcela,
+                        DsDireccion = resultado.DsDireccion
+                    };
+
+                    _apiCliente!.ActualizarDatosResultadoAsync(resultado.CdResultado, requestDatos)
+                        .GetAwaiter().GetResult();
+
+                    _apiCliente!.ActualizarEstadoControlResultadoAsync(resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
+                    {
+                        CdEstadoControl = ResultadoIA.EstadosControl.Controlado,
+                        SnModificaDatos = modificoDatos ? "SI" : "NO"
+                    }).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    RegistrarCorreccionesSiCorresponde(resultado, cdUsuario);
+
+                    var resultadoIADAL = new ResultadoIADAL();
+                    resultadoIADAL.ActualizarDatos(resultado, cdUsuario);
+                    resultadoIADAL.ActualizarEstadoControl(
+                        resultado.CdResultado,
+                        ResultadoIA.EstadosControl.Controlado,
+                        modificoDatos ? "SI" : "NO",
+                        cdUsuario);
+                }
 
                 CargarDatosGrilla();
             }
@@ -851,6 +1143,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         /// </summary>
         private void RotarPaginaActual(int grados)
         {
+            if (SesionApi.ModoRemoto)
+            {
+                MessageBox.Show(
+                    "Esta función no está disponible en modo remoto (requiere acceso directo al almacenamiento de archivos).",
+                    "Función no disponible", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             if (_filaSeleccionada == null)
             {
                 MessageBox.Show("Seleccione una página de la grilla.", "Aviso",
@@ -981,9 +1281,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             try
             {
-                int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
-                var resultadoIADAL = new ResultadoIADAL();
-                resultadoIADAL.ActualizarEstadoControl(_filaSeleccionada.Resultado.CdResultado, cdEstadoControl, "NO", cdUsuario);
+                if (SesionApi.ModoRemoto)
+                {
+                    _apiCliente!.ActualizarEstadoControlResultadoAsync(_filaSeleccionada.Resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
+                    {
+                        CdEstadoControl = cdEstadoControl,
+                        SnModificaDatos = "NO"
+                    }).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+                    var resultadoIADAL = new ResultadoIADAL();
+                    resultadoIADAL.ActualizarEstadoControl(_filaSeleccionada.Resultado.CdResultado, cdEstadoControl, "NO", cdUsuario);
+                }
 
                 MessageBox.Show("Registro actualizado correctamente.", tituloAccion,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1001,21 +1312,65 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
-                var loteDAL = new LoteDAL();
-                var resultadoIADAL = new ResultadoIADAL();
                 var loteFinalizacionBL = new LoteFinalizacionBL();
 
-                var resultados = resultadoIADAL.ObtenerPorLote(_cdLote, mostrarTodos: true);
-                var archivosPorPagina = loteDAL.ObtenerArchivosPaginasPorLote(_cdLote)
-                    .ToDictionary(a => a.CdArchivoPagina, a => a);
+                List<LoteFinalizacionBL.FilaFinalizacion> filas;
 
-                var filas = resultados
-                    .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
-                    .Select(r => new LoteFinalizacionBL.FilaFinalizacion
-                    {
-                        Archivo = archivosPorPagina[r.CdArchivoPagina],
-                        Resultado = r
-                    }).ToList();
+                if (SesionApi.ModoRemoto)
+                {
+                    // Se vuelve a pedir el detalle con mostrarTodos=true para no depender
+                    // del estado del checkbox "Mostrar Todos" (si está destildado, la
+                    // grilla puede no incluir los registros ya controlados).
+                    var detalleCompleto = _apiCliente!.ObtenerDetalleLoteAsync(_cdLote, mostrarTodos: true)
+                        .GetAwaiter().GetResult();
+
+                    filas = detalleCompleto.Filas
+                        .Where(f => f.Resultado != null)
+                        .Select(f => new LoteFinalizacionBL.FilaFinalizacion
+                        {
+                            Archivo = new ArchivoPagina
+                            {
+                                CdArchivoPagina = f.Archivo.CdArchivoPagina,
+                                NuPagina = f.Archivo.NuPagina,
+                                DsNombreArchivoPagina = f.Archivo.DsNombreArchivoPagina,
+                                NombreArchivo = f.Archivo.NombreArchivo,
+                                SnGirada = f.Archivo.SnGirada,
+                                SnPosibleBlanca = f.Archivo.SnPosibleBlanca
+                            },
+                            Resultado = new ResultadoIA
+                            {
+                                CdResultado = f.Resultado!.CdResultado,
+                                CdLote = f.Resultado.CdLote,
+                                CdArchivoPagina = f.Resultado.CdArchivoPagina,
+                                CdCategoriaPlano = f.Resultado.CdCategoriaPlano,
+                                CdTipoPlano = f.Resultado.CdTipoPlano,
+                                DsNumeroPlano = f.Resultado.DsNumeroPlano,
+                                DsExpediente = f.Resultado.DsExpediente,
+                                DsSeccion = f.Resultado.DsSeccion,
+                                DsManzana = f.Resultado.DsManzana,
+                                DsParcela = f.Resultado.DsParcela,
+                                DsDireccion = f.Resultado.DsDireccion,
+                                CdEstadoControl = f.Resultado.CdEstadoControl
+                            }
+                        }).ToList();
+                }
+                else
+                {
+                    var loteDAL = new LoteDAL();
+                    var resultadoIADAL = new ResultadoIADAL();
+
+                    var resultados = resultadoIADAL.ObtenerPorLote(_cdLote, mostrarTodos: true);
+                    var archivosPorPagina = loteDAL.ObtenerArchivosPaginasPorLote(_cdLote)
+                        .ToDictionary(a => a.CdArchivoPagina, a => a);
+
+                    filas = resultados
+                        .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
+                        .Select(r => new LoteFinalizacionBL.FilaFinalizacion
+                        {
+                            Archivo = archivosPorPagina[r.CdArchivoPagina],
+                            Resultado = r
+                        }).ToList();
+                }
 
                 if (filas.Count == 0)
                 {
@@ -1059,8 +1414,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 if (confirmacion != DialogResult.Yes)
                     return;
 
-                int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
-                loteFinalizacionBL.MarcarLotePendienteFinalizar(_cdLote, cdUsuario);
+                if (SesionApi.ModoRemoto)
+                {
+                    _apiCliente!.MarcarLotePendienteFinalizarAsync(_cdLote).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+                    loteFinalizacionBL.MarcarLotePendienteFinalizar(_cdLote, cdUsuario);
+                }
 
                 MessageBox.Show("El lote fue marcado como Pendiente de Finalizar.", "Marcar Lote Pendiente de Finalizar",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -51,14 +51,14 @@ namespace IndexadorIA.Api.Controllers
         /// Equivalente remoto de FrmVerLote.CargarEncabezadoLote() + CargarDatosGrilla().
         /// </summary>
         [HttpGet("{cdLote:int}/detalle")]
-        public IActionResult ObtenerDetalle(int cdLote)
+        public IActionResult ObtenerDetalle(int cdLote, [FromQuery] bool mostrarTodos = true)
         {
             Lote? lote = _loteDAL.ObtenerPorId(cdLote);
             if (lote == null)
                 return NotFound(new { mensaje = "Lote no encontrado" });
 
             var archivos = _loteDAL.ObtenerArchivosPaginasPorLote(cdLote);
-            var resultados = _resultadoIADAL.ObtenerPorLote(cdLote, mostrarTodos: true)
+            var resultados = _resultadoIADAL.ObtenerPorLote(cdLote, mostrarTodos)
                 .ToDictionary(r => r.CdArchivoPagina, r => r);
 
             var filas = archivos.Select(a => new FilaLoteDetalleDto
@@ -67,11 +67,34 @@ namespace IndexadorIA.Api.Controllers
                 Resultado = resultados.TryGetValue(a.CdArchivoPagina, out var r) ? ResultadoIADto.DesdeEntidad(r) : null
             }).ToList();
 
+            var loteResumen = LoteResumenDto.DesdeEntidad(lote);
+            loteResumen.FeProcesamientoIA = _loteDAL.ObtenerFechaProcesamientoIA(cdLote);
+
             return Ok(new
             {
-                Lote = LoteResumenDto.DesdeEntidad(lote),
+                Lote = loteResumen,
                 Filas = filas
             });
+        }
+
+        /// <summary>
+        /// Marca el lote como "Pendiente de Finalizar". Equivalente remoto de
+        /// FrmVerLote.btnMarcarLoteCompletado_Click (solo el cambio de estado, sin
+        /// mover archivos, ya que eso se realiza desde la pantalla de finalizaci\u00F3n
+        /// con acceso directo al almacenamiento).
+        /// </summary>
+        [HttpPut("{cdLote:int}/pendiente-finalizar")]
+        public IActionResult MarcarPendienteFinalizar(int cdLote)
+        {
+            Lote? lote = _loteDAL.ObtenerPorId(cdLote);
+            if (lote == null)
+                return NotFound(new { mensaje = "Lote no encontrado" });
+
+            int cdUsuario = ObtenerCdUsuarioActual();
+            var loteFinalizacionBL = new IndexadorIA.Negocio.LoteFinalizacionBL();
+            loteFinalizacionBL.MarcarLotePendienteFinalizar(cdLote, cdUsuario);
+
+            return Ok(new { mensaje = "Lote marcado como Pendiente de Finalizar." });
         }
     }
 }
