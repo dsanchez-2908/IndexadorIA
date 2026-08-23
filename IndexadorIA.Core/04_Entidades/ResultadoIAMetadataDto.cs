@@ -19,5 +19,6 @@ namespace IndexadorIA.Entidades
         public string DsExpediente { get; set; } = string.Empty;
         public string DsNumeroPlano { get; set; } = string.Empty;
         public int CdEstadoControl { get; set; }
+        public string? DsObservaciones { get; set; }
     }
 }

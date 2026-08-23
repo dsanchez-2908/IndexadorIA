@@ -328,6 +328,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 _procesando = true;
                 _cancellationTokenSource = new CancellationTokenSource();
                 btnProcesar.Text = "Cancelar Procesamiento";
+                btnProcesar.BackColor = Color.FromArgb(150, 40, 40);
                 btnCargarLotes.Enabled = false;
                 btnVerPrompt.Enabled = false;
                 cboProyecto.Enabled = false;
@@ -409,6 +410,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             {
                 _procesando = false;
                 btnProcesar.Text = "Procesar Lotes";
+                btnProcesar.BackColor = Color.FromArgb(0, 122, 204);
                 btnCargarLotes.Enabled = true;
                 btnVerPrompt.Enabled = true;
                 cboProyecto.Enabled = true;

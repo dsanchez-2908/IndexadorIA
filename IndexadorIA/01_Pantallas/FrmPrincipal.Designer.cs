@@ -27,6 +27,9 @@ namespace IndexadorIA.Pantallas
             menuAsignacionLote = new ToolStripMenuItem();
             menuControlFinalizacion = new ToolStripMenuItem();
             menuFinalizarLote = new ToolStripMenuItem();
+            menuConsultas = new ToolStripMenuItem();
+            menuReportes = new ToolStripMenuItem();
+            menuConsumosIA = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -35,6 +38,7 @@ namespace IndexadorIA.Pantallas
             menuCerrarSesion = new ToolStripMenuItem();
             statusStrip = new StatusStrip();
             lblUsuario = new ToolStripStatusLabel();
+            lblBaseDatos = new ToolStripStatusLabel();
             lblFecha = new ToolStripStatusLabel();
             panelContenido = new Panel();
             lblBienvenida = new Label();
@@ -47,7 +51,7 @@ namespace IndexadorIA.Pantallas
             // 
             menuStrip.BackColor = Color.FromArgb(45, 45, 48);
             menuStrip.ImageScalingSize = new Size(20, 20);
-            menuStrip.Items.AddRange(new ToolStripItem[] { menuLotes, menuPlanosGCBA, menuConfiguracion });
+            menuStrip.Items.AddRange(new ToolStripItem[] { menuLotes, menuPlanosGCBA, menuConsultas, menuReportes, menuConfiguracion });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
             menuStrip.Padding = new Padding(5, 2, 0, 2);
@@ -154,6 +158,32 @@ namespace IndexadorIA.Pantallas
             menuFinalizarLote.Text = "Finalizar Lote";
             menuFinalizarLote.Click += menuFinalizarLote_Click;
             // 
+            // menuConsultas
+            // 
+            menuConsultas.Font = new Font("Segoe UI", 10F);
+            menuConsultas.ForeColor = Color.White;
+            menuConsultas.Name = "menuConsultas";
+            menuConsultas.Size = new Size(90, 23);
+            menuConsultas.Text = "Consultas";
+            // 
+            // menuReportes
+            // 
+            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA });
+            menuReportes.Font = new Font("Segoe UI", 10F);
+            menuReportes.ForeColor = Color.White;
+            menuReportes.Name = "menuReportes";
+            menuReportes.Size = new Size(80, 23);
+            menuReportes.Text = "Reportes";
+            // 
+            // menuConsumosIA
+            // 
+            menuConsumosIA.BackColor = Color.FromArgb(45, 45, 48);
+            menuConsumosIA.ForeColor = Color.White;
+            menuConsumosIA.Name = "menuConsumosIA";
+            menuConsumosIA.Size = new Size(180, 24);
+            menuConsumosIA.Text = "Consumos IA";
+            menuConsumosIA.Click += menuConsumosIA_Click;
+            // 
             // menuConfiguracion
             // 
             menuConfiguracion.DropDownItems.AddRange(new ToolStripItem[] { menuProyectos, menuUsuarios, toolStripSeparator1, menuCambiarClave, menuCerrarSesion });
@@ -210,7 +240,7 @@ namespace IndexadorIA.Pantallas
             // 
             statusStrip.BackColor = Color.FromArgb(45, 45, 48);
             statusStrip.ImageScalingSize = new Size(20, 20);
-            statusStrip.Items.AddRange(new ToolStripItem[] { lblUsuario, lblFecha });
+            statusStrip.Items.AddRange(new ToolStripItem[] { lblUsuario, lblBaseDatos, lblFecha });
             statusStrip.Location = new Point(0, 503);
             statusStrip.Name = "statusStrip";
             statusStrip.Padding = new Padding(1, 0, 12, 0);
@@ -226,12 +256,20 @@ namespace IndexadorIA.Pantallas
             lblUsuario.Size = new Size(50, 17);
             lblUsuario.Text = "Usuario:";
             // 
+            // lblBaseDatos
+            // 
+            lblBaseDatos.Font = new Font("Segoe UI", 9F);
+            lblBaseDatos.ForeColor = Color.White;
+            lblBaseDatos.Name = "lblBaseDatos";
+            lblBaseDatos.Size = new Size(82, 17);
+            lblBaseDatos.Text = "Base de datos:";
+            // 
             // lblFecha
             // 
             lblFecha.Font = new Font("Segoe UI", 9F);
             lblFecha.ForeColor = Color.White;
             lblFecha.Name = "lblFecha";
-            lblFecha.Size = new Size(987, 17);
+            lblFecha.Size = new Size(905, 17);
             lblFecha.Spring = true;
             lblFecha.Text = "Fecha";
             lblFecha.TextAlign = ContentAlignment.MiddleRight;
@@ -271,7 +309,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20260820)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260821_v2)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
@@ -296,6 +334,9 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuFinalizarLote;
         private ToolStripMenuItem menuLotes;
         private ToolStripMenuItem menuMonitorLotes;
+        private ToolStripMenuItem menuConsultas;
+        private ToolStripMenuItem menuReportes;
+        private ToolStripMenuItem menuConsumosIA;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;
@@ -304,6 +345,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuCerrarSesion;
         private StatusStrip statusStrip;
         private ToolStripStatusLabel lblUsuario;
+        private ToolStripStatusLabel lblBaseDatos;
         private ToolStripStatusLabel lblFecha;
         private Panel panelContenido;
         private Label lblBienvenida;

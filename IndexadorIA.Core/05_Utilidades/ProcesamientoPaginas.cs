@@ -228,6 +228,8 @@ namespace IndexadorIA.Utilidades
                     return resultados;
                 }
 
+                string nombreBaseArchivo = Path.GetFileNameWithoutExtension(rutaArchivo);
+
                 for (int i = 0; i < totalPaginas; i++)
                 {
                     var resultado = new ResultadoPagina
@@ -238,9 +240,8 @@ namespace IndexadorIA.Utilidades
 
                     try
                     {
-                        // Generar nombre de archivo con secuencia
-                        int numeroSecuencia = secuenciaInicial + i;
-                        string nombreArchivo = $"{numeroSecuencia:D8}.pdf";
+                        // Generar nombre de archivo: [nombre original]_[número de página]
+                        string nombreArchivo = $"{nombreBaseArchivo}_{i + 1}.pdf";
                         string rutaCompleta = Path.Combine(carpetaDestino, nombreArchivo);
 
                         resultado.NombreArchivo = nombreArchivo;
@@ -430,8 +431,9 @@ namespace IndexadorIA.Utilidades
 
             try
             {
-                // Generar nombre de archivo con secuencia
-                string nombreArchivo = $"{secuencia:D8}.jpg";
+                // Generar nombre de archivo: [nombre original]_[número de página]
+                string nombreBaseArchivo = Path.GetFileNameWithoutExtension(rutaArchivo);
+                string nombreArchivo = $"{nombreBaseArchivo}_1.jpg";
                 string rutaCompleta = Path.Combine(carpetaDestino, nombreArchivo);
 
                 resultado.NombreArchivo = nombreArchivo;

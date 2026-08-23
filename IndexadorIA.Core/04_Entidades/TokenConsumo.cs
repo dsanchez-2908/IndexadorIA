@@ -10,6 +10,7 @@ namespace IndexadorIA.Entidades
         public int? NuTokensPrompt { get; set; }
         public int? NuTokensCompletion { get; set; }
         public int? NuTokensTotal { get; set; }
+        public string? DsModelo { get; set; }
         public DateTime FeAlta { get; set; }
     }
 }

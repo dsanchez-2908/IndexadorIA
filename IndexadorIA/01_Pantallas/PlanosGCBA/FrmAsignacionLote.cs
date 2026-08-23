@@ -13,6 +13,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private const int CD_ESTADO_PROCESADO_IA = 4;
 
         private List<LoteSeleccionable> _lotesActuales = new();
+        private int _indiceSeleccion10 = 0;
 
         /// <summary>
         /// Envoltorio de Lote con una propiedad de selección para el checkbox de la grilla
@@ -131,6 +132,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     CD_ESTADO_PROCESADO_IA, dsNombreLote, feAltaDesde, feAltaHasta);
 
                 _lotesActuales = lotes.Select(l => new LoteSeleccionable { Lote = l }).ToList();
+                _indiceSeleccion10 = 0;
 
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotesActuales;
@@ -224,6 +226,50 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private void btnCerrar_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void btnSeleccionarTodos_Click(object sender, EventArgs e)
+        {
+            foreach (var lote in _lotesActuales)
+            {
+                lote.Seleccionado = true;
+            }
+
+            _indiceSeleccion10 = 0;
+            dgvLotes.Refresh();
+        }
+
+        private void btnDeseleccionarTodo_Click(object sender, EventArgs e)
+        {
+            foreach (var lote in _lotesActuales)
+            {
+                lote.Seleccionado = false;
+            }
+
+            _indiceSeleccion10 = 0;
+            dgvLotes.Refresh();
+        }
+
+        private void btnSeleccionar10_Click(object sender, EventArgs e)
+        {
+            if (_lotesActuales.Count == 0)
+            {
+                return;
+            }
+
+            if (_indiceSeleccion10 >= _lotesActuales.Count)
+            {
+                _indiceSeleccion10 = 0;
+            }
+
+            int cantidad = Math.Min(10, _lotesActuales.Count - _indiceSeleccion10);
+            for (int i = 0; i < cantidad; i++)
+            {
+                _lotesActuales[_indiceSeleccion10 + i].Seleccionado = true;
+            }
+
+            _indiceSeleccion10 += cantidad;
+            dgvLotes.Refresh();
         }
     }
 }

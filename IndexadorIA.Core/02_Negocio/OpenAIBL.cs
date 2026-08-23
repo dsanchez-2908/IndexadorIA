@@ -594,6 +594,7 @@ namespace IndexadorIA.Negocio
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
                 ?? throw new Exception("No se encontr� la API Key de OpenAI en par�metros");
+                string? dsModelo = parametroDAL.ObtenerValor("OPENAI_MODEL");
 
             // Log de diagn�stico PRE-subida
             var logDAL = new LogDAL();
@@ -672,6 +673,7 @@ namespace IndexadorIA.Negocio
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
                 ?? throw new Exception("No se encontr� la API Key de OpenAI en par�metros");
+                string? dsModelo = parametroDAL.ObtenerValor("OPENAI_MODEL");
 
             var requestBody = new
             {
@@ -715,6 +717,7 @@ namespace IndexadorIA.Negocio
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
                 ?? throw new Exception("No se encontr� la API Key de OpenAI en par�metros");
+                string? dsModelo = parametroDAL.ObtenerValor("OPENAI_MODEL");
 
             var logDAL = new LogDAL();
             int intentos = 0;
@@ -799,6 +802,7 @@ namespace IndexadorIA.Negocio
             var parametroDAL = new ParametrosDAL();
             string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
                 ?? throw new Exception("No se encontr� la API Key de OpenAI en par�metros");
+            string? dsModelo = parametroDAL.ObtenerValor("OPENAI_MODEL");
 
             // Descargar archivo de resultados
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.openai.com/v1/files/{resultFileId}/content");
@@ -851,6 +855,7 @@ namespace IndexadorIA.Negocio
                     NuTokensPrompt = promptTokens,
                     NuTokensCompletion = completionTokens,
                     NuTokensTotal = totalTokens,
+                    DsModelo = dsModelo,
                     FeAlta = DateTime.Now
                 });
 
@@ -893,6 +898,7 @@ namespace IndexadorIA.Negocio
             {
                 string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
                     ?? throw new Exception("No se encontr� la API Key de OpenAI en par�metros");
+                string? dsModelo = parametroDAL.ObtenerValor("OPENAI_MODEL");
 
                 string url = $"https://api.openai.com/v1/batches/{batchId}";
 
@@ -989,6 +995,7 @@ namespace IndexadorIA.Negocio
             {
                 string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY") 
                     ?? throw new Exception("No se encontr� la API Key de OpenAI en par�metros");
+                string? dsModelo = parametroDAL.ObtenerValor("OPENAI_MODEL");
 
                 // 1. Intentar obtener output_file_id de la BD primero
                 string? outputFileId = null;
@@ -1330,6 +1337,7 @@ namespace IndexadorIA.Negocio
                         NuTokensPrompt = promptTokens,
                         NuTokensCompletion = completionTokens,
                         NuTokensTotal = totalTokens,
+                        DsModelo = dsModelo,
                         FeAlta = DateTime.Now
                     });
 

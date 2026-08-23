@@ -74,31 +74,38 @@ namespace IndexadorIA.Utilidades
         /// Construye el nombre de archivo final para un registro controlado
         /// (estados 1 - Pendiente de Control o 2 - Controlado), aplicando la
         /// estructura correspondiente segun la categoria del plano:
-        /// - OBRAS/INSTALACIONES: [CATEGORIA]_[TIPO]_[DIRECCION]_[SECCION]_[MANZANA]_[PARCELA]_[EXPEDIENTE].pdf
-        /// - CATASTRO: CATASTRO_[NUMERO DE PLANO]_[DIRECCION]_[SECCION]_[MANZANA]_[PARCELA]_[EXPEDIENTE].pdf
+        /// - OBRAS/INSTALACIONES: [CATEGORIA]_[TIPO]_[DIRECCION]_[SECCION]-[MANZANA]-[PARCELA]_[EXPEDIENTE].pdf
+        /// - CATASTRO: CATASTRO_[NUMERO DE PLANO]_[DIRECCION]_[SECCION]-[MANZANA]-[PARCELA]_[EXPEDIENTE].pdf
+        /// La nomenclatura (Seccion-Manzana-Parcela) se une con guion medio "-".
         /// </summary>
         public static string ConstruirNombreControlado(string? dsCategoriaPlano, string? tipoPlano,
             string? numeroPlano, string? direccion, string? seccion, string? manzana, string? parcela,
             string? expediente)
         {
-            string dir = Normalizar(direccion);
-            string sec = Normalizar(seccion);
-            string mza = Normalizar(manzana);
-            string parc = Normalizar(parcela);
+            // La direccion, seccion, manzana y parcela se usan tal cual vienen de la base
+            // de datos, sin normalizar (sin mayusculas forzadas, sin reemplazo de espacios
+            // o caracteres especiales).
+            string dir = direccion ?? string.Empty;
+            string sec = seccion ?? string.Empty;
+            string mza = manzana ?? string.Empty;
+            string parc = parcela ?? string.Empty;
             string exp = Normalizar(expediente);
+
+            // Nomenclatura: Seccion-Manzana-Parcela unidos con guion medio "-"
+            string nomenclatura = $"{sec}-{mza}-{parc}";
 
             string nombre;
 
             if (EsCategoriaCatastro(dsCategoriaPlano))
             {
                 string numero = Normalizar(numeroPlano);
-                nombre = $"{CategoriaCatastro}_{numero}_{dir}_{sec}_{mza}_{parc}_{exp}";
+                nombre = $"{CategoriaCatastro}_{numero}_{dir}_{nomenclatura}_{exp}";
             }
             else
             {
                 string categoria = Normalizar(dsCategoriaPlano);
                 string tipo = Normalizar(tipoPlano);
-                nombre = $"{categoria}_{tipo}_{dir}_{sec}_{mza}_{parc}_{exp}";
+                nombre = $"{categoria}_{tipo}_{dir}_{nomenclatura}_{exp}";
             }
 
             // Colapsar guiones bajos repetidos generados por campos vacios

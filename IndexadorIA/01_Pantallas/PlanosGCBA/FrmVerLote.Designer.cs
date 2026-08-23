@@ -17,9 +17,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
             panelEncabezado = new Panel();
             lblFechaProcesamientoIATitulo = new Label();
             lblFechaProcesamientoIA = new Label();
@@ -92,6 +92,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblNuPagina = new Label();
             lblNombreArchivoOriginal = new Label();
             lblCabeceraArchivo = new Label();
+            txtObservaciones = new TextBox();
+            lblObservacionesCampo = new Label();
             panelDerecho = new Panel();
             panelImagenScroll = new Panel();
             pictureBoxImagen = new PictureBox();
@@ -273,28 +275,28 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             dgvArchivos.AllowUserToAddRows = false;
             dgvArchivos.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(40, 40, 40);
-            dgvArchivos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle7.BackColor = Color.FromArgb(40, 40, 40);
+            dgvArchivos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
             dgvArchivos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvArchivos.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvArchivos.BorderStyle = BorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.FromArgb(60, 60, 60);
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle2.ForeColor = Color.White;
-            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            dgvArchivos.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = Color.FromArgb(60, 60, 60);
+            dataGridViewCellStyle8.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle8.ForeColor = Color.White;
+            dataGridViewCellStyle8.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle8.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = DataGridViewTriState.True;
+            dgvArchivos.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle8;
             dgvArchivos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.FromArgb(30, 30, 30);
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle3.ForeColor = Color.White;
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvArchivos.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = Color.FromArgb(30, 30, 30);
+            dataGridViewCellStyle9.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle9.ForeColor = Color.White;
+            dataGridViewCellStyle9.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dataGridViewCellStyle9.SelectionForeColor = Color.White;
+            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.False;
+            dgvArchivos.DefaultCellStyle = dataGridViewCellStyle9;
             dgvArchivos.Dock = DockStyle.Fill;
             dgvArchivos.EnableHeadersVisualStyles = false;
             dgvArchivos.GridColor = Color.FromArgb(63, 63, 70);
@@ -585,6 +587,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.Controls.Add(lblNuPagina);
             groupBoxDetalle.Controls.Add(lblNombreArchivoOriginal);
             groupBoxDetalle.Controls.Add(lblCabeceraArchivo);
+            groupBoxDetalle.Controls.Add(txtObservaciones);
+            groupBoxDetalle.Controls.Add(lblObservacionesCampo);
             groupBoxDetalle.Dock = DockStyle.Fill;
             groupBoxDetalle.ForeColor = Color.White;
             groupBoxDetalle.Location = new Point(0, 0);
@@ -601,18 +605,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtDireccion.CharacterCasing = CharacterCasing.Upper;
             txtDireccion.Font = new Font("Segoe UI", 12F);
             txtDireccion.ForeColor = Color.White;
-            txtDireccion.Location = new Point(15, 546);
+            txtDireccion.Location = new Point(15, 449);
             txtDireccion.Multiline = true;
             txtDireccion.Name = "txtDireccion";
             txtDireccion.ScrollBars = ScrollBars.Vertical;
-            txtDireccion.Size = new Size(300, 80);
-            txtDireccion.TabIndex = 21;
+            txtDireccion.Size = new Size(401, 94);
+            txtDireccion.TabIndex = 17;
             // 
             // lblConfianzaDireccion
             // 
             lblConfianzaDireccion.AutoSize = true;
             lblConfianzaDireccion.ForeColor = Color.Yellow;
-            lblConfianzaDireccion.Location = new Point(325, 549);
+            lblConfianzaDireccion.Location = new Point(422, 449);
             lblConfianzaDireccion.Name = "lblConfianzaDireccion";
             lblConfianzaDireccion.Size = new Size(30, 15);
             lblConfianzaDireccion.TabIndex = 22;
@@ -622,7 +626,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblDireccionCampo.AutoSize = true;
             lblDireccionCampo.ForeColor = Color.White;
-            lblDireccionCampo.Location = new Point(15, 528);
+            lblDireccionCampo.Location = new Point(15, 431);
             lblDireccionCampo.Name = "lblDireccionCampo";
             lblDireccionCampo.Size = new Size(76, 15);
             lblDireccionCampo.TabIndex = 20;
@@ -634,16 +638,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtParcela.BorderStyle = BorderStyle.FixedSingle;
             txtParcela.Font = new Font("Segoe UI", 12F);
             txtParcela.ForeColor = Color.White;
-            txtParcela.Location = new Point(15, 493);
+            txtParcela.Location = new Point(15, 393);
             txtParcela.Name = "txtParcela";
             txtParcela.Size = new Size(300, 29);
-            txtParcela.TabIndex = 18;
+            txtParcela.TabIndex = 16;
             // 
             // lblConfianzaParcela
             // 
             lblConfianzaParcela.AutoSize = true;
             lblConfianzaParcela.ForeColor = Color.Yellow;
-            lblConfianzaParcela.Location = new Point(325, 496);
+            lblConfianzaParcela.Location = new Point(325, 396);
             lblConfianzaParcela.Name = "lblConfianzaParcela";
             lblConfianzaParcela.Size = new Size(30, 15);
             lblConfianzaParcela.TabIndex = 19;
@@ -653,7 +657,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblParcelaCampo.AutoSize = true;
             lblParcelaCampo.ForeColor = Color.White;
-            lblParcelaCampo.Location = new Point(15, 475);
+            lblParcelaCampo.Location = new Point(15, 375);
             lblParcelaCampo.Name = "lblParcelaCampo";
             lblParcelaCampo.Size = new Size(64, 15);
             lblParcelaCampo.TabIndex = 17;
@@ -666,7 +670,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtManzana.CharacterCasing = CharacterCasing.Upper;
             txtManzana.Font = new Font("Segoe UI", 12F);
             txtManzana.ForeColor = Color.White;
-            txtManzana.Location = new Point(15, 440);
+            txtManzana.Location = new Point(15, 340);
             txtManzana.Name = "txtManzana";
             txtManzana.Size = new Size(300, 29);
             txtManzana.TabIndex = 15;
@@ -675,7 +679,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblConfianzaManzana.AutoSize = true;
             lblConfianzaManzana.ForeColor = Color.Yellow;
-            lblConfianzaManzana.Location = new Point(325, 443);
+            lblConfianzaManzana.Location = new Point(325, 343);
             lblConfianzaManzana.Name = "lblConfianzaManzana";
             lblConfianzaManzana.Size = new Size(30, 15);
             lblConfianzaManzana.TabIndex = 16;
@@ -685,7 +689,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblManzanaCampo.AutoSize = true;
             lblManzanaCampo.ForeColor = Color.White;
-            lblManzanaCampo.Location = new Point(15, 422);
+            lblManzanaCampo.Location = new Point(15, 322);
             lblManzanaCampo.Name = "lblManzanaCampo";
             lblManzanaCampo.Size = new Size(74, 15);
             lblManzanaCampo.TabIndex = 14;
@@ -698,16 +702,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtSeccion.CharacterCasing = CharacterCasing.Upper;
             txtSeccion.Font = new Font("Segoe UI", 12F);
             txtSeccion.ForeColor = Color.White;
-            txtSeccion.Location = new Point(15, 387);
+            txtSeccion.Location = new Point(15, 287);
             txtSeccion.Name = "txtSeccion";
             txtSeccion.Size = new Size(300, 29);
-            txtSeccion.TabIndex = 12;
+            txtSeccion.TabIndex = 14;
             // 
             // lblConfianzaSeccion
             // 
             lblConfianzaSeccion.AutoSize = true;
             lblConfianzaSeccion.ForeColor = Color.Yellow;
-            lblConfianzaSeccion.Location = new Point(325, 390);
+            lblConfianzaSeccion.Location = new Point(325, 290);
             lblConfianzaSeccion.Name = "lblConfianzaSeccion";
             lblConfianzaSeccion.Size = new Size(30, 15);
             lblConfianzaSeccion.TabIndex = 13;
@@ -717,7 +721,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblSeccionCampo.AutoSize = true;
             lblSeccionCampo.ForeColor = Color.White;
-            lblSeccionCampo.Location = new Point(15, 369);
+            lblSeccionCampo.Location = new Point(15, 269);
             lblSeccionCampo.Name = "lblSeccionCampo";
             lblSeccionCampo.Size = new Size(67, 15);
             lblSeccionCampo.TabIndex = 11;
@@ -731,7 +735,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteEx.Enabled = false;
             txtExpedienteEx.Font = new Font("Segoe UI", 12F);
             txtExpedienteEx.ForeColor = Color.White;
-            txtExpedienteEx.Location = new Point(15, 334);
+            txtExpedienteEx.Location = new Point(15, 236);
             txtExpedienteEx.Name = "txtExpedienteEx";
             txtExpedienteEx.Size = new Size(35, 29);
             txtExpedienteEx.TabIndex = 9;
@@ -741,7 +745,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblExpedienteGuion1.AutoSize = true;
             lblExpedienteGuion1.ForeColor = Color.White;
-            lblExpedienteGuion1.Location = new Point(52, 341);
+            lblExpedienteGuion1.Location = new Point(52, 243);
             lblExpedienteGuion1.Name = "lblExpedienteGuion1";
             lblExpedienteGuion1.Size = new Size(12, 15);
             lblExpedienteGuion1.TabIndex = 10;
@@ -754,17 +758,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteAnio.CharacterCasing = CharacterCasing.Upper;
             txtExpedienteAnio.Font = new Font("Segoe UI", 12F);
             txtExpedienteAnio.ForeColor = Color.White;
-            txtExpedienteAnio.Location = new Point(64, 334);
+            txtExpedienteAnio.Location = new Point(64, 236);
             txtExpedienteAnio.MaxLength = 4;
             txtExpedienteAnio.Name = "txtExpedienteAnio";
             txtExpedienteAnio.Size = new Size(48, 29);
-            txtExpedienteAnio.TabIndex = 11;
+            txtExpedienteAnio.TabIndex = 10;
             // 
             // lblExpedienteGuion2
             // 
             lblExpedienteGuion2.AutoSize = true;
             lblExpedienteGuion2.ForeColor = Color.White;
-            lblExpedienteGuion2.Location = new Point(114, 341);
+            lblExpedienteGuion2.Location = new Point(114, 243);
             lblExpedienteGuion2.Name = "lblExpedienteGuion2";
             lblExpedienteGuion2.Size = new Size(12, 15);
             lblExpedienteGuion2.TabIndex = 12;
@@ -777,17 +781,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteNumero.CharacterCasing = CharacterCasing.Upper;
             txtExpedienteNumero.Font = new Font("Segoe UI", 12F);
             txtExpedienteNumero.ForeColor = Color.White;
-            txtExpedienteNumero.Location = new Point(126, 334);
+            txtExpedienteNumero.Location = new Point(126, 236);
             txtExpedienteNumero.MaxLength = 8;
             txtExpedienteNumero.Name = "txtExpedienteNumero";
             txtExpedienteNumero.Size = new Size(85, 29);
-            txtExpedienteNumero.TabIndex = 13;
+            txtExpedienteNumero.TabIndex = 11;
             // 
             // lblExpedienteGuion3
             // 
             lblExpedienteGuion3.AutoSize = true;
             lblExpedienteGuion3.ForeColor = Color.White;
-            lblExpedienteGuion3.Location = new Point(215, 341);
+            lblExpedienteGuion3.Location = new Point(215, 243);
             lblExpedienteGuion3.Name = "lblExpedienteGuion3";
             lblExpedienteGuion3.Size = new Size(12, 15);
             lblExpedienteGuion3.TabIndex = 14;
@@ -801,17 +805,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteGcaba.Enabled = false;
             txtExpedienteGcaba.Font = new Font("Segoe UI", 12F);
             txtExpedienteGcaba.ForeColor = Color.White;
-            txtExpedienteGcaba.Location = new Point(227, 334);
+            txtExpedienteGcaba.Location = new Point(227, 236);
             txtExpedienteGcaba.Name = "txtExpedienteGcaba";
             txtExpedienteGcaba.Size = new Size(55, 29);
-            txtExpedienteGcaba.TabIndex = 15;
+            txtExpedienteGcaba.TabIndex = 12;
             txtExpedienteGcaba.Text = "GCABA";
             // 
             // lblExpedienteGuion4
             // 
             lblExpedienteGuion4.AutoSize = true;
             lblExpedienteGuion4.ForeColor = Color.White;
-            lblExpedienteGuion4.Location = new Point(285, 341);
+            lblExpedienteGuion4.Location = new Point(285, 243);
             lblExpedienteGuion4.Name = "lblExpedienteGuion4";
             lblExpedienteGuion4.Size = new Size(12, 15);
             lblExpedienteGuion4.TabIndex = 16;
@@ -824,16 +828,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteReparticion.CharacterCasing = CharacterCasing.Upper;
             txtExpedienteReparticion.Font = new Font("Segoe UI", 12F);
             txtExpedienteReparticion.ForeColor = Color.White;
-            txtExpedienteReparticion.Location = new Point(297, 334);
+            txtExpedienteReparticion.Location = new Point(297, 236);
             txtExpedienteReparticion.Name = "txtExpedienteReparticion";
             txtExpedienteReparticion.Size = new Size(120, 29);
-            txtExpedienteReparticion.TabIndex = 17;
+            txtExpedienteReparticion.TabIndex = 13;
             // 
             // lblConfianzaExpediente
             // 
             lblConfianzaExpediente.AutoSize = true;
             lblConfianzaExpediente.ForeColor = Color.Yellow;
-            lblConfianzaExpediente.Location = new Point(422, 337);
+            lblConfianzaExpediente.Location = new Point(422, 239);
             lblConfianzaExpediente.Name = "lblConfianzaExpediente";
             lblConfianzaExpediente.Size = new Size(30, 15);
             lblConfianzaExpediente.TabIndex = 18;
@@ -844,7 +848,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnParsearExpedienteDeArchivo.BackColor = Color.FromArgb(60, 60, 60);
             btnParsearExpedienteDeArchivo.FlatStyle = FlatStyle.Flat;
             btnParsearExpedienteDeArchivo.ForeColor = Color.White;
-            btnParsearExpedienteDeArchivo.Location = new Point(458, 332);
+            btnParsearExpedienteDeArchivo.Location = new Point(458, 237);
             btnParsearExpedienteDeArchivo.Name = "btnParsearExpedienteDeArchivo";
             btnParsearExpedienteDeArchivo.Size = new Size(30, 30);
             btnParsearExpedienteDeArchivo.TabIndex = 19;
@@ -856,7 +860,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblExpedienteCampo.AutoSize = true;
             lblExpedienteCampo.ForeColor = Color.White;
-            lblExpedienteCampo.Location = new Point(15, 316);
+            lblExpedienteCampo.Location = new Point(15, 218);
             lblExpedienteCampo.Name = "lblExpedienteCampo";
             lblExpedienteCampo.Size = new Size(67, 15);
             lblExpedienteCampo.TabIndex = 8;
@@ -871,16 +875,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboTipoPlanoDetalle.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             cboTipoPlanoDetalle.ForeColor = Color.White;
             cboTipoPlanoDetalle.FormattingEnabled = true;
-            cboTipoPlanoDetalle.Location = new Point(15, 228);
+            cboTipoPlanoDetalle.Location = new Point(15, 182);
             cboTipoPlanoDetalle.Name = "cboTipoPlanoDetalle";
-            cboTipoPlanoDetalle.Size = new Size(300, 29);
+            cboTipoPlanoDetalle.Size = new Size(401, 29);
             cboTipoPlanoDetalle.TabIndex = 20;
             // 
             // lblConfianzaTipoPlano
             // 
             lblConfianzaTipoPlano.AutoSize = true;
             lblConfianzaTipoPlano.ForeColor = Color.Yellow;
-            lblConfianzaTipoPlano.Location = new Point(325, 231);
+            lblConfianzaTipoPlano.Location = new Point(422, 187);
             lblConfianzaTipoPlano.Name = "lblConfianzaTipoPlano";
             lblConfianzaTipoPlano.Size = new Size(30, 15);
             lblConfianzaTipoPlano.TabIndex = 21;
@@ -890,7 +894,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblTipoPlanoCampo.AutoSize = true;
             lblTipoPlanoCampo.ForeColor = Color.White;
-            lblTipoPlanoCampo.Location = new Point(15, 210);
+            lblTipoPlanoCampo.Location = new Point(15, 164);
             lblTipoPlanoCampo.Name = "lblTipoPlanoCampo";
             lblTipoPlanoCampo.Size = new Size(99, 15);
             lblTipoPlanoCampo.TabIndex = 22;
@@ -903,9 +907,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboCategoriaPlanoDetalle.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             cboCategoriaPlanoDetalle.ForeColor = Color.White;
             cboCategoriaPlanoDetalle.FormattingEnabled = true;
-            cboCategoriaPlanoDetalle.Location = new Point(15, 163);
+            cboCategoriaPlanoDetalle.Location = new Point(15, 125);
             cboCategoriaPlanoDetalle.Name = "cboCategoriaPlanoDetalle";
-            cboCategoriaPlanoDetalle.Size = new Size(300, 29);
+            cboCategoriaPlanoDetalle.Size = new Size(401, 29);
             cboCategoriaPlanoDetalle.TabIndex = 17;
             cboCategoriaPlanoDetalle.SelectedIndexChanged += cboCategoriaPlanoDetalle_SelectedIndexChanged;
             // 
@@ -913,7 +917,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblConfianzaCategoriaPlano.AutoSize = true;
             lblConfianzaCategoriaPlano.ForeColor = Color.Yellow;
-            lblConfianzaCategoriaPlano.Location = new Point(325, 166);
+            lblConfianzaCategoriaPlano.Location = new Point(422, 130);
             lblConfianzaCategoriaPlano.Name = "lblConfianzaCategoriaPlano";
             lblConfianzaCategoriaPlano.Size = new Size(30, 15);
             lblConfianzaCategoriaPlano.TabIndex = 18;
@@ -923,7 +927,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblCategoriaPlanoCampo.AutoSize = true;
             lblCategoriaPlanoCampo.ForeColor = Color.White;
-            lblCategoriaPlanoCampo.Location = new Point(15, 145);
+            lblCategoriaPlanoCampo.Location = new Point(15, 107);
             lblCategoriaPlanoCampo.Name = "lblCategoriaPlanoCampo";
             lblCategoriaPlanoCampo.Size = new Size(126, 15);
             lblCategoriaPlanoCampo.TabIndex = 19;
@@ -936,16 +940,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtNumeroPlano.CharacterCasing = CharacterCasing.Upper;
             txtNumeroPlano.Font = new Font("Segoe UI", 12F);
             txtNumeroPlano.ForeColor = Color.White;
-            txtNumeroPlano.Location = new Point(15, 281);
+            txtNumeroPlano.Location = new Point(15, 564);
             txtNumeroPlano.Name = "txtNumeroPlano";
             txtNumeroPlano.Size = new Size(300, 29);
-            txtNumeroPlano.TabIndex = 23;
+            txtNumeroPlano.TabIndex = 18;
             // 
             // lblConfianzaNumeroPlano
             // 
             lblConfianzaNumeroPlano.AutoSize = true;
             lblConfianzaNumeroPlano.ForeColor = Color.Yellow;
-            lblConfianzaNumeroPlano.Location = new Point(325, 284);
+            lblConfianzaNumeroPlano.Location = new Point(325, 567);
             lblConfianzaNumeroPlano.Name = "lblConfianzaNumeroPlano";
             lblConfianzaNumeroPlano.Size = new Size(30, 15);
             lblConfianzaNumeroPlano.TabIndex = 24;
@@ -955,7 +959,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblNumeroPlanoCampo.AutoSize = true;
             lblNumeroPlanoCampo.ForeColor = Color.White;
-            lblNumeroPlanoCampo.Location = new Point(15, 263);
+            lblNumeroPlanoCampo.Location = new Point(15, 546);
             lblNumeroPlanoCampo.Name = "lblNumeroPlanoCampo";
             lblNumeroPlanoCampo.Size = new Size(103, 15);
             lblNumeroPlanoCampo.TabIndex = 25;
@@ -965,7 +969,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblSnPosibleBlanca.AutoSize = true;
             lblSnPosibleBlanca.ForeColor = Color.Gainsboro;
-            lblSnPosibleBlanca.Location = new Point(15, 106);
+            lblSnPosibleBlanca.Location = new Point(203, 70);
             lblSnPosibleBlanca.Name = "lblSnPosibleBlanca";
             lblSnPosibleBlanca.Size = new Size(94, 15);
             lblSnPosibleBlanca.TabIndex = 4;
@@ -975,7 +979,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblSnGirada.AutoSize = true;
             lblSnGirada.ForeColor = Color.Gainsboro;
-            lblSnGirada.Location = new Point(15, 88);
+            lblSnGirada.Location = new Point(114, 70);
             lblSnGirada.Name = "lblSnGirada";
             lblSnGirada.Size = new Size(52, 15);
             lblSnGirada.TabIndex = 3;
@@ -1011,6 +1015,29 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCabeceraArchivo.Size = new Size(154, 17);
             lblCabeceraArchivo.TabIndex = 0;
             lblCabeceraArchivo.Text = "(seleccione una página)";
+            // 
+            // txtObservaciones
+            // 
+            txtObservaciones.BackColor = Color.FromArgb(30, 30, 30);
+            txtObservaciones.BorderStyle = BorderStyle.FixedSingle;
+            txtObservaciones.Font = new Font("Segoe UI", 10F);
+            txtObservaciones.ForeColor = Color.White;
+            txtObservaciones.Location = new Point(15, 619);
+            txtObservaciones.Multiline = true;
+            txtObservaciones.Name = "txtObservaciones";
+            txtObservaciones.ScrollBars = ScrollBars.Vertical;
+            txtObservaciones.Size = new Size(430, 67);
+            txtObservaciones.TabIndex = 26;
+            // 
+            // lblObservacionesCampo
+            // 
+            lblObservacionesCampo.AutoSize = true;
+            lblObservacionesCampo.ForeColor = Color.White;
+            lblObservacionesCampo.Location = new Point(15, 601);
+            lblObservacionesCampo.Name = "lblObservacionesCampo";
+            lblObservacionesCampo.Size = new Size(87, 15);
+            lblObservacionesCampo.TabIndex = 27;
+            lblObservacionesCampo.Text = "Observaciones:";
             // 
             // panelDerecho
             // 
@@ -1184,7 +1211,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnMarcarPaginaIlegible.BackColor = Color.FromArgb(180, 90, 0);
             btnMarcarPaginaIlegible.FlatStyle = FlatStyle.Flat;
             btnMarcarPaginaIlegible.ForeColor = Color.White;
-            btnMarcarPaginaIlegible.Location = new Point(727, 13);
+            btnMarcarPaginaIlegible.Location = new Point(885, 13);
             btnMarcarPaginaIlegible.Margin = new Padding(3, 3, 8, 3);
             btnMarcarPaginaIlegible.Name = "btnMarcarPaginaIlegible";
             btnMarcarPaginaIlegible.Size = new Size(170, 34);
@@ -1199,7 +1226,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnMarcarDatosIlegible.BackColor = Color.FromArgb(180, 90, 0);
             btnMarcarDatosIlegible.FlatStyle = FlatStyle.Flat;
             btnMarcarDatosIlegible.ForeColor = Color.White;
-            btnMarcarDatosIlegible.Location = new Point(907, 13);
+            btnMarcarDatosIlegible.Location = new Point(678, 13);
             btnMarcarDatosIlegible.Margin = new Padding(3, 3, 8, 3);
             btnMarcarDatosIlegible.Name = "btnMarcarDatosIlegible";
             btnMarcarDatosIlegible.Size = new Size(170, 34);
@@ -1370,6 +1397,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblNuPagina;
         private Label lblNombreArchivoOriginal;
         private Label lblCabeceraArchivo;
+        private TextBox txtObservaciones;
+        private Label lblObservacionesCampo;
         private Panel panelDerecho;
         private Panel panelImagenScroll;
         private PictureBox pictureBoxImagen;

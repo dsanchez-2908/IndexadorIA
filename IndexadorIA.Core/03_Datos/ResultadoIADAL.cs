@@ -128,7 +128,8 @@ namespace IndexadorIA.Datos
                            r.nuConfianzaManzana, r.nuConfianzaParcela, r.nuConfianzaDireccion, r.nuConfianzaNumeroPlano,
                            r.feAlta, r.cdUsuarioAlta, r.feUltimaModificacion, r.cdUsuarioModificacion,
                            cp.dsCategoriaPlano, tp.dsTipoPlano, a.dsNombreArchivo, ap.nuPagina,
-                           r.cdEstadoControl, r.snModificaDatos, r.feControl, r.cdUsuarioControl, e.dsEstado
+                           r.cdEstadoControl, r.snModificaDatos, r.feControl, r.cdUsuarioControl, e.dsEstado,
+                           r.dsObservaciones
                     FROM TD_001_RESULTADO_IA r
                     LEFT JOIN TD_CATEGORIA_PLANO cp ON r.cdCategoriaPlano = cp.cdCategoriaPlano
                     LEFT JOIN TD_TIPOS_PLANO tp ON r.cdTipoPlano = tp.cdTipoPlano
@@ -180,7 +181,8 @@ namespace IndexadorIA.Datos
                         SnModificaDatos = reader.IsDBNull(28) ? null : reader.GetString(28),
                         FeControl = reader.IsDBNull(29) ? null : reader.GetDateTime(29),
                         CdUsuarioControl = reader.IsDBNull(30) ? null : reader.GetInt32(30),
-                        DsEstadoControl = reader.IsDBNull(31) ? null : reader.GetString(31)
+                        DsEstadoControl = reader.IsDBNull(31) ? null : reader.GetString(31),
+                        DsObservaciones = reader.IsDBNull(32) ? null : reader.GetString(32)
                     });
                 }
 
@@ -260,7 +262,7 @@ namespace IndexadorIA.Datos
         /// Actualiza el estado de control de un resultado (Guardar y Marcar Controlada,
         /// Marcar Página Ilegible, Marcar Datos Ilegible), registrando fecha y usuario de control.
         /// </summary>
-        public void ActualizarEstadoControl(int cdResultado, int cdEstadoControl, string? snModificaDatos, int cdUsuarioControl)
+        public void ActualizarEstadoControl(int cdResultado, int cdEstadoControl, string? snModificaDatos, int cdUsuarioControl, string? dsObservaciones = null)
         {
             try
             {
@@ -270,13 +272,15 @@ namespace IndexadorIA.Datos
                     SET cdEstadoControl = @cdEstadoControl,
                         snModificaDatos = @snModificaDatos,
                         feControl = GETDATE(),
-                        cdUsuarioControl = @cdUsuarioControl
+                        cdUsuarioControl = @cdUsuarioControl,
+                        dsObservaciones = COALESCE(@dsObservaciones, dsObservaciones)
                     WHERE cdResultado = @cdResultado", conn);
 
                 cmd.Parameters.AddWithValue("@cdEstadoControl", cdEstadoControl);
                 cmd.Parameters.AddWithValue("@snModificaDatos", (object?)snModificaDatos ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@cdUsuarioControl", cdUsuarioControl);
                 cmd.Parameters.AddWithValue("@cdResultado", cdResultado);
+                cmd.Parameters.AddWithValue("@dsObservaciones", (object?)dsObservaciones ?? DBNull.Value);
 
                 conn.Open();
                 cmd.ExecuteNonQuery();

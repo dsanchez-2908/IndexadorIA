@@ -1,6 +1,9 @@
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 using IndexadorIA.Pantallas.Configuracion;
 using IndexadorIA.Pantallas.PlanosGCBA;
+using IndexadorIA.Pantallas.Reportes;
+using ConfiguracionCore = IndexadorIA.Datos.Configuracion;
 
 namespace IndexadorIA.Pantallas
 {
@@ -20,6 +23,18 @@ namespace IndexadorIA.Pantallas
             if (SesionActual.UsuarioActual != null)
             {
                 lblUsuario.Text = $"Usuario: {SesionActual.UsuarioActual.DsNombreCompleto}";
+            }
+
+            if (SesionApi.ModoRemoto)
+            {
+                lblBaseDatos.Text = "Base de datos: Remoto (API)";
+            }
+            else
+            {
+                string nombreBaseDeDatos = ConfiguracionCore.ObtenerNombreBaseDeDatos();
+                lblBaseDatos.Text = string.IsNullOrEmpty(nombreBaseDeDatos)
+                    ? string.Empty
+                    : $"Base de datos: {nombreBaseDeDatos}";
             }
 
             lblFecha.Text = DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy");
@@ -114,6 +129,11 @@ namespace IndexadorIA.Pantallas
         private void menuMonitorLotes_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmMonitorLotes());
+        }
+
+        private void menuConsumosIA_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Reportes.FrmConsumosIA());
         }
 
         private void menuCambiarClave_Click(object sender, EventArgs e)

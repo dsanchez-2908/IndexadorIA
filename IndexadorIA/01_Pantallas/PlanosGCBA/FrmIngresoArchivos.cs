@@ -300,5 +300,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             Close();
         }
+
+        private void btnCerrar2_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
 }

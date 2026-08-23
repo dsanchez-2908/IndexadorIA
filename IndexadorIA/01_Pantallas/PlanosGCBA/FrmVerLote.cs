@@ -278,7 +278,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             NuConfianzaParcela = f.Resultado.NuConfianzaParcela,
                             NuConfianzaDireccion = f.Resultado.NuConfianzaDireccion,
                             DsCategoriaPlano = _categoriasPlano.FirstOrDefault(c => c.CdCategoriaPlano == f.Resultado.CdCategoriaPlano)?.DsCategoriaPlano,
-                            DsTipoPlano = _tiposPlano.FirstOrDefault(t => t.CdTipoPlano == f.Resultado.CdTipoPlano)?.DsTipoPlano
+                            DsTipoPlano = _tiposPlano.FirstOrDefault(t => t.CdTipoPlano == f.Resultado.CdTipoPlano)?.DsTipoPlano,
+                            DsObservaciones = f.Resultado.DsObservaciones
                         }
                     }).ToList();
             }
@@ -479,7 +480,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 DsSeccion = resultado.DsSeccion,
                 DsManzana = resultado.DsManzana,
                 DsParcela = resultado.DsParcela,
-                DsDireccion = resultado.DsDireccion
+                DsDireccion = resultado.DsDireccion,
+                DsObservaciones = resultado.DsObservaciones
             };
 
             cboCategoriaPlanoDetalle.SelectedValue = resultado?.CdCategoriaPlano ?? 0;
@@ -491,6 +493,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtManzana.Text = resultado?.DsManzana ?? string.Empty;
             txtParcela.Text = resultado?.DsParcela ?? string.Empty;
             txtDireccion.Text = resultado?.DsDireccion ?? string.Empty;
+            txtObservaciones.Text = resultado?.DsObservaciones ?? string.Empty;
 
             lblConfianzaCategoriaPlano.Text = FormatearConfianza(resultado?.NuConfianzaCategoriaPlano);
             lblConfianzaTipoPlano.Text = FormatearConfianza(resultado?.NuConfianzaTipoPlano);
@@ -523,6 +526,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtManzana.Text = string.Empty;
             txtParcela.Text = string.Empty;
             txtDireccion.Text = string.Empty;
+            txtObservaciones.Text = string.Empty;
 
             lblConfianzaCategoriaPlano.Text = "-- %";
             lblConfianzaTipoPlano.Text = "-- %";
@@ -1000,6 +1004,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 resultado.DsDireccion = txtDireccion.Text;
 
                 bool modificoDatos = DatosFueronModificados(resultado);
+                string? dsObservaciones = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim();
 
                 if (SesionApi.ModoRemoto)
                 {
@@ -1021,7 +1026,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     _apiCliente!.ActualizarEstadoControlResultadoAsync(resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
                     {
                         CdEstadoControl = ResultadoIA.EstadosControl.Controlado,
-                        SnModificaDatos = modificoDatos ? "SI" : "NO"
+                        SnModificaDatos = modificoDatos ? "SI" : "NO",
+                        DsObservaciones = dsObservaciones
                     }).GetAwaiter().GetResult();
                 }
                 else
@@ -1034,7 +1040,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         resultado.CdResultado,
                         ResultadoIA.EstadosControl.Controlado,
                         modificoDatos ? "SI" : "NO",
-                        cdUsuario);
+                        cdUsuario,
+                        dsObservaciones);
                 }
 
                 CargarDatosGrilla();
@@ -1281,19 +1288,22 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             try
             {
+                string? dsObservaciones = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim();
+
                 if (SesionApi.ModoRemoto)
                 {
                     _apiCliente!.ActualizarEstadoControlResultadoAsync(_filaSeleccionada.Resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
                     {
                         CdEstadoControl = cdEstadoControl,
-                        SnModificaDatos = "NO"
+                        SnModificaDatos = "NO",
+                        DsObservaciones = dsObservaciones
                     }).GetAwaiter().GetResult();
                 }
                 else
                 {
                     int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
                     var resultadoIADAL = new ResultadoIADAL();
-                    resultadoIADAL.ActualizarEstadoControl(_filaSeleccionada.Resultado.CdResultado, cdEstadoControl, "NO", cdUsuario);
+                    resultadoIADAL.ActualizarEstadoControl(_filaSeleccionada.Resultado.CdResultado, cdEstadoControl, "NO", cdUsuario, dsObservaciones);
                 }
 
                 MessageBox.Show("Registro actualizado correctamente.", tituloAccion,

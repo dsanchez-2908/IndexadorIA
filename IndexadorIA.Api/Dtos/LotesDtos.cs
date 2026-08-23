@@ -43,6 +43,7 @@ namespace IndexadorIA.Api.Dtos
         public string? DsParcela { get; set; }
         public string? DsDireccion { get; set; }
         public int CdEstadoControl { get; set; }
+        public string? DsObservaciones { get; set; }
         public decimal? NuConfianzaCategoriaPlano { get; set; }
         public decimal? NuConfianzaTipoPlano { get; set; }
         public decimal? NuConfianzaNumeroPlano { get; set; }
@@ -66,6 +67,7 @@ namespace IndexadorIA.Api.Dtos
             DsParcela = r.DsParcela,
             DsDireccion = r.DsDireccion,
             CdEstadoControl = r.CdEstadoControl,
+            DsObservaciones = r.DsObservaciones,
             NuConfianzaCategoriaPlano = r.NuConfianzaCategoriaPlano,
             NuConfianzaTipoPlano = r.NuConfianzaTipoPlano,
             NuConfianzaNumeroPlano = r.NuConfianzaNumeroPlano,
@@ -119,6 +121,7 @@ namespace IndexadorIA.Api.Dtos
     {
         public int CdEstadoControl { get; set; }
         public string? SnModificaDatos { get; set; }
+        public string? DsObservaciones { get; set; }
     }
 
     public class CategoriaPlanoDto

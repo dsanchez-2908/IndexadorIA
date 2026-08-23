@@ -28,10 +28,10 @@ namespace IndexadorIA.Datos
                         _cadenaConexion = null;
                     }
 
-                    // Si no se encontró en el config, usa la cadena de desarrollo por defecto
+                    // Si no se encontró en el config, dejar vacío
                     if (string.IsNullOrEmpty(_cadenaConexion))
                     {
-                        _cadenaConexion = "Server=localhost\\SQLEXPRESS;Database=IndexadorIA;User Id=sa;Password=123;TrustServerCertificate=True;";
+                        _cadenaConexion = string.Empty;
                     }
                 }
                 return _cadenaConexion;
@@ -40,6 +40,37 @@ namespace IndexadorIA.Datos
             {
                 _cadenaConexion = value;
             }
+        }
+
+        /// <summary>
+        /// Obtiene el nombre de la base de datos configurada, extra�do de la cadena de conexi�n.
+        /// �til para mostrar en la interfaz el entorno/ambiente al que est� conectado el usuario.
+        /// </summary>
+        public static string ObtenerNombreBaseDeDatos()
+        {
+            string cadena = CadenaConexion;
+
+            if (string.IsNullOrEmpty(cadena))
+            {
+                return string.Empty;
+            }
+
+            foreach (string parte in cadena.Split(';'))
+            {
+                string trimmed = parte.Trim();
+
+                if (trimmed.StartsWith("Database=", StringComparison.OrdinalIgnoreCase))
+                {
+                    return trimmed["Database=".Length..].Trim();
+                }
+
+                if (trimmed.StartsWith("Initial Catalog=", StringComparison.OrdinalIgnoreCase))
+                {
+                    return trimmed["Initial Catalog=".Length..].Trim();
+                }
+            }
+
+            return string.Empty;
         }
     }
 }

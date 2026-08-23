@@ -17,436 +17,430 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void InitializeComponent()
         {
-            this.pnlTop = new System.Windows.Forms.Panel();
-            this.btnCerrar = new System.Windows.Forms.Button();
-            this.lblTitulo = new System.Windows.Forms.Label();
-            this.dgvArchivos = new System.Windows.Forms.DataGridView();
-            this.colSeleccion = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.pnlBotones = new System.Windows.Forms.Panel();
-            this.btnSeleccionarTodo = new System.Windows.Forms.Button();
-            this.btnDeseleccionarTodo = new System.Windows.Forms.Button();
-            this.btnMarcar50 = new System.Windows.Forms.Button();
-            this.pnlContadores = new System.Windows.Forms.Panel();
-            this.lblTotalRegistros = new System.Windows.Forms.Label();
-            this.lblRegistrosSeleccionados = new System.Windows.Forms.Label();
-            this.pnlOpciones = new System.Windows.Forms.Panel();
-            this.chkEliminarOriginal = new System.Windows.Forms.CheckBox();
-            this.chkHabilitarGiro = new System.Windows.Forms.CheckBox();
-            this.rbGirarAutomatico = new System.Windows.Forms.RadioButton();
-            this.rbGirar90Derecha = new System.Windows.Forms.RadioButton();
-            this.rbGirar90Izquierda = new System.Windows.Forms.RadioButton();
-            this.chkMarcaBlanco = new System.Windows.Forms.CheckBox();
-            this.btnProcesar = new System.Windows.Forms.Button();
-            this.progressBar = new System.Windows.Forms.ProgressBar();
-            this.lblProgreso = new System.Windows.Forms.Label();
-            this.pnlFiltros = new System.Windows.Forms.Panel();
-            this.chkFiltroDesde = new System.Windows.Forms.CheckBox();
-            this.dtpFiltroDesde = new System.Windows.Forms.DateTimePicker();
-            this.chkFiltroHasta = new System.Windows.Forms.CheckBox();
-            this.dtpFiltroHasta = new System.Windows.Forms.DateTimePicker();
-            this.lblFiltroCarpeta = new System.Windows.Forms.Label();
-            this.txtFiltroCarpeta = new System.Windows.Forms.TextBox();
-            this.btnFiltrar = new System.Windows.Forms.Button();
-            this.pnlTop.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvArchivos)).BeginInit();
-            this.pnlBotones.SuspendLayout();
-            this.pnlContadores.SuspendLayout();
-            this.pnlOpciones.SuspendLayout();
-            this.pnlFiltros.SuspendLayout();
-            this.SuspendLayout();
+            pnlTop = new Panel();
+            btnCerrar2 = new Button();
+            lblTitulo = new Label();
+            dgvArchivos = new DataGridView();
+            colSeleccion = new DataGridViewCheckBoxColumn();
+            pnlBotones = new Panel();
+            btnSeleccionarTodo = new Button();
+            btnDeseleccionarTodo = new Button();
+            btnMarcar50 = new Button();
+            pnlContadores = new Panel();
+            lblTotalRegistros = new Label();
+            lblRegistrosSeleccionados = new Label();
+            pnlOpciones = new Panel();
+            chkEliminarOriginal = new CheckBox();
+            chkHabilitarGiro = new CheckBox();
+            rbGirarAutomatico = new RadioButton();
+            rbGirar90Derecha = new RadioButton();
+            rbGirar90Izquierda = new RadioButton();
+            chkMarcaBlanco = new CheckBox();
+            btnProcesar = new Button();
+            progressBar = new ProgressBar();
+            lblProgreso = new Label();
+            pnlFiltros = new Panel();
+            chkFiltroDesde = new CheckBox();
+            dtpFiltroDesde = new DateTimePicker();
+            chkFiltroHasta = new CheckBox();
+            dtpFiltroHasta = new DateTimePicker();
+            lblFiltroCarpeta = new Label();
+            txtFiltroCarpeta = new TextBox();
+            btnFiltrar = new Button();
+            pnlTop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvArchivos).BeginInit();
+            pnlBotones.SuspendLayout();
+            pnlContadores.SuspendLayout();
+            pnlOpciones.SuspendLayout();
+            pnlFiltros.SuspendLayout();
+            SuspendLayout();
             // 
             // pnlTop
             // 
-            this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
-            this.pnlTop.Controls.Add(this.btnCerrar);
-            this.pnlTop.Controls.Add(this.lblTitulo);
-            this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlTop.Location = new System.Drawing.Point(0, 0);
-            this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(1200, 50);
-            this.pnlTop.TabIndex = 0;
+            pnlTop.BackColor = Color.FromArgb(45, 45, 48);
+            pnlTop.Controls.Add(btnCerrar2);
+            pnlTop.Controls.Add(lblTitulo);
+            pnlTop.Dock = DockStyle.Top;
+            pnlTop.Location = new Point(0, 0);
+            pnlTop.Name = "pnlTop";
+            pnlTop.Size = new Size(1200, 50);
+            pnlTop.TabIndex = 0;
             // 
-            // btnCerrar
+            // btnCerrar2
             // 
-            this.btnCerrar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCerrar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
-            this.btnCerrar.FlatAppearance.BorderSize = 0;
-            this.btnCerrar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCerrar.ForeColor = System.Drawing.Color.White;
-            this.btnCerrar.Location = new System.Drawing.Point(1130, 10);
-            this.btnCerrar.Name = "btnCerrar";
-            this.btnCerrar.Size = new System.Drawing.Size(60, 30);
-            this.btnCerrar.TabIndex = 1;
-            this.btnCerrar.Text = "Cerrar";
-            this.btnCerrar.UseVisualStyleBackColor = false;
-            this.btnCerrar.Click += new System.EventHandler(this.btnCerrar_Click);
+            btnCerrar2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCerrar2.BackColor = Color.FromArgb(150, 30, 30);
+            btnCerrar2.FlatStyle = FlatStyle.Flat;
+            btnCerrar2.ForeColor = Color.White;
+            btnCerrar2.Location = new Point(1063, 7);
+            btnCerrar2.Margin = new Padding(3, 3, 8, 3);
+            btnCerrar2.Name = "btnCerrar2";
+            btnCerrar2.Size = new Size(120, 34);
+            btnCerrar2.TabIndex = 9;
+            btnCerrar2.Text = "Cerrar";
+            btnCerrar2.UseVisualStyleBackColor = false;
+            btnCerrar2.Click += btnCerrar2_Click;
             // 
             // lblTitulo
             // 
-            this.lblTitulo.AutoSize = true;
-            this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
-            this.lblTitulo.ForeColor = System.Drawing.Color.White;
-            this.lblTitulo.Location = new System.Drawing.Point(12, 12);
-            this.lblTitulo.Name = "lblTitulo";
-            this.lblTitulo.Size = new System.Drawing.Size(234, 25);
-            this.lblTitulo.TabIndex = 0;
-            this.lblTitulo.Text = "Separación de Imágenes";
+            lblTitulo.AutoSize = true;
+            lblTitulo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblTitulo.ForeColor = Color.White;
+            lblTitulo.Location = new Point(12, 12);
+            lblTitulo.Name = "lblTitulo";
+            lblTitulo.Size = new Size(228, 25);
+            lblTitulo.TabIndex = 0;
+            lblTitulo.Text = "Separación de Imágenes";
             // 
             // dgvArchivos
             // 
-            this.dgvArchivos.AllowUserToAddRows = false;
-            this.dgvArchivos.AllowUserToDeleteRows = false;
-            this.dgvArchivos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvArchivos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvArchivos.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.dgvArchivos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvArchivos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colSeleccion});
-            this.dgvArchivos.Location = new System.Drawing.Point(12, 175);
-            this.dgvArchivos.Name = "dgvArchivos";
-            this.dgvArchivos.RowHeadersVisible = false;
-            this.dgvArchivos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvArchivos.Size = new System.Drawing.Size(1176, 305);
-            this.dgvArchivos.TabIndex = 1;
-            this.dgvArchivos.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvArchivos_CellContentClick);
+            dgvArchivos.AllowUserToAddRows = false;
+            dgvArchivos.AllowUserToDeleteRows = false;
+            dgvArchivos.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dgvArchivos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvArchivos.BackgroundColor = Color.FromArgb(37, 37, 38);
+            dgvArchivos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvArchivos.Columns.AddRange(new DataGridViewColumn[] { colSeleccion });
+            dgvArchivos.Location = new Point(12, 175);
+            dgvArchivos.Name = "dgvArchivos";
+            dgvArchivos.RowHeadersVisible = false;
+            dgvArchivos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvArchivos.Size = new Size(1176, 305);
+            dgvArchivos.TabIndex = 1;
+            dgvArchivos.CellContentClick += dgvArchivos_CellContentClick;
             // 
             // colSeleccion
             // 
-            this.colSeleccion.HeaderText = "Seleccionar";
-            this.colSeleccion.Name = "colSeleccion";
-            this.colSeleccion.FillWeight = 15F;
+            colSeleccion.FillWeight = 15F;
+            colSeleccion.HeaderText = "Seleccionar";
+            colSeleccion.Name = "colSeleccion";
             // 
             // pnlBotones
             // 
-            this.pnlBotones.Controls.Add(this.btnSeleccionarTodo);
-            this.pnlBotones.Controls.Add(this.btnDeseleccionarTodo);
-            this.pnlBotones.Controls.Add(this.btnMarcar50);
-            this.pnlBotones.Location = new System.Drawing.Point(12, 55);
-            this.pnlBotones.Name = "pnlBotones";
-            this.pnlBotones.Size = new System.Drawing.Size(500, 40);
-            this.pnlBotones.TabIndex = 2;
+            pnlBotones.Controls.Add(btnSeleccionarTodo);
+            pnlBotones.Controls.Add(btnDeseleccionarTodo);
+            pnlBotones.Controls.Add(btnMarcar50);
+            pnlBotones.Location = new Point(12, 55);
+            pnlBotones.Name = "pnlBotones";
+            pnlBotones.Size = new Size(500, 40);
+            pnlBotones.TabIndex = 2;
             // 
             // btnSeleccionarTodo
             // 
-            this.btnSeleccionarTodo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            this.btnSeleccionarTodo.FlatAppearance.BorderSize = 0;
-            this.btnSeleccionarTodo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSeleccionarTodo.ForeColor = System.Drawing.Color.White;
-            this.btnSeleccionarTodo.Location = new System.Drawing.Point(0, 5);
-            this.btnSeleccionarTodo.Name = "btnSeleccionarTodo";
-            this.btnSeleccionarTodo.Size = new System.Drawing.Size(130, 30);
-            this.btnSeleccionarTodo.TabIndex = 0;
-            this.btnSeleccionarTodo.Text = "Seleccionar Todo";
-            this.btnSeleccionarTodo.UseVisualStyleBackColor = false;
-            this.btnSeleccionarTodo.Click += new System.EventHandler(this.btnSeleccionarTodo_Click);
+            btnSeleccionarTodo.BackColor = Color.FromArgb(0, 122, 204);
+            btnSeleccionarTodo.FlatAppearance.BorderSize = 0;
+            btnSeleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnSeleccionarTodo.ForeColor = Color.White;
+            btnSeleccionarTodo.Location = new Point(4, 5);
+            btnSeleccionarTodo.Name = "btnSeleccionarTodo";
+            btnSeleccionarTodo.Size = new Size(130, 30);
+            btnSeleccionarTodo.TabIndex = 0;
+            btnSeleccionarTodo.Text = "Seleccionar Todo";
+            btnSeleccionarTodo.UseVisualStyleBackColor = false;
+            btnSeleccionarTodo.Click += btnSeleccionarTodo_Click;
             // 
             // btnDeseleccionarTodo
             // 
-            this.btnDeseleccionarTodo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
-            this.btnDeseleccionarTodo.FlatAppearance.BorderSize = 0;
-            this.btnDeseleccionarTodo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDeseleccionarTodo.ForeColor = System.Drawing.Color.White;
-            this.btnDeseleccionarTodo.Location = new System.Drawing.Point(140, 5);
-            this.btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
-            this.btnDeseleccionarTodo.Size = new System.Drawing.Size(150, 30);
-            this.btnDeseleccionarTodo.TabIndex = 1;
-            this.btnDeseleccionarTodo.Text = "Deseleccionar Todo";
-            this.btnDeseleccionarTodo.UseVisualStyleBackColor = false;
-            this.btnDeseleccionarTodo.Click += new System.EventHandler(this.btnDeseleccionarTodo_Click);
+            btnDeseleccionarTodo.BackColor = Color.FromArgb(63, 63, 70);
+            btnDeseleccionarTodo.FlatAppearance.BorderSize = 0;
+            btnDeseleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnDeseleccionarTodo.ForeColor = Color.White;
+            btnDeseleccionarTodo.Location = new Point(142, 5);
+            btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
+            btnDeseleccionarTodo.Size = new Size(150, 30);
+            btnDeseleccionarTodo.TabIndex = 1;
+            btnDeseleccionarTodo.Text = "Deseleccionar Todo";
+            btnDeseleccionarTodo.UseVisualStyleBackColor = false;
+            btnDeseleccionarTodo.Click += btnDeseleccionarTodo_Click;
             // 
             // btnMarcar50
             // 
-            this.btnMarcar50.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
-            this.btnMarcar50.FlatAppearance.BorderSize = 0;
-            this.btnMarcar50.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnMarcar50.ForeColor = System.Drawing.Color.White;
-            this.btnMarcar50.Location = new System.Drawing.Point(300, 5);
-            this.btnMarcar50.Name = "btnMarcar50";
-            this.btnMarcar50.Size = new System.Drawing.Size(100, 30);
-            this.btnMarcar50.TabIndex = 2;
-            this.btnMarcar50.Text = "Marcar 50";
-            this.btnMarcar50.UseVisualStyleBackColor = false;
-            this.btnMarcar50.Click += new System.EventHandler(this.btnMarcar50_Click);
+            btnMarcar50.BackColor = Color.FromArgb(63, 63, 70);
+            btnMarcar50.FlatAppearance.BorderSize = 0;
+            btnMarcar50.FlatStyle = FlatStyle.Flat;
+            btnMarcar50.ForeColor = Color.White;
+            btnMarcar50.Location = new Point(302, 5);
+            btnMarcar50.Name = "btnMarcar50";
+            btnMarcar50.Size = new Size(100, 30);
+            btnMarcar50.TabIndex = 2;
+            btnMarcar50.Text = "Marcar 50";
+            btnMarcar50.UseVisualStyleBackColor = false;
+            btnMarcar50.Click += btnMarcar50_Click;
             // 
             // pnlContadores
             // 
-            this.pnlContadores.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.pnlContadores.Controls.Add(this.lblTotalRegistros);
-            this.pnlContadores.Controls.Add(this.lblRegistrosSeleccionados);
-            this.pnlContadores.Location = new System.Drawing.Point(900, 55);
-            this.pnlContadores.Name = "pnlContadores";
-            this.pnlContadores.Size = new System.Drawing.Size(288, 60);
-            this.pnlContadores.TabIndex = 3;
+            pnlContadores.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            pnlContadores.Controls.Add(lblTotalRegistros);
+            pnlContadores.Controls.Add(lblRegistrosSeleccionados);
+            pnlContadores.Location = new Point(900, 55);
+            pnlContadores.Name = "pnlContadores";
+            pnlContadores.Size = new Size(288, 60);
+            pnlContadores.TabIndex = 3;
             // 
             // lblTotalRegistros
             // 
-            this.lblTotalRegistros.AutoSize = true;
-            this.lblTotalRegistros.ForeColor = System.Drawing.Color.White;
-            this.lblTotalRegistros.Location = new System.Drawing.Point(10, 10);
-            this.lblTotalRegistros.Name = "lblTotalRegistros";
-            this.lblTotalRegistros.Size = new System.Drawing.Size(122, 15);
-            this.lblTotalRegistros.TabIndex = 0;
-            this.lblTotalRegistros.Text = "Total de registros: 0";
+            lblTotalRegistros.AutoSize = true;
+            lblTotalRegistros.ForeColor = Color.White;
+            lblTotalRegistros.Location = new Point(10, 10);
+            lblTotalRegistros.Name = "lblTotalRegistros";
+            lblTotalRegistros.Size = new Size(109, 15);
+            lblTotalRegistros.TabIndex = 0;
+            lblTotalRegistros.Text = "Total de registros: 0";
             // 
             // lblRegistrosSeleccionados
             // 
-            this.lblRegistrosSeleccionados.AutoSize = true;
-            this.lblRegistrosSeleccionados.ForeColor = System.Drawing.Color.White;
-            this.lblRegistrosSeleccionados.Location = new System.Drawing.Point(10, 35);
-            this.lblRegistrosSeleccionados.Name = "lblRegistrosSeleccionados";
-            this.lblRegistrosSeleccionados.Size = new System.Drawing.Size(163, 15);
-            this.lblRegistrosSeleccionados.TabIndex = 1;
-            this.lblRegistrosSeleccionados.Text = "Registros seleccionados: 0";
+            lblRegistrosSeleccionados.AutoSize = true;
+            lblRegistrosSeleccionados.ForeColor = Color.White;
+            lblRegistrosSeleccionados.Location = new Point(10, 35);
+            lblRegistrosSeleccionados.Name = "lblRegistrosSeleccionados";
+            lblRegistrosSeleccionados.Size = new Size(144, 15);
+            lblRegistrosSeleccionados.TabIndex = 1;
+            lblRegistrosSeleccionados.Text = "Registros seleccionados: 0";
             // 
             // pnlOpciones
             // 
-            this.pnlOpciones.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.pnlOpciones.Controls.Add(this.chkEliminarOriginal);
-            this.pnlOpciones.Controls.Add(this.chkHabilitarGiro);
-            this.pnlOpciones.Controls.Add(this.rbGirarAutomatico);
-            this.pnlOpciones.Controls.Add(this.rbGirar90Derecha);
-            this.pnlOpciones.Controls.Add(this.rbGirar90Izquierda);
-            this.pnlOpciones.Controls.Add(this.chkMarcaBlanco);
-            this.pnlOpciones.Controls.Add(this.btnProcesar);
-            this.pnlOpciones.Location = new System.Drawing.Point(12, 490);
-            this.pnlOpciones.Name = "pnlOpciones";
-            this.pnlOpciones.Size = new System.Drawing.Size(700, 90);
-            this.pnlOpciones.TabIndex = 4;
+            pnlOpciones.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            pnlOpciones.Controls.Add(chkEliminarOriginal);
+            pnlOpciones.Controls.Add(chkHabilitarGiro);
+            pnlOpciones.Controls.Add(rbGirarAutomatico);
+            pnlOpciones.Controls.Add(rbGirar90Derecha);
+            pnlOpciones.Controls.Add(rbGirar90Izquierda);
+            pnlOpciones.Controls.Add(chkMarcaBlanco);
+            pnlOpciones.Controls.Add(btnProcesar);
+            pnlOpciones.Location = new Point(12, 490);
+            pnlOpciones.Name = "pnlOpciones";
+            pnlOpciones.Size = new Size(700, 90);
+            pnlOpciones.TabIndex = 4;
             // 
             // chkEliminarOriginal
             // 
-            this.chkEliminarOriginal.AutoSize = true;
-            this.chkEliminarOriginal.ForeColor = System.Drawing.Color.White;
-            this.chkEliminarOriginal.Location = new System.Drawing.Point(10, 10);
-            this.chkEliminarOriginal.Name = "chkEliminarOriginal";
-            this.chkEliminarOriginal.Size = new System.Drawing.Size(164, 19);
-            this.chkEliminarOriginal.TabIndex = 0;
-            this.chkEliminarOriginal.Text = "Eliminar archivo original";
-            this.chkEliminarOriginal.UseVisualStyleBackColor = true;
+            chkEliminarOriginal.AutoSize = true;
+            chkEliminarOriginal.ForeColor = Color.White;
+            chkEliminarOriginal.Location = new Point(10, 10);
+            chkEliminarOriginal.Name = "chkEliminarOriginal";
+            chkEliminarOriginal.Size = new Size(154, 19);
+            chkEliminarOriginal.TabIndex = 0;
+            chkEliminarOriginal.Text = "Eliminar archivo original";
+            chkEliminarOriginal.UseVisualStyleBackColor = true;
             // 
             // chkHabilitarGiro
             // 
-            this.chkHabilitarGiro.AutoSize = true;
-            this.chkHabilitarGiro.ForeColor = System.Drawing.Color.White;
-            this.chkHabilitarGiro.Location = new System.Drawing.Point(10, 35);
-            this.chkHabilitarGiro.Name = "chkHabilitarGiro";
-            this.chkHabilitarGiro.Size = new System.Drawing.Size(103, 19);
-            this.chkHabilitarGiro.TabIndex = 1;
-            this.chkHabilitarGiro.Text = "Habilitar Giro";
-            this.chkHabilitarGiro.UseVisualStyleBackColor = true;
-            this.chkHabilitarGiro.CheckedChanged += new System.EventHandler(this.chkHabilitarGiro_CheckedChanged);
+            chkHabilitarGiro.AutoSize = true;
+            chkHabilitarGiro.ForeColor = Color.White;
+            chkHabilitarGiro.Location = new Point(10, 35);
+            chkHabilitarGiro.Name = "chkHabilitarGiro";
+            chkHabilitarGiro.Size = new Size(96, 19);
+            chkHabilitarGiro.TabIndex = 1;
+            chkHabilitarGiro.Text = "Habilitar Giro";
+            chkHabilitarGiro.UseVisualStyleBackColor = true;
+            chkHabilitarGiro.CheckedChanged += chkHabilitarGiro_CheckedChanged;
             // 
             // rbGirarAutomatico
             // 
-            this.rbGirarAutomatico.AutoSize = true;
-            this.rbGirarAutomatico.Checked = true;
-            this.rbGirarAutomatico.Enabled = false;
-            this.rbGirarAutomatico.ForeColor = System.Drawing.Color.White;
-            this.rbGirarAutomatico.Location = new System.Drawing.Point(30, 58);
-            this.rbGirarAutomatico.Name = "rbGirarAutomatico";
-            this.rbGirarAutomatico.Size = new System.Drawing.Size(160, 19);
-            this.rbGirarAutomatico.TabIndex = 2;
-            this.rbGirarAutomatico.TabStop = true;
-            this.rbGirarAutomatico.Text = "Girar Automáticamente";
-            this.rbGirarAutomatico.UseVisualStyleBackColor = true;
+            rbGirarAutomatico.AutoSize = true;
+            rbGirarAutomatico.Checked = true;
+            rbGirarAutomatico.Enabled = false;
+            rbGirarAutomatico.ForeColor = Color.White;
+            rbGirarAutomatico.Location = new Point(30, 58);
+            rbGirarAutomatico.Name = "rbGirarAutomatico";
+            rbGirarAutomatico.Size = new Size(149, 19);
+            rbGirarAutomatico.TabIndex = 2;
+            rbGirarAutomatico.TabStop = true;
+            rbGirarAutomatico.Text = "Girar Automáticamente";
+            rbGirarAutomatico.UseVisualStyleBackColor = true;
             // 
             // rbGirar90Derecha
             // 
-            this.rbGirar90Derecha.AutoSize = true;
-            this.rbGirar90Derecha.Enabled = false;
-            this.rbGirar90Derecha.ForeColor = System.Drawing.Color.White;
-            this.rbGirar90Derecha.Location = new System.Drawing.Point(200, 58);
-            this.rbGirar90Derecha.Name = "rbGirar90Derecha";
-            this.rbGirar90Derecha.Size = new System.Drawing.Size(160, 19);
-            this.rbGirar90Derecha.TabIndex = 3;
-            this.rbGirar90Derecha.Text = "Girar 90° a la derecha";
-            this.rbGirar90Derecha.UseVisualStyleBackColor = true;
+            rbGirar90Derecha.AutoSize = true;
+            rbGirar90Derecha.Enabled = false;
+            rbGirar90Derecha.ForeColor = Color.White;
+            rbGirar90Derecha.Location = new Point(200, 58);
+            rbGirar90Derecha.Name = "rbGirar90Derecha";
+            rbGirar90Derecha.Size = new Size(136, 19);
+            rbGirar90Derecha.TabIndex = 3;
+            rbGirar90Derecha.Text = "Girar 90° a la derecha";
+            rbGirar90Derecha.UseVisualStyleBackColor = true;
             // 
             // rbGirar90Izquierda
             // 
-            this.rbGirar90Izquierda.AutoSize = true;
-            this.rbGirar90Izquierda.Enabled = false;
-            this.rbGirar90Izquierda.ForeColor = System.Drawing.Color.White;
-            this.rbGirar90Izquierda.Location = new System.Drawing.Point(370, 58);
-            this.rbGirar90Izquierda.Name = "rbGirar90Izquierda";
-            this.rbGirar90Izquierda.Size = new System.Drawing.Size(160, 19);
-            this.rbGirar90Izquierda.TabIndex = 4;
-            this.rbGirar90Izquierda.Text = "Girar 90° a la izquierda";
-            this.rbGirar90Izquierda.UseVisualStyleBackColor = true;
+            rbGirar90Izquierda.AutoSize = true;
+            rbGirar90Izquierda.Enabled = false;
+            rbGirar90Izquierda.ForeColor = Color.White;
+            rbGirar90Izquierda.Location = new Point(370, 58);
+            rbGirar90Izquierda.Name = "rbGirar90Izquierda";
+            rbGirar90Izquierda.Size = new Size(142, 19);
+            rbGirar90Izquierda.TabIndex = 4;
+            rbGirar90Izquierda.Text = "Girar 90° a la izquierda";
+            rbGirar90Izquierda.UseVisualStyleBackColor = true;
             // 
             // chkMarcaBlanco
             // 
-            this.chkMarcaBlanco.AutoSize = true;
-            this.chkMarcaBlanco.ForeColor = System.Drawing.Color.White;
-            this.chkMarcaBlanco.Location = new System.Drawing.Point(250, 10);
-            this.chkMarcaBlanco.Name = "chkMarcaBlanco";
-            this.chkMarcaBlanco.Size = new System.Drawing.Size(210, 19);
-            this.chkMarcaBlanco.TabIndex = 5;
-            this.chkMarcaBlanco.Text = "Marcar como posiblemente blanco";
-            this.chkMarcaBlanco.UseVisualStyleBackColor = true;
+            chkMarcaBlanco.AutoSize = true;
+            chkMarcaBlanco.ForeColor = Color.White;
+            chkMarcaBlanco.Location = new Point(250, 10);
+            chkMarcaBlanco.Name = "chkMarcaBlanco";
+            chkMarcaBlanco.Size = new Size(211, 19);
+            chkMarcaBlanco.TabIndex = 5;
+            chkMarcaBlanco.Text = "Marcar como posiblemente blanco";
+            chkMarcaBlanco.UseVisualStyleBackColor = true;
             // 
             // btnProcesar
             // 
-            this.btnProcesar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            this.btnProcesar.FlatAppearance.BorderSize = 0;
-            this.btnProcesar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnProcesar.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnProcesar.ForeColor = System.Drawing.Color.White;
-            this.btnProcesar.Location = new System.Drawing.Point(550, 25);
-            this.btnProcesar.Name = "btnProcesar";
-            this.btnProcesar.Size = new System.Drawing.Size(120, 40);
-            this.btnProcesar.TabIndex = 6;
-            this.btnProcesar.Text = "Procesar";
-            this.btnProcesar.UseVisualStyleBackColor = false;
-            this.btnProcesar.Click += new System.EventHandler(this.btnProcesar_Click);
+            btnProcesar.BackColor = Color.FromArgb(0, 122, 204);
+            btnProcesar.FlatAppearance.BorderSize = 0;
+            btnProcesar.FlatStyle = FlatStyle.Flat;
+            btnProcesar.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnProcesar.ForeColor = Color.White;
+            btnProcesar.Location = new Point(550, 25);
+            btnProcesar.Name = "btnProcesar";
+            btnProcesar.Size = new Size(120, 40);
+            btnProcesar.TabIndex = 6;
+            btnProcesar.Text = "Procesar";
+            btnProcesar.UseVisualStyleBackColor = false;
+            btnProcesar.Click += btnProcesar_Click;
             // 
             // progressBar
             // 
-            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(12, 580);
-            this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(1176, 23);
-            this.progressBar.TabIndex = 5;
+            progressBar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            progressBar.Location = new Point(12, 580);
+            progressBar.Name = "progressBar";
+            progressBar.Size = new Size(1176, 23);
+            progressBar.TabIndex = 5;
             // 
             // lblProgreso
             // 
-            this.lblProgreso.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblProgreso.ForeColor = System.Drawing.Color.White;
-            this.lblProgreso.Location = new System.Drawing.Point(12, 610);
-            this.lblProgreso.Name = "lblProgreso";
-            this.lblProgreso.Size = new System.Drawing.Size(1176, 20);
-            this.lblProgreso.TabIndex = 6;
-            this.lblProgreso.Text = "Listo para procesar";
-            this.lblProgreso.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            lblProgreso.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lblProgreso.ForeColor = Color.White;
+            lblProgreso.Location = new Point(12, 610);
+            lblProgreso.Name = "lblProgreso";
+            lblProgreso.Size = new Size(1176, 20);
+            lblProgreso.TabIndex = 6;
+            lblProgreso.Text = "Listo para procesar";
+            lblProgreso.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // pnlFiltros
             // 
-            this.pnlFiltros.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
-            this.pnlFiltros.Controls.Add(this.chkFiltroDesde);
-            this.pnlFiltros.Controls.Add(this.dtpFiltroDesde);
-            this.pnlFiltros.Controls.Add(this.chkFiltroHasta);
-            this.pnlFiltros.Controls.Add(this.dtpFiltroHasta);
-            this.pnlFiltros.Controls.Add(this.lblFiltroCarpeta);
-            this.pnlFiltros.Controls.Add(this.txtFiltroCarpeta);
-            this.pnlFiltros.Controls.Add(this.btnFiltrar);
-            this.pnlFiltros.Location = new System.Drawing.Point(12, 120);
-            this.pnlFiltros.Name = "pnlFiltros";
-            this.pnlFiltros.Size = new System.Drawing.Size(1176, 45);
-            this.pnlFiltros.TabIndex = 7;
+            pnlFiltros.BackColor = Color.FromArgb(45, 45, 48);
+            pnlFiltros.Controls.Add(chkFiltroDesde);
+            pnlFiltros.Controls.Add(dtpFiltroDesde);
+            pnlFiltros.Controls.Add(chkFiltroHasta);
+            pnlFiltros.Controls.Add(dtpFiltroHasta);
+            pnlFiltros.Controls.Add(lblFiltroCarpeta);
+            pnlFiltros.Controls.Add(txtFiltroCarpeta);
+            pnlFiltros.Controls.Add(btnFiltrar);
+            pnlFiltros.Location = new Point(12, 120);
+            pnlFiltros.Name = "pnlFiltros";
+            pnlFiltros.Size = new Size(1176, 45);
+            pnlFiltros.TabIndex = 7;
             // 
             // chkFiltroDesde
             // 
-            this.chkFiltroDesde.AutoSize = true;
-            this.chkFiltroDesde.ForeColor = System.Drawing.Color.White;
-            this.chkFiltroDesde.Location = new System.Drawing.Point(10, 10);
-            this.chkFiltroDesde.Name = "chkFiltroDesde";
-            this.chkFiltroDesde.Size = new System.Drawing.Size(120, 19);
-            this.chkFiltroDesde.TabIndex = 0;
-            this.chkFiltroDesde.Text = "Desde Fecha Alta";
-            this.chkFiltroDesde.UseVisualStyleBackColor = true;
-            this.chkFiltroDesde.CheckedChanged += new System.EventHandler(this.chkFiltroDesde_CheckedChanged);
+            chkFiltroDesde.AutoSize = true;
+            chkFiltroDesde.ForeColor = Color.White;
+            chkFiltroDesde.Location = new Point(10, 10);
+            chkFiltroDesde.Name = "chkFiltroDesde";
+            chkFiltroDesde.Size = new Size(116, 19);
+            chkFiltroDesde.TabIndex = 0;
+            chkFiltroDesde.Text = "Desde Fecha Alta";
+            chkFiltroDesde.UseVisualStyleBackColor = true;
+            chkFiltroDesde.CheckedChanged += chkFiltroDesde_CheckedChanged;
             // 
             // dtpFiltroDesde
             // 
-            this.dtpFiltroDesde.Enabled = false;
-            this.dtpFiltroDesde.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpFiltroDesde.Location = new System.Drawing.Point(150, 8);
-            this.dtpFiltroDesde.Name = "dtpFiltroDesde";
-            this.dtpFiltroDesde.Size = new System.Drawing.Size(120, 23);
-            this.dtpFiltroDesde.TabIndex = 1;
+            dtpFiltroDesde.Enabled = false;
+            dtpFiltroDesde.Format = DateTimePickerFormat.Short;
+            dtpFiltroDesde.Location = new Point(150, 8);
+            dtpFiltroDesde.Name = "dtpFiltroDesde";
+            dtpFiltroDesde.Size = new Size(120, 23);
+            dtpFiltroDesde.TabIndex = 1;
             // 
             // chkFiltroHasta
             // 
-            this.chkFiltroHasta.AutoSize = true;
-            this.chkFiltroHasta.ForeColor = System.Drawing.Color.White;
-            this.chkFiltroHasta.Location = new System.Drawing.Point(290, 10);
-            this.chkFiltroHasta.Name = "chkFiltroHasta";
-            this.chkFiltroHasta.Size = new System.Drawing.Size(120, 19);
-            this.chkFiltroHasta.TabIndex = 2;
-            this.chkFiltroHasta.Text = "Hasta Fecha Alta";
-            this.chkFiltroHasta.UseVisualStyleBackColor = true;
-            this.chkFiltroHasta.CheckedChanged += new System.EventHandler(this.chkFiltroHasta_CheckedChanged);
+            chkFiltroHasta.AutoSize = true;
+            chkFiltroHasta.ForeColor = Color.White;
+            chkFiltroHasta.Location = new Point(290, 10);
+            chkFiltroHasta.Name = "chkFiltroHasta";
+            chkFiltroHasta.Size = new Size(114, 19);
+            chkFiltroHasta.TabIndex = 2;
+            chkFiltroHasta.Text = "Hasta Fecha Alta";
+            chkFiltroHasta.UseVisualStyleBackColor = true;
+            chkFiltroHasta.CheckedChanged += chkFiltroHasta_CheckedChanged;
             // 
             // dtpFiltroHasta
             // 
-            this.dtpFiltroHasta.Enabled = false;
-            this.dtpFiltroHasta.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpFiltroHasta.Location = new System.Drawing.Point(430, 8);
-            this.dtpFiltroHasta.Name = "dtpFiltroHasta";
-            this.dtpFiltroHasta.Size = new System.Drawing.Size(120, 23);
-            this.dtpFiltroHasta.TabIndex = 3;
+            dtpFiltroHasta.Enabled = false;
+            dtpFiltroHasta.Format = DateTimePickerFormat.Short;
+            dtpFiltroHasta.Location = new Point(430, 8);
+            dtpFiltroHasta.Name = "dtpFiltroHasta";
+            dtpFiltroHasta.Size = new Size(120, 23);
+            dtpFiltroHasta.TabIndex = 3;
             // 
             // lblFiltroCarpeta
             // 
-            this.lblFiltroCarpeta.AutoSize = true;
-            this.lblFiltroCarpeta.ForeColor = System.Drawing.Color.White;
-            this.lblFiltroCarpeta.Location = new System.Drawing.Point(570, 12);
-            this.lblFiltroCarpeta.Name = "lblFiltroCarpeta";
-            this.lblFiltroCarpeta.Size = new System.Drawing.Size(120, 15);
-            this.lblFiltroCarpeta.TabIndex = 4;
-            this.lblFiltroCarpeta.Text = "Nombre \u00faltima carpeta:";
+            lblFiltroCarpeta.AutoSize = true;
+            lblFiltroCarpeta.ForeColor = Color.White;
+            lblFiltroCarpeta.Location = new Point(570, 12);
+            lblFiltroCarpeta.Name = "lblFiltroCarpeta";
+            lblFiltroCarpeta.Size = new Size(133, 15);
+            lblFiltroCarpeta.TabIndex = 4;
+            lblFiltroCarpeta.Text = "Nombre última carpeta:";
             // 
             // txtFiltroCarpeta
             // 
-            this.txtFiltroCarpeta.Location = new System.Drawing.Point(700, 8);
-            this.txtFiltroCarpeta.Name = "txtFiltroCarpeta";
-            this.txtFiltroCarpeta.Size = new System.Drawing.Size(200, 23);
-            this.txtFiltroCarpeta.TabIndex = 5;
+            txtFiltroCarpeta.Location = new Point(709, 8);
+            txtFiltroCarpeta.Name = "txtFiltroCarpeta";
+            txtFiltroCarpeta.Size = new Size(191, 23);
+            txtFiltroCarpeta.TabIndex = 5;
             // 
             // btnFiltrar
             // 
-            this.btnFiltrar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
-            this.btnFiltrar.FlatAppearance.BorderSize = 0;
-            this.btnFiltrar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnFiltrar.ForeColor = System.Drawing.Color.White;
-            this.btnFiltrar.Location = new System.Drawing.Point(920, 6);
-            this.btnFiltrar.Name = "btnFiltrar";
-            this.btnFiltrar.Size = new System.Drawing.Size(100, 30);
-            this.btnFiltrar.TabIndex = 6;
-            this.btnFiltrar.Text = "Filtrar";
-            this.btnFiltrar.UseVisualStyleBackColor = false;
-            this.btnFiltrar.Click += new System.EventHandler(this.btnFiltrar_Click);
+            btnFiltrar.BackColor = Color.FromArgb(63, 63, 70);
+            btnFiltrar.FlatAppearance.BorderSize = 0;
+            btnFiltrar.FlatStyle = FlatStyle.Flat;
+            btnFiltrar.ForeColor = Color.White;
+            btnFiltrar.Location = new Point(920, 6);
+            btnFiltrar.Name = "btnFiltrar";
+            btnFiltrar.Size = new Size(100, 30);
+            btnFiltrar.TabIndex = 6;
+            btnFiltrar.Text = "Filtrar";
+            btnFiltrar.UseVisualStyleBackColor = false;
+            btnFiltrar.Click += btnFiltrar_Click;
             // 
             // FrmSeparacionImagenes
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.ClientSize = new System.Drawing.Size(1200, 640);
-            this.Controls.Add(this.lblProgreso);
-            this.Controls.Add(this.progressBar);
-            this.Controls.Add(this.pnlOpciones);
-            this.Controls.Add(this.pnlContadores);
-            this.Controls.Add(this.pnlBotones);
-            this.Controls.Add(this.dgvArchivos);
-            this.Controls.Add(this.pnlFiltros);
-            this.Controls.Add(this.pnlTop);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Name = "FrmSeparacionImagenes";
-            this.Text = "Separación de Imágenes";
-            this.Load += new System.EventHandler(this.FrmSeparacionImagenes_Load);
-            this.pnlTop.ResumeLayout(false);
-            this.pnlTop.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvArchivos)).EndInit();
-            this.pnlBotones.ResumeLayout(false);
-            this.pnlContadores.ResumeLayout(false);
-            this.pnlContadores.PerformLayout();
-            this.pnlOpciones.ResumeLayout(false);
-            this.pnlOpciones.PerformLayout();
-            this.pnlFiltros.ResumeLayout(false);
-            this.pnlFiltros.PerformLayout();
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(37, 37, 38);
+            ClientSize = new Size(1200, 640);
+            Controls.Add(lblProgreso);
+            Controls.Add(progressBar);
+            Controls.Add(pnlOpciones);
+            Controls.Add(pnlContadores);
+            Controls.Add(pnlBotones);
+            Controls.Add(dgvArchivos);
+            Controls.Add(pnlFiltros);
+            Controls.Add(pnlTop);
+            FormBorderStyle = FormBorderStyle.None;
+            Name = "FrmSeparacionImagenes";
+            Text = "Separación de Imágenes";
+            Load += FrmSeparacionImagenes_Load;
+            pnlTop.ResumeLayout(false);
+            pnlTop.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvArchivos).EndInit();
+            pnlBotones.ResumeLayout(false);
+            pnlContadores.ResumeLayout(false);
+            pnlContadores.PerformLayout();
+            pnlOpciones.ResumeLayout(false);
+            pnlOpciones.PerformLayout();
+            pnlFiltros.ResumeLayout(false);
+            pnlFiltros.PerformLayout();
+            ResumeLayout(false);
 
         }
 
         #endregion
 
         private System.Windows.Forms.Panel pnlTop;
-        private System.Windows.Forms.Button btnCerrar;
         private System.Windows.Forms.Label lblTitulo;
         private System.Windows.Forms.DataGridView dgvArchivos;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colSeleccion;
@@ -475,5 +469,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private System.Windows.Forms.Label lblFiltroCarpeta;
         private System.Windows.Forms.TextBox txtFiltroCarpeta;
         private System.Windows.Forms.Button btnFiltrar;
+        private Button btnCerrar2;
     }
 }

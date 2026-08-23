@@ -46,6 +46,37 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Obtiene el valor de un parámetro por su código numérico (cdParametro)
+        /// </summary>
+        public string? ObtenerValorPorCodigo(int cdParametro)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_cadenaConexion);
+                using var cmd = new SqlCommand("SELECT dsValorParametro FROM TD_PARAMETROS WHERE cdParametro = @cdParametro", conn);
+
+                cmd.Parameters.AddWithValue("@cdParametro", cdParametro);
+
+                conn.Open();
+                object? result = cmd.ExecuteScalar();
+
+                return result?.ToString();
+            }
+            catch (Exception ex)
+            {
+                var logDAL = new LogDAL();
+                logDAL.Insertar(new Entidades.LogRegistro
+                {
+                    DsNivel = Entidades.LogRegistro.Niveles.ERROR,
+                    DsModulo = "ParametrosDAL.ObtenerValorPorCodigo",
+                    DsMensaje = $"Error al obtener parámetro con código '{cdParametro}': {ex.Message}",
+                    DsExcepcion = ex.ToString()
+                });
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Actualiza el valor de un parámetro
         /// </summary>
         public void ActualizarValor(string clave, string valor, int cdUsuario)

@@ -28,7 +28,10 @@ namespace IndexadorIA.Pantallas
             _usuarioBL = new UsuarioBL();
             _cdUsuario = cdUsuario;
             _esPrimerIngreso = esPrimerIngreso;
-            _usarApi = false;
+            _usarApi = SesionApi.ModoRemoto;
+
+            if (_usarApi)
+                _apiCliente = new ApiClienteServicio();
 
             AjustarLayoutPrimerIngreso();
         }
@@ -118,7 +121,11 @@ namespace IndexadorIA.Pantallas
 
             if (_usarApi)
             {
-                CambiarClaveTemporalApiAsync(nuevaClave, confirmarClave).ConfigureAwait(true);
+                if (_dsUsuarioApi != null)
+                    CambiarClaveTemporalApiAsync(nuevaClave, confirmarClave).ConfigureAwait(true);
+                else
+                    CambiarClaveApiAsync(claveActual, nuevaClave, confirmarClave).ConfigureAwait(true);
+
                 return;
             }
 
@@ -166,6 +173,38 @@ namespace IndexadorIA.Pantallas
             {
                 MessageBox.Show($"Error al cambiar la contraseña: {ex.Message}", "Error", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private async Task CambiarClaveApiAsync(string claveActual, string nuevaClave, string confirmarClave)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                btnGuardar.Enabled = false;
+
+                await _apiCliente!.CambiarClaveAsync(claveActual, nuevaClave, confirmarClave);
+
+                MessageBox.Show("Contraseña cambiada exitosamente", "Éxito",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnGuardar.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cambiar la contraseña: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnGuardar.Enabled = true;
             }
             finally
             {

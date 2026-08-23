@@ -56,7 +56,7 @@ namespace IndexadorIA.Api.Controllers
         public IActionResult ActualizarEstadoControl(int cdResultado, [FromBody] ActualizarEstadoControlRequestDto request)
         {
             _resultadoIADAL.ActualizarEstadoControl(
-                cdResultado, request.CdEstadoControl, request.SnModificaDatos, ObtenerCdUsuarioActual());
+                cdResultado, request.CdEstadoControl, request.SnModificaDatos, ObtenerCdUsuarioActual(), request.DsObservaciones);
 
             return Ok(new { mensaje = "Estado de control actualizado correctamente" });
         }

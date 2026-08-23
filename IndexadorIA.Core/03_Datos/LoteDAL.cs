@@ -710,6 +710,31 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Agrega un texto a las observaciones existentes del resultado IA asociado a la
+        /// pagina indicada (usado, por ejemplo, para marcar "NOMBRE DE ARCHIVO INCOMPLETO"
+        /// cuando el nombre final del PDF debio truncarse por exceder los 260 caracteres).
+        /// </summary>
+        public void AgregarObservacion(int cdArchivoPagina, string textoAAgregar)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_001_RESULTADO_IA
+                    SET dsObservaciones = CASE
+                        WHEN dsObservaciones IS NULL OR dsObservaciones = '' THEN @texto
+                        ELSE dsObservaciones + ' ' + @texto
+                    END
+                    WHERE cdArchivoPagina = @cdArchivoPagina", conexion);
+
+                comando.Parameters.AddWithValue("@texto", textoAAgregar);
+                comando.Parameters.AddWithValue("@cdArchivoPagina", cdArchivoPagina);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
         /// Obtiene las filas de metadatos de la vista VW_001_RESULTADO_IA para un lote,
         /// usadas para generar los CSV de finalizacion.
         /// </summary>
@@ -722,7 +747,8 @@ namespace IndexadorIA.Datos
                 var comando = new SqlCommand(@"
                     SELECT dsRutaCompleta, dsNombreArchivoOriginal, dsNombreArchivoFinal,
                            dsCategoriaPlano, dsTipoPlano, dsAcronimo, dsDireccion, dsSeccion,
-                           dsManzana, dsParcela, dsExpediente, dsNumeroPlano, cdEstadoControl
+                           dsManzana, dsParcela, dsExpediente, dsNumeroPlano, cdEstadoControl,
+                           dsObservaciones
                     FROM VW_001_RESULTADO_IA
                     WHERE cdLote = @cdLote", conexion);
 
@@ -747,7 +773,8 @@ namespace IndexadorIA.Datos
                             DsParcela = lector.IsDBNull(9) ? string.Empty : lector.GetString(9),
                             DsExpediente = lector.IsDBNull(10) ? string.Empty : lector.GetString(10),
                             DsNumeroPlano = lector.IsDBNull(11) ? string.Empty : lector.GetString(11),
-                            CdEstadoControl = lector.GetInt32(12)
+                            CdEstadoControl = lector.GetInt32(12),
+                            DsObservaciones = lector.IsDBNull(13) ? null : lector.GetString(13)
                         });
                     }
                 }

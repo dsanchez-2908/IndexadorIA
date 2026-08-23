@@ -19,6 +19,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             splitContainer1 = new SplitContainer();
             groupBoxPrincipal = new GroupBox();
+            panelGrilla = new Panel();
+            dgvLotes = new DataGridView();
+            lblInfoSeleccion = new Label();
+            panelBotonesSeleccion = new Panel();
+            btnSeleccionar50 = new Button();
+            btnDeseleccionarTodo = new Button();
+            btnSeleccionarTodo = new Button();
             panelFiltros = new Panel();
             btnLimpiar = new Button();
             btnBuscar = new Button();
@@ -28,13 +35,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblDesde = new Label();
             txtFiltroNombre = new TextBox();
             lblFiltroNombre = new Label();
-            panelBotonesSeleccion = new Panel();
-            btnSeleccionar50 = new Button();
-            btnDeseleccionarTodo = new Button();
-            btnSeleccionarTodo = new Button();
-            panelGrilla = new Panel();
-            dgvLotes = new DataGridView();
-            lblInfoSeleccion = new Label();
             panelDerecha = new Panel();
             groupBoxPreview = new GroupBox();
             panelVisor = new Panel();
@@ -62,10 +62,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
             groupBoxPrincipal.SuspendLayout();
-            panelFiltros.SuspendLayout();
-            panelBotonesSeleccion.SuspendLayout();
             panelGrilla.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvLotes).BeginInit();
+            panelBotonesSeleccion.SuspendLayout();
+            panelFiltros.SuspendLayout();
             panelDerecha.SuspendLayout();
             groupBoxPreview.SuspendLayout();
             panelVisor.SuspendLayout();
@@ -110,6 +110,87 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxPrincipal.TabStop = false;
             groupBoxPrincipal.Text = "Lotes Disponibles";
             // 
+            // panelGrilla
+            // 
+            panelGrilla.Controls.Add(dgvLotes);
+            panelGrilla.Controls.Add(lblInfoSeleccion);
+            panelGrilla.Dock = DockStyle.Fill;
+            panelGrilla.Location = new Point(10, 161);
+            panelGrilla.Name = "panelGrilla";
+            panelGrilla.Padding = new Padding(0, 5, 0, 0);
+            panelGrilla.Size = new Size(680, 479);
+            panelGrilla.TabIndex = 2;
+            // 
+            // dgvLotes
+            // 
+            dgvLotes.AllowUserToAddRows = false;
+            dgvLotes.AllowUserToDeleteRows = false;
+            dgvLotes.BackgroundColor = Color.FromArgb(30, 30, 30);
+            dgvLotes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvLotes.Dock = DockStyle.Fill;
+            dgvLotes.Location = new Point(0, 5);
+            dgvLotes.Name = "dgvLotes";
+            dgvLotes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvLotes.Size = new Size(680, 449);
+            dgvLotes.TabIndex = 0;
+            // 
+            // lblInfoSeleccion
+            // 
+            lblInfoSeleccion.Dock = DockStyle.Bottom;
+            lblInfoSeleccion.Location = new Point(0, 454);
+            lblInfoSeleccion.Name = "lblInfoSeleccion";
+            lblInfoSeleccion.Padding = new Padding(5);
+            lblInfoSeleccion.Size = new Size(680, 25);
+            lblInfoSeleccion.TabIndex = 1;
+            lblInfoSeleccion.Text = "Lotes seleccionados: 0 | Total archivos: 0";
+            // 
+            // panelBotonesSeleccion
+            // 
+            panelBotonesSeleccion.Controls.Add(btnSeleccionar50);
+            panelBotonesSeleccion.Controls.Add(btnDeseleccionarTodo);
+            panelBotonesSeleccion.Controls.Add(btnSeleccionarTodo);
+            panelBotonesSeleccion.Dock = DockStyle.Top;
+            panelBotonesSeleccion.Location = new Point(10, 116);
+            panelBotonesSeleccion.Name = "panelBotonesSeleccion";
+            panelBotonesSeleccion.Size = new Size(680, 45);
+            panelBotonesSeleccion.TabIndex = 1;
+            // 
+            // btnSeleccionar50
+            // 
+            btnSeleccionar50.BackColor = Color.FromArgb(45, 45, 48);
+            btnSeleccionar50.FlatStyle = FlatStyle.Flat;
+            btnSeleccionar50.ForeColor = Color.White;
+            btnSeleccionar50.Location = new Point(290, 8);
+            btnSeleccionar50.Name = "btnSeleccionar50";
+            btnSeleccionar50.Size = new Size(130, 30);
+            btnSeleccionar50.TabIndex = 2;
+            btnSeleccionar50.Text = "Seleccionar 50";
+            btnSeleccionar50.UseVisualStyleBackColor = false;
+            // 
+            // btnDeseleccionarTodo
+            // 
+            btnDeseleccionarTodo.BackColor = Color.FromArgb(45, 45, 48);
+            btnDeseleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnDeseleccionarTodo.ForeColor = Color.White;
+            btnDeseleccionarTodo.Location = new Point(150, 8);
+            btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
+            btnDeseleccionarTodo.Size = new Size(130, 30);
+            btnDeseleccionarTodo.TabIndex = 1;
+            btnDeseleccionarTodo.Text = "Deseleccionar Todo";
+            btnDeseleccionarTodo.UseVisualStyleBackColor = false;
+            // 
+            // btnSeleccionarTodo
+            // 
+            btnSeleccionarTodo.BackColor = Color.FromArgb(45, 45, 48);
+            btnSeleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnSeleccionarTodo.ForeColor = Color.White;
+            btnSeleccionarTodo.Location = new Point(10, 8);
+            btnSeleccionarTodo.Name = "btnSeleccionarTodo";
+            btnSeleccionarTodo.Size = new Size(130, 30);
+            btnSeleccionarTodo.TabIndex = 0;
+            btnSeleccionarTodo.Text = "Seleccionar Todo";
+            btnSeleccionarTodo.UseVisualStyleBackColor = false;
+            // 
             // panelFiltros
             // 
             panelFiltros.Controls.Add(btnLimpiar);
@@ -121,7 +202,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelFiltros.Controls.Add(txtFiltroNombre);
             panelFiltros.Controls.Add(lblFiltroNombre);
             panelFiltros.Dock = DockStyle.Top;
-            panelFiltros.Location = new Point(10, 71);
+            panelFiltros.Location = new Point(10, 26);
             panelFiltros.Name = "panelFiltros";
             panelFiltros.Size = new Size(680, 90);
             panelFiltros.TabIndex = 0;
@@ -199,87 +280,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblFiltroNombre.Size = new Size(93, 15);
             lblFiltroNombre.TabIndex = 0;
             lblFiltroNombre.Text = "Nombre de lote:";
-            // 
-            // panelBotonesSeleccion
-            // 
-            panelBotonesSeleccion.Controls.Add(btnSeleccionar50);
-            panelBotonesSeleccion.Controls.Add(btnDeseleccionarTodo);
-            panelBotonesSeleccion.Controls.Add(btnSeleccionarTodo);
-            panelBotonesSeleccion.Dock = DockStyle.Top;
-            panelBotonesSeleccion.Location = new Point(10, 26);
-            panelBotonesSeleccion.Name = "panelBotonesSeleccion";
-            panelBotonesSeleccion.Size = new Size(680, 45);
-            panelBotonesSeleccion.TabIndex = 1;
-            // 
-            // btnSeleccionar50
-            // 
-            btnSeleccionar50.BackColor = Color.FromArgb(45, 45, 48);
-            btnSeleccionar50.FlatStyle = FlatStyle.Flat;
-            btnSeleccionar50.ForeColor = Color.White;
-            btnSeleccionar50.Location = new Point(290, 8);
-            btnSeleccionar50.Name = "btnSeleccionar50";
-            btnSeleccionar50.Size = new Size(130, 30);
-            btnSeleccionar50.TabIndex = 2;
-            btnSeleccionar50.Text = "Seleccionar 50";
-            btnSeleccionar50.UseVisualStyleBackColor = false;
-            // 
-            // btnDeseleccionarTodo
-            // 
-            btnDeseleccionarTodo.BackColor = Color.FromArgb(45, 45, 48);
-            btnDeseleccionarTodo.FlatStyle = FlatStyle.Flat;
-            btnDeseleccionarTodo.ForeColor = Color.White;
-            btnDeseleccionarTodo.Location = new Point(150, 8);
-            btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
-            btnDeseleccionarTodo.Size = new Size(130, 30);
-            btnDeseleccionarTodo.TabIndex = 1;
-            btnDeseleccionarTodo.Text = "Deseleccionar Todo";
-            btnDeseleccionarTodo.UseVisualStyleBackColor = false;
-            // 
-            // btnSeleccionarTodo
-            // 
-            btnSeleccionarTodo.BackColor = Color.FromArgb(45, 45, 48);
-            btnSeleccionarTodo.FlatStyle = FlatStyle.Flat;
-            btnSeleccionarTodo.ForeColor = Color.White;
-            btnSeleccionarTodo.Location = new Point(10, 8);
-            btnSeleccionarTodo.Name = "btnSeleccionarTodo";
-            btnSeleccionarTodo.Size = new Size(130, 30);
-            btnSeleccionarTodo.TabIndex = 0;
-            btnSeleccionarTodo.Text = "Seleccionar Todo";
-            btnSeleccionarTodo.UseVisualStyleBackColor = false;
-            // 
-            // panelGrilla
-            // 
-            panelGrilla.Controls.Add(dgvLotes);
-            panelGrilla.Controls.Add(lblInfoSeleccion);
-            panelGrilla.Dock = DockStyle.Fill;
-            panelGrilla.Location = new Point(10, 26);
-            panelGrilla.Name = "panelGrilla";
-            panelGrilla.Padding = new Padding(0, 5, 0, 0);
-            panelGrilla.Size = new Size(680, 614);
-            panelGrilla.TabIndex = 2;
-            // 
-            // dgvLotes
-            // 
-            dgvLotes.AllowUserToAddRows = false;
-            dgvLotes.AllowUserToDeleteRows = false;
-            dgvLotes.BackgroundColor = Color.FromArgb(30, 30, 30);
-            dgvLotes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvLotes.Dock = DockStyle.Fill;
-            dgvLotes.Location = new Point(0, 5);
-            dgvLotes.Name = "dgvLotes";
-            dgvLotes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvLotes.Size = new Size(680, 584);
-            dgvLotes.TabIndex = 0;
-            // 
-            // lblInfoSeleccion
-            // 
-            lblInfoSeleccion.Dock = DockStyle.Bottom;
-            lblInfoSeleccion.Location = new Point(0, 589);
-            lblInfoSeleccion.Name = "lblInfoSeleccion";
-            lblInfoSeleccion.Padding = new Padding(5);
-            lblInfoSeleccion.Size = new Size(680, 25);
-            lblInfoSeleccion.TabIndex = 1;
-            lblInfoSeleccion.Text = "Lotes seleccionados: 0 | Total archivos: 0";
             // 
             // panelDerecha
             // 
@@ -484,10 +484,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // progressBar
             // 
-            progressBar.Dock = DockStyle.Fill;
-            progressBar.Location = new Point(0, 30);
+            progressBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            progressBar.Location = new Point(0, 35);
             progressBar.Name = "progressBar";
-            progressBar.Size = new Size(730, 50);
+            progressBar.Size = new Size(870, 25);
             progressBar.TabIndex = 0;
             // 
             // lblProgresoTexto
@@ -496,38 +496,38 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblProgresoTexto.Location = new Point(0, 10);
             lblProgresoTexto.Name = "lblProgresoTexto";
             lblProgresoTexto.Padding = new Padding(5, 0, 5, 0);
-            lblProgresoTexto.Size = new Size(730, 20);
+            lblProgresoTexto.Size = new Size(1180, 20);
             lblProgresoTexto.TabIndex = 1;
             lblProgresoTexto.Text = "Listo para procesar";
             lblProgresoTexto.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // btnCerrar
-            // 
-            btnCerrar.BackColor = Color.FromArgb(60, 60, 63);
-            btnCerrar.Dock = DockStyle.Right;
-            btnCerrar.FlatStyle = FlatStyle.Flat;
-            btnCerrar.Font = new Font("Segoe UI", 10F);
-            btnCerrar.ForeColor = Color.White;
-            btnCerrar.Location = new Point(730, 10);
-            btnCerrar.Name = "btnCerrar";
-            btnCerrar.Size = new Size(150, 70);
-            btnCerrar.TabIndex = 3;
-            btnCerrar.Text = "Cerrar";
-            btnCerrar.UseVisualStyleBackColor = false;
-            // 
             // btnProcesar
             // 
             btnProcesar.BackColor = Color.FromArgb(0, 122, 204);
-            btnProcesar.Dock = DockStyle.Right;
+            btnProcesar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnProcesar.FlatStyle = FlatStyle.Flat;
-            btnProcesar.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnProcesar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             btnProcesar.ForeColor = Color.White;
-            btnProcesar.Location = new Point(880, 10);
+            btnProcesar.Location = new Point(880, 30);
             btnProcesar.Name = "btnProcesar";
-            btnProcesar.Size = new Size(300, 70);
+            btnProcesar.Size = new Size(190, 35);
             btnProcesar.TabIndex = 2;
             btnProcesar.Text = "Procesar Lotes Seleccionados";
             btnProcesar.UseVisualStyleBackColor = false;
+            // 
+            // btnCerrar
+            // 
+            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
+            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.Font = new Font("Segoe UI", 9F);
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.Location = new Point(1080, 30);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(100, 35);
+            btnCerrar.TabIndex = 3;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
             // 
             // FrmPreparacionImagenes
             // 
@@ -547,11 +547,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
             groupBoxPrincipal.ResumeLayout(false);
-            panelFiltros.ResumeLayout(false);
-            panelFiltros.PerformLayout();
-            panelBotonesSeleccion.ResumeLayout(false);
             panelGrilla.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvLotes).EndInit();
+            panelBotonesSeleccion.ResumeLayout(false);
+            panelFiltros.ResumeLayout(false);
+            panelFiltros.PerformLayout();
             panelDerecha.ResumeLayout(false);
             groupBoxPreview.ResumeLayout(false);
             panelVisor.ResumeLayout(false);

@@ -22,6 +22,13 @@ namespace IndexadorIA.Negocio.Api
         public string DsRol { get; set; } = string.Empty;
     }
 
+    public class CambiarClaveApiRequestDto
+    {
+        public string ClaveActual { get; set; } = string.Empty;
+        public string NuevaClave { get; set; } = string.Empty;
+        public string ConfirmarClave { get; set; } = string.Empty;
+    }
+
     public class CambiarClaveTemporalApiRequestDto
     {
         public string DsUsuario { get; set; } = string.Empty;
@@ -60,6 +67,7 @@ namespace IndexadorIA.Negocio.Api
         public string? DsParcela { get; set; }
         public string? DsDireccion { get; set; }
         public int CdEstadoControl { get; set; }
+        public string? DsObservaciones { get; set; }
         public decimal? NuConfianzaCategoriaPlano { get; set; }
         public decimal? NuConfianzaTipoPlano { get; set; }
         public decimal? NuConfianzaNumeroPlano { get; set; }
@@ -108,6 +116,7 @@ namespace IndexadorIA.Negocio.Api
     {
         public int CdEstadoControl { get; set; }
         public string? SnModificaDatos { get; set; }
+        public string? DsObservaciones { get; set; }
     }
 
     public class CategoriaPlanoApiDto

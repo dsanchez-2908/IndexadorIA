@@ -41,6 +41,9 @@ namespace IndexadorIA.Entidades
         public DateTime? FeControl { get; set; }
         public int? CdUsuarioControl { get; set; }
 
+        // Observaciones opcionales ingresadas manualmente por el usuario
+        public string? DsObservaciones { get; set; }
+
         // Navegación (opcional)
         public string? DsTipoPlano { get; set; }
         public string? DsCategoriaPlano { get; set; }

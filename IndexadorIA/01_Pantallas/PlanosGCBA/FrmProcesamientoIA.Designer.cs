@@ -15,12 +15,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             panelSuperior = new Panel();
             groupBoxAcciones = new GroupBox();
             lblEstado = new Label();
             progressBar = new ProgressBar();
             btnProcesar = new Button();
-            btnCerrar = new Button();
             groupBoxLotes = new GroupBox();
             dgvLotes = new DataGridView();
             panelSeleccion = new Panel();
@@ -33,6 +38,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboProyecto = new ComboBox();
             btnCargarLotes = new Button();
             btnVerPrompt = new Button();
+            btnCerrar = new Button();
             groupBoxTracking = new GroupBox();
             dgvTracking = new DataGridView();
             panelTrackingButtons = new Panel();
@@ -68,7 +74,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxAcciones.Controls.Add(lblEstado);
             groupBoxAcciones.Controls.Add(progressBar);
             groupBoxAcciones.Controls.Add(btnProcesar);
-            groupBoxAcciones.Controls.Add(btnCerrar);
             groupBoxAcciones.Dock = DockStyle.Bottom;
             groupBoxAcciones.ForeColor = Color.White;
             groupBoxAcciones.Location = new Point(0, 282);
@@ -101,28 +106,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // btnProcesar
             // 
-            btnProcesar.ForeColor = Color.Black;
+            btnProcesar.BackColor = Color.FromArgb(0, 122, 204);
+            btnProcesar.FlatStyle = FlatStyle.Flat;
+            btnProcesar.ForeColor = Color.White;
             btnProcesar.Location = new Point(490, 18);
             btnProcesar.Margin = new Padding(3, 2, 3, 2);
             btnProcesar.Name = "btnProcesar";
             btnProcesar.Size = new Size(175, 38);
             btnProcesar.TabIndex = 2;
             btnProcesar.Text = "Procesar Lotes";
-            btnProcesar.UseVisualStyleBackColor = true;
+            btnProcesar.UseVisualStyleBackColor = false;
             btnProcesar.Click += btnProcesar_Click;
-            // 
-            // btnCerrar
-            // 
-            btnCerrar.ForeColor = Color.Black;
-            btnCerrar.Location = new Point(675, 18);
-            btnCerrar.Margin = new Padding(3, 2, 3, 2);
-            btnCerrar.Name = "btnCerrar";
-            btnCerrar.Size = new Size(155, 38);
-            btnCerrar.TabIndex = 3;
-            btnCerrar.Text = "Cerrar";
-            btnCerrar.UseVisualStyleBackColor = true;
-            btnCerrar.Visible = true;
-            btnCerrar.Click += btnCerrar_Click;
             // 
             // groupBoxLotes
             // 
@@ -143,20 +137,31 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             dgvLotes.AllowUserToAddRows = false;
             dgvLotes.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(40, 40, 40);
+            dgvLotes.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvLotes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvLotes.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvLotes.BorderStyle = BorderStyle.None;
-            dgvLotes.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(60, 60, 60);
-            dgvLotes.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(60, 60, 60);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dgvLotes.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvLotes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvLotes.DefaultCellStyle.BackColor = Color.FromArgb(30, 30, 30);
-            dgvLotes.DefaultCellStyle.ForeColor = Color.White;
-            dgvLotes.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dgvLotes.DefaultCellStyle.SelectionForeColor = Color.White;
-            dgvLotes.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(40, 40, 40);
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(30, 30, 30);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle3.ForeColor = Color.White;
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvLotes.DefaultCellStyle = dataGridViewCellStyle3;
+            dgvLotes.Dock = DockStyle.Fill;
             dgvLotes.EnableHeadersVisualStyles = false;
             dgvLotes.GridColor = Color.FromArgb(63, 63, 70);
-            dgvLotes.Dock = DockStyle.Fill;
             dgvLotes.Location = new Point(9, 54);
             dgvLotes.Margin = new Padding(3, 2, 3, 2);
             dgvLotes.MultiSelect = false;
@@ -169,11 +174,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // panelSeleccion
             // 
+            panelSeleccion.BackColor = Color.FromArgb(45, 45, 48);
             panelSeleccion.Controls.Add(lblTotalizadorLotes);
             panelSeleccion.Controls.Add(btnSeleccionarTodo);
             panelSeleccion.Controls.Add(btnDeseleccionarTodo);
             panelSeleccion.Controls.Add(btnSeleccionar50);
-            panelSeleccion.BackColor = Color.FromArgb(45, 45, 48);
             panelSeleccion.Dock = DockStyle.Top;
             panelSeleccion.Location = new Point(9, 24);
             panelSeleccion.Margin = new Padding(3, 2, 3, 2);
@@ -181,11 +186,22 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelSeleccion.Size = new Size(839, 30);
             panelSeleccion.TabIndex = 1;
             // 
+            // lblTotalizadorLotes
+            // 
+            lblTotalizadorLotes.AutoSize = true;
+            lblTotalizadorLotes.BackColor = Color.FromArgb(45, 45, 48);
+            lblTotalizadorLotes.ForeColor = Color.White;
+            lblTotalizadorLotes.Location = new Point(400, 8);
+            lblTotalizadorLotes.Name = "lblTotalizadorLotes";
+            lblTotalizadorLotes.Size = new Size(141, 15);
+            lblTotalizadorLotes.TabIndex = 3;
+            lblTotalizadorLotes.Text = "Total: 0 | Seleccionados: 0";
+            // 
             // btnSeleccionarTodo
             // 
             btnSeleccionarTodo.BackColor = Color.FromArgb(0, 122, 204);
-            btnSeleccionarTodo.ForeColor = Color.White;
             btnSeleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnSeleccionarTodo.ForeColor = Color.White;
             btnSeleccionarTodo.Location = new Point(4, 4);
             btnSeleccionarTodo.Margin = new Padding(3, 2, 3, 2);
             btnSeleccionarTodo.Name = "btnSeleccionarTodo";
@@ -198,8 +214,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnDeseleccionarTodo
             // 
             btnDeseleccionarTodo.BackColor = Color.FromArgb(0, 122, 204);
-            btnDeseleccionarTodo.ForeColor = Color.White;
             btnDeseleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnDeseleccionarTodo.ForeColor = Color.White;
             btnDeseleccionarTodo.Location = new Point(127, 4);
             btnDeseleccionarTodo.Margin = new Padding(3, 2, 3, 2);
             btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
@@ -212,8 +228,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnSeleccionar50
             // 
             btnSeleccionar50.BackColor = Color.FromArgb(0, 122, 204);
-            btnSeleccionar50.ForeColor = Color.White;
             btnSeleccionar50.FlatStyle = FlatStyle.Flat;
+            btnSeleccionar50.ForeColor = Color.White;
             btnSeleccionar50.Location = new Point(267, 4);
             btnSeleccionar50.Margin = new Padding(3, 2, 3, 2);
             btnSeleccionar50.Name = "btnSeleccionar50";
@@ -223,26 +239,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnSeleccionar50.UseVisualStyleBackColor = false;
             btnSeleccionar50.Click += btnSeleccionar50_Click;
             // 
-            // lblTotalizadorLotes
-            // 
-            lblTotalizadorLotes.AutoSize = true;
-            lblTotalizadorLotes.BackColor = Color.FromArgb(45, 45, 48);
-            lblTotalizadorLotes.ForeColor = Color.White;
-            lblTotalizadorLotes.Location = new Point(400, 8);
-            lblTotalizadorLotes.Name = "lblTotalizadorLotes";
-            lblTotalizadorLotes.Size = new Size(150, 15);
-            lblTotalizadorLotes.TabIndex = 3;
-            lblTotalizadorLotes.Text = "Total: 0 | Seleccionados: 0";
-            // 
             // groupBoxFiltros
-            //
+            // 
+            groupBoxFiltros.BackColor = Color.FromArgb(45, 45, 48);
+            groupBoxFiltros.Controls.Add(btnCerrar);
             groupBoxFiltros.Controls.Add(lblProyecto);
             groupBoxFiltros.Controls.Add(cboProyecto);
             groupBoxFiltros.Controls.Add(btnCargarLotes);
             groupBoxFiltros.Controls.Add(btnVerPrompt);
-            groupBoxFiltros.BackColor = Color.FromArgb(45, 45, 48);
-            groupBoxFiltros.ForeColor = Color.White;
             groupBoxFiltros.Dock = DockStyle.Top;
+            groupBoxFiltros.ForeColor = Color.White;
             groupBoxFiltros.Location = new Point(0, 0);
             groupBoxFiltros.Margin = new Padding(3, 2, 3, 2);
             groupBoxFiltros.Name = "groupBoxFiltros";
@@ -266,9 +272,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // cboProyecto
             // 
             cboProyecto.BackColor = Color.FromArgb(30, 30, 30);
-            cboProyecto.ForeColor = Color.White;
-            cboProyecto.FlatStyle = FlatStyle.Flat;
             cboProyecto.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboProyecto.FlatStyle = FlatStyle.Flat;
+            cboProyecto.ForeColor = Color.White;
             cboProyecto.FormattingEnabled = true;
             cboProyecto.Location = new Point(88, 24);
             cboProyecto.Margin = new Padding(3, 2, 3, 2);
@@ -279,8 +285,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnCargarLotes
             // 
             btnCargarLotes.BackColor = Color.FromArgb(0, 122, 204);
-            btnCargarLotes.ForeColor = Color.White;
             btnCargarLotes.FlatStyle = FlatStyle.Flat;
+            btnCargarLotes.ForeColor = Color.White;
             btnCargarLotes.Location = new Point(368, 22);
             btnCargarLotes.Margin = new Padding(3, 2, 3, 2);
             btnCargarLotes.Name = "btnCargarLotes";
@@ -293,8 +299,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnVerPrompt
             // 
             btnVerPrompt.BackColor = Color.FromArgb(0, 122, 204);
-            btnVerPrompt.ForeColor = Color.White;
             btnVerPrompt.FlatStyle = FlatStyle.Flat;
+            btnVerPrompt.ForeColor = Color.White;
             btnVerPrompt.Location = new Point(516, 22);
             btnVerPrompt.Margin = new Padding(3, 2, 3, 2);
             btnVerPrompt.Name = "btnVerPrompt";
@@ -304,13 +310,28 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnVerPrompt.UseVisualStyleBackColor = false;
             btnVerPrompt.Click += btnVerPrompt_Click;
             // 
+            // btnCerrar
+            // 
+            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.Location = new Point(748, 18);
+            btnCerrar.Margin = new Padding(3, 2, 3, 2);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(100, 30);
+            btnCerrar.TabIndex = 3;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
+            btnCerrar.Click += btnCerrar_Click;
+            // 
             // groupBoxTracking
             // 
+            groupBoxTracking.BackColor = Color.FromArgb(45, 45, 48);
             groupBoxTracking.Controls.Add(dgvTracking);
             groupBoxTracking.Controls.Add(panelTrackingButtons);
-            groupBoxTracking.BackColor = Color.FromArgb(45, 45, 48);
-            groupBoxTracking.ForeColor = Color.White;
             groupBoxTracking.Dock = DockStyle.Fill;
+            groupBoxTracking.ForeColor = Color.White;
             groupBoxTracking.Location = new Point(9, 358);
             groupBoxTracking.Margin = new Padding(3, 2, 3, 2);
             groupBoxTracking.Name = "groupBoxTracking";
@@ -324,20 +345,31 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             dgvTracking.AllowUserToAddRows = false;
             dgvTracking.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(40, 40, 40);
+            dgvTracking.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             dgvTracking.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvTracking.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvTracking.BorderStyle = BorderStyle.None;
-            dgvTracking.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(60, 60, 60);
-            dgvTracking.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.FromArgb(60, 60, 60);
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle5.ForeColor = Color.White;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            dgvTracking.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dgvTracking.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvTracking.DefaultCellStyle.BackColor = Color.FromArgb(30, 30, 30);
-            dgvTracking.DefaultCellStyle.ForeColor = Color.White;
-            dgvTracking.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dgvTracking.DefaultCellStyle.SelectionForeColor = Color.White;
-            dgvTracking.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(40, 40, 40);
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.FromArgb(30, 30, 30);
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle6.ForeColor = Color.White;
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dataGridViewCellStyle6.SelectionForeColor = Color.White;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvTracking.DefaultCellStyle = dataGridViewCellStyle6;
+            dgvTracking.Dock = DockStyle.Fill;
             dgvTracking.EnableHeadersVisualStyles = false;
             dgvTracking.GridColor = Color.FromArgb(63, 63, 70);
-            dgvTracking.Dock = DockStyle.Fill;
             dgvTracking.Location = new Point(9, 54);
             dgvTracking.Margin = new Padding(3, 2, 3, 2);
             dgvTracking.MultiSelect = false;
@@ -350,11 +382,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // panelTrackingButtons
             // 
+            panelTrackingButtons.BackColor = Color.FromArgb(45, 45, 48);
             panelTrackingButtons.Controls.Add(chkMostrarProcesados);
             panelTrackingButtons.Controls.Add(btnVerificarEstado);
             panelTrackingButtons.Controls.Add(btnProcesarResultados);
             panelTrackingButtons.Controls.Add(btnActualizarTracking);
-            panelTrackingButtons.BackColor = Color.FromArgb(45, 45, 48);
             panelTrackingButtons.Dock = DockStyle.Top;
             panelTrackingButtons.Location = new Point(9, 24);
             panelTrackingButtons.Margin = new Padding(3, 2, 3, 2);
@@ -377,8 +409,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnVerificarEstado
             // 
             btnVerificarEstado.BackColor = Color.FromArgb(0, 122, 204);
-            btnVerificarEstado.ForeColor = Color.White;
             btnVerificarEstado.FlatStyle = FlatStyle.Flat;
+            btnVerificarEstado.ForeColor = Color.White;
             btnVerificarEstado.Location = new Point(144, 4);
             btnVerificarEstado.Margin = new Padding(3, 2, 3, 2);
             btnVerificarEstado.Name = "btnVerificarEstado";
@@ -391,8 +423,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnProcesarResultados
             // 
             btnProcesarResultados.BackColor = Color.FromArgb(0, 122, 204);
-            btnProcesarResultados.ForeColor = Color.White;
             btnProcesarResultados.FlatStyle = FlatStyle.Flat;
+            btnProcesarResultados.ForeColor = Color.White;
             btnProcesarResultados.Location = new Point(284, 4);
             btnProcesarResultados.Margin = new Padding(3, 2, 3, 2);
             btnProcesarResultados.Name = "btnProcesarResultados";
@@ -405,8 +437,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnActualizarTracking
             // 
             btnActualizarTracking.BackColor = Color.FromArgb(0, 122, 204);
-            btnActualizarTracking.ForeColor = Color.White;
             btnActualizarTracking.FlatStyle = FlatStyle.Flat;
+            btnActualizarTracking.ForeColor = Color.White;
             btnActualizarTracking.Location = new Point(4, 4);
             btnActualizarTracking.Margin = new Padding(3, 2, 3, 2);
             btnActualizarTracking.Name = "btnActualizarTracking";
@@ -421,10 +453,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(45, 45, 48);
-            ForeColor = Color.White;
             ClientSize = new Size(875, 525);
             Controls.Add(groupBoxTracking);
             Controls.Add(panelSuperior);
+            ForeColor = Color.White;
             FormBorderStyle = FormBorderStyle.None;
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmProcesamientoIA";

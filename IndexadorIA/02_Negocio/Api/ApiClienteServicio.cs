@@ -82,6 +82,30 @@ namespace IndexadorIA.Negocio.Api
         }
 
         /// <summary>
+        /// Llama a POST /api/auth/cambiar-clave (usuario ya autenticado, sesión normal).
+        /// Lanza ApiException con el mensaje de error si falla.
+        /// </summary>
+        public async Task CambiarClaveAsync(string claveActual, string nuevaClave, string confirmarClave)
+        {
+            AplicarToken();
+
+            var request = new CambiarClaveApiRequestDto
+            {
+                ClaveActual = claveActual,
+                NuevaClave = nuevaClave,
+                ConfirmarClave = confirmarClave
+            };
+
+            HttpResponseMessage respuesta = await _httpClient.PostAsJsonAsync("api/auth/cambiar-clave", request).ConfigureAwait(false);
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                string mensaje = await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false);
+                throw new ApiException(mensaje);
+            }
+        }
+
+        /// <summary>
         /// Llama a GET /api/lotes con los filtros indicados (equivalente remoto de FrmControlFinalizacion.CargarLotes()).
         /// </summary>
         public async Task<List<LoteResumenApiDto>> ObtenerLotesEnControlAsync(

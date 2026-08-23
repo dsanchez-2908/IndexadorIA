@@ -17,6 +17,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             groupBoxFiltros = new GroupBox();
             lblNombreLote = new Label();
             txtNombreLote = new TextBox();
@@ -31,10 +34,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvLotes = new DataGridView();
             lblTotalizadorLotes = new Label();
             panelAcciones = new Panel();
-            lblAsignarAUsuarios = new Label();
-            cboUsuarios = new ComboBox();
-            btnAsignarLotes = new Button();
             btnCerrar = new Button();
+            btnAsignarLotes = new Button();
+            cboUsuarios = new ComboBox();
+            lblAsignarAUsuarios = new Label();
+            btnSeleccionarTodos = new Button();
+            btnDeseleccionarTodo = new Button();
+            btnSeleccionar10 = new Button();
             groupBoxFiltros.SuspendLayout();
             groupBoxLotes.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvLotes).BeginInit();
@@ -43,6 +49,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // groupBoxFiltros
             // 
+            groupBoxFiltros.BackColor = Color.FromArgb(45, 45, 48);
             groupBoxFiltros.Controls.Add(lblNombreLote);
             groupBoxFiltros.Controls.Add(txtNombreLote);
             groupBoxFiltros.Controls.Add(lblFechaDesde);
@@ -52,9 +59,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxFiltros.Controls.Add(chkFiltrarFecha);
             groupBoxFiltros.Controls.Add(btnBuscar);
             groupBoxFiltros.Controls.Add(btnLimpiarFiltros);
-            groupBoxFiltros.BackColor = Color.FromArgb(45, 45, 48);
-            groupBoxFiltros.ForeColor = Color.White;
             groupBoxFiltros.Dock = DockStyle.Top;
+            groupBoxFiltros.ForeColor = Color.White;
             groupBoxFiltros.Location = new Point(0, 0);
             groupBoxFiltros.Margin = new Padding(3, 2, 3, 2);
             groupBoxFiltros.Name = "groupBoxFiltros";
@@ -69,18 +75,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblNombreLote.AutoSize = true;
             lblNombreLote.BackColor = Color.FromArgb(45, 45, 48);
             lblNombreLote.ForeColor = Color.White;
-            lblNombreLote.Location = new Point(18, 28);
+            lblNombreLote.Location = new Point(12, 18);
             lblNombreLote.Name = "lblNombreLote";
-            lblNombreLote.Size = new Size(90, 15);
+            lblNombreLote.Size = new Size(96, 15);
             lblNombreLote.TabIndex = 0;
             lblNombreLote.Text = "Nombre de Lote:";
             // 
             // txtNombreLote
             // 
             txtNombreLote.BackColor = Color.FromArgb(30, 30, 30);
-            txtNombreLote.ForeColor = Color.White;
             txtNombreLote.BorderStyle = BorderStyle.FixedSingle;
-            txtNombreLote.Location = new Point(114, 25);
+            txtNombreLote.ForeColor = Color.White;
+            txtNombreLote.Location = new Point(12, 35);
             txtNombreLote.Margin = new Padding(3, 2, 3, 2);
             txtNombreLote.Name = "txtNombreLote";
             txtNombreLote.Size = new Size(180, 23);
@@ -91,18 +97,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblFechaDesde.AutoSize = true;
             lblFechaDesde.BackColor = Color.FromArgb(45, 45, 48);
             lblFechaDesde.ForeColor = Color.White;
-            lblFechaDesde.Location = new Point(320, 28);
+            lblFechaDesde.Location = new Point(351, 18);
             lblFechaDesde.Name = "lblFechaDesde";
-            lblFechaDesde.Size = new Size(75, 15);
+            lblFechaDesde.Size = new Size(76, 15);
             lblFechaDesde.TabIndex = 2;
             lblFechaDesde.Text = "Fecha Desde:";
             // 
             // dtpFechaDesde
             // 
-            dtpFechaDesde.CalendarMonthBackground = Color.FromArgb(45, 45, 48);
             dtpFechaDesde.CalendarForeColor = Color.White;
+            dtpFechaDesde.CalendarMonthBackground = Color.FromArgb(45, 45, 48);
             dtpFechaDesde.Format = DateTimePickerFormat.Short;
-            dtpFechaDesde.Location = new Point(401, 25);
+            dtpFechaDesde.Location = new Point(351, 35);
             dtpFechaDesde.Margin = new Padding(3, 2, 3, 2);
             dtpFechaDesde.Name = "dtpFechaDesde";
             dtpFechaDesde.Size = new Size(120, 23);
@@ -113,18 +119,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblFechaHasta.AutoSize = true;
             lblFechaHasta.BackColor = Color.FromArgb(45, 45, 48);
             lblFechaHasta.ForeColor = Color.White;
-            lblFechaHasta.Location = new Point(535, 28);
+            lblFechaHasta.Location = new Point(477, 18);
             lblFechaHasta.Name = "lblFechaHasta";
-            lblFechaHasta.Size = new Size(70, 15);
+            lblFechaHasta.Size = new Size(74, 15);
             lblFechaHasta.TabIndex = 4;
             lblFechaHasta.Text = "Fecha Hasta:";
             // 
             // dtpFechaHasta
             // 
-            dtpFechaHasta.CalendarMonthBackground = Color.FromArgb(45, 45, 48);
             dtpFechaHasta.CalendarForeColor = Color.White;
+            dtpFechaHasta.CalendarMonthBackground = Color.FromArgb(45, 45, 48);
             dtpFechaHasta.Format = DateTimePickerFormat.Short;
-            dtpFechaHasta.Location = new Point(611, 25);
+            dtpFechaHasta.Location = new Point(477, 35);
             dtpFechaHasta.Margin = new Padding(3, 2, 3, 2);
             dtpFechaHasta.Name = "dtpFechaHasta";
             dtpFechaHasta.Size = new Size(120, 23);
@@ -134,9 +140,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             chkFiltrarFecha.AutoSize = true;
             chkFiltrarFecha.ForeColor = Color.White;
-            chkFiltrarFecha.Location = new Point(114, 4);
+            chkFiltrarFecha.Location = new Point(198, 35);
             chkFiltrarFecha.Name = "chkFiltrarFecha";
-            chkFiltrarFecha.Size = new Size(133, 19);
+            chkFiltrarFecha.Size = new Size(147, 19);
             chkFiltrarFecha.TabIndex = 6;
             chkFiltrarFecha.Text = "Filtrar por fecha de alta";
             chkFiltrarFecha.UseVisualStyleBackColor = true;
@@ -145,8 +151,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnBuscar
             // 
             btnBuscar.BackColor = Color.FromArgb(0, 122, 204);
-            btnBuscar.ForeColor = Color.White;
             btnBuscar.FlatStyle = FlatStyle.Flat;
+            btnBuscar.ForeColor = Color.White;
             btnBuscar.Location = new Point(750, 24);
             btnBuscar.Margin = new Padding(3, 2, 3, 2);
             btnBuscar.Name = "btnBuscar";
@@ -159,8 +165,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // btnLimpiarFiltros
             // 
             btnLimpiarFiltros.BackColor = Color.FromArgb(0, 122, 204);
-            btnLimpiarFiltros.ForeColor = Color.White;
             btnLimpiarFiltros.FlatStyle = FlatStyle.Flat;
+            btnLimpiarFiltros.ForeColor = Color.White;
             btnLimpiarFiltros.Location = new Point(846, 24);
             btnLimpiarFiltros.Margin = new Padding(3, 2, 3, 2);
             btnLimpiarFiltros.Name = "btnLimpiarFiltros";
@@ -172,11 +178,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // groupBoxLotes
             // 
+            groupBoxLotes.BackColor = Color.FromArgb(45, 45, 48);
             groupBoxLotes.Controls.Add(dgvLotes);
             groupBoxLotes.Controls.Add(lblTotalizadorLotes);
-            groupBoxLotes.BackColor = Color.FromArgb(45, 45, 48);
-            groupBoxLotes.ForeColor = Color.White;
             groupBoxLotes.Dock = DockStyle.Fill;
+            groupBoxLotes.ForeColor = Color.White;
             groupBoxLotes.Location = new Point(0, 70);
             groupBoxLotes.Margin = new Padding(3, 2, 3, 2);
             groupBoxLotes.Name = "groupBoxLotes";
@@ -190,29 +196,38 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             dgvLotes.AllowUserToAddRows = false;
             dgvLotes.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(40, 40, 40);
+            dgvLotes.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             dgvLotes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvLotes.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvLotes.BorderStyle = BorderStyle.None;
-            dgvLotes.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(60, 60, 60);
-            dgvLotes.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.FromArgb(60, 60, 60);
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle5.ForeColor = Color.White;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            dgvLotes.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dgvLotes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvLotes.DefaultCellStyle.BackColor = Color.FromArgb(30, 30, 30);
-            dgvLotes.DefaultCellStyle.ForeColor = Color.White;
-            dgvLotes.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dgvLotes.DefaultCellStyle.SelectionForeColor = Color.White;
-            dgvLotes.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(40, 40, 40);
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.FromArgb(30, 30, 30);
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle6.ForeColor = Color.White;
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dataGridViewCellStyle6.SelectionForeColor = Color.White;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvLotes.DefaultCellStyle = dataGridViewCellStyle6;
+            dgvLotes.Dock = DockStyle.Fill;
             dgvLotes.EnableHeadersVisualStyles = false;
             dgvLotes.GridColor = Color.FromArgb(63, 63, 70);
-            dgvLotes.ReadOnly = false;
-            dgvLotes.AllowUserToOrderColumns = false;
-            dgvLotes.MultiSelect = false;
-            dgvLotes.Dock = DockStyle.Fill;
-            dgvLotes.Location = new Point(9, 24);
+            dgvLotes.Location = new Point(9, 40);
             dgvLotes.Margin = new Padding(3, 2, 3, 2);
+            dgvLotes.MultiSelect = false;
             dgvLotes.Name = "dgvLotes";
             dgvLotes.RowHeadersWidth = 51;
             dgvLotes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvLotes.Size = new Size(939, 266);
+            dgvLotes.Size = new Size(939, 257);
             dgvLotes.TabIndex = 0;
             dgvLotes.CellContentClick += dgvLotes_CellContentClick;
             // 
@@ -220,23 +235,26 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblTotalizadorLotes.AutoSize = true;
             lblTotalizadorLotes.BackColor = Color.FromArgb(45, 45, 48);
-            lblTotalizadorLotes.ForeColor = Color.White;
             lblTotalizadorLotes.Dock = DockStyle.Bottom;
-            lblTotalizadorLotes.Location = new Point(9, 290);
+            lblTotalizadorLotes.ForeColor = Color.White;
+            lblTotalizadorLotes.Location = new Point(9, 297);
             lblTotalizadorLotes.Name = "lblTotalizadorLotes";
-            lblTotalizadorLotes.Size = new Size(60, 15);
+            lblTotalizadorLotes.Padding = new Padding(0, 4, 0, 4);
+            lblTotalizadorLotes.Size = new Size(45, 23);
             lblTotalizadorLotes.TabIndex = 1;
             lblTotalizadorLotes.Text = "Total: 0";
             lblTotalizadorLotes.TextAlign = ContentAlignment.MiddleLeft;
-            lblTotalizadorLotes.Padding = new Padding(0, 4, 0, 4);
             // 
             // panelAcciones
             // 
-            panelAcciones.Controls.Add(btnCerrar);
-            panelAcciones.Controls.Add(btnAsignarLotes);
-            panelAcciones.Controls.Add(cboUsuarios);
-            panelAcciones.Controls.Add(lblAsignarAUsuarios);
             panelAcciones.BackColor = Color.FromArgb(45, 45, 48);
+            panelAcciones.Controls.Add(btnSeleccionarTodos);
+            panelAcciones.Controls.Add(btnDeseleccionarTodo);
+            panelAcciones.Controls.Add(btnSeleccionar10);
+            panelAcciones.Controls.Add(lblAsignarAUsuarios);
+            panelAcciones.Controls.Add(cboUsuarios);
+            panelAcciones.Controls.Add(btnAsignarLotes);
+            panelAcciones.Controls.Add(btnCerrar);
             panelAcciones.Dock = DockStyle.Bottom;
             panelAcciones.Location = new Point(0, 398);
             panelAcciones.Margin = new Padding(3, 2, 3, 2);
@@ -244,67 +262,110 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelAcciones.Size = new Size(957, 46);
             panelAcciones.TabIndex = 2;
             // 
-            // lblAsignarAUsuarios
+            // btnCerrar
             // 
-            lblAsignarAUsuarios.AutoSize = true;
-            lblAsignarAUsuarios.BackColor = Color.FromArgb(45, 45, 48);
-            lblAsignarAUsuarios.ForeColor = Color.White;
-            lblAsignarAUsuarios.Location = new Point(18, 15);
-            lblAsignarAUsuarios.Name = "lblAsignarAUsuarios";
-            lblAsignarAUsuarios.Size = new Size(107, 15);
-            lblAsignarAUsuarios.TabIndex = 0;
-            lblAsignarAUsuarios.Text = "Asignar a Usuario:";
-            // 
-            // cboUsuarios
-            // 
-            cboUsuarios.BackColor = Color.FromArgb(30, 30, 30);
-            cboUsuarios.ForeColor = Color.White;
-            cboUsuarios.DropDownStyle = ComboBoxStyle.DropDownList;
-            cboUsuarios.FlatStyle = FlatStyle.Flat;
-            cboUsuarios.Location = new Point(131, 11);
-            cboUsuarios.Margin = new Padding(3, 2, 3, 2);
-            cboUsuarios.Name = "cboUsuarios";
-            cboUsuarios.Size = new Size(220, 23);
-            cboUsuarios.TabIndex = 1;
+            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCerrar.Location = new Point(819, 8);
+            btnCerrar.Margin = new Padding(3, 2, 3, 2);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(120, 30);
+            btnCerrar.TabIndex = 3;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
+            btnCerrar.Click += btnCerrar_Click;
             // 
             // btnAsignarLotes
             // 
             btnAsignarLotes.BackColor = Color.FromArgb(0, 122, 204);
-            btnAsignarLotes.ForeColor = Color.White;
             btnAsignarLotes.FlatStyle = FlatStyle.Flat;
-            btnAsignarLotes.Location = new Point(608, 8);
+            btnAsignarLotes.ForeColor = Color.White;
+            btnAsignarLotes.Location = new Point(674, 8);
             btnAsignarLotes.Margin = new Padding(3, 2, 3, 2);
             btnAsignarLotes.Name = "btnAsignarLotes";
-            btnAsignarLotes.Size = new Size(150, 30);
+            btnAsignarLotes.Size = new Size(120, 30);
             btnAsignarLotes.TabIndex = 2;
             btnAsignarLotes.Text = "Asignar Lotes";
             btnAsignarLotes.UseVisualStyleBackColor = false;
             btnAsignarLotes.Click += btnAsignarLotes_Click;
             // 
-            // btnCerrar
+            // cboUsuarios
             // 
-            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
-            btnCerrar.ForeColor = Color.White;
-            btnCerrar.FlatStyle = FlatStyle.Flat;
-            btnCerrar.Location = new Point(789, 8);
-            btnCerrar.Margin = new Padding(3, 2, 3, 2);
-            btnCerrar.Name = "btnCerrar";
-            btnCerrar.Size = new Size(150, 30);
-            btnCerrar.TabIndex = 3;
-            btnCerrar.Text = "Cerrar";
-            btnCerrar.UseVisualStyleBackColor = false;
-            btnCerrar.Click += btnCerrar_Click;
+            cboUsuarios.BackColor = Color.FromArgb(30, 30, 30);
+            cboUsuarios.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboUsuarios.FlatStyle = FlatStyle.Flat;
+            cboUsuarios.ForeColor = Color.White;
+            cboUsuarios.Location = new Point(516, 11);
+            cboUsuarios.Margin = new Padding(3, 2, 3, 2);
+            cboUsuarios.Name = "cboUsuarios";
+            cboUsuarios.Size = new Size(150, 23);
+            cboUsuarios.TabIndex = 1;
+            // 
+            // lblAsignarAUsuarios
+            // 
+            lblAsignarAUsuarios.AutoSize = true;
+            lblAsignarAUsuarios.BackColor = Color.FromArgb(45, 45, 48);
+            lblAsignarAUsuarios.ForeColor = Color.White;
+            lblAsignarAUsuarios.Location = new Point(410, 15);
+            lblAsignarAUsuarios.Name = "lblAsignarAUsuarios";
+            lblAsignarAUsuarios.Size = new Size(102, 15);
+            lblAsignarAUsuarios.TabIndex = 0;
+            lblAsignarAUsuarios.Text = "Asignar a Usuario:";
+            // 
+            // btnSeleccionarTodos
+            // 
+            btnSeleccionarTodos.BackColor = Color.FromArgb(62, 62, 66);
+            btnSeleccionarTodos.FlatStyle = FlatStyle.Flat;
+            btnSeleccionarTodos.ForeColor = Color.White;
+            btnSeleccionarTodos.Location = new Point(18, 8);
+            btnSeleccionarTodos.Margin = new Padding(3, 2, 3, 2);
+            btnSeleccionarTodos.Name = "btnSeleccionarTodos";
+            btnSeleccionarTodos.Size = new Size(120, 30);
+            btnSeleccionarTodos.TabIndex = 4;
+            btnSeleccionarTodos.Text = "Seleccionar Todos";
+            btnSeleccionarTodos.UseVisualStyleBackColor = false;
+            btnSeleccionarTodos.Click += btnSeleccionarTodos_Click;
+            // 
+            // btnDeseleccionarTodo
+            // 
+            btnDeseleccionarTodo.BackColor = Color.FromArgb(62, 62, 66);
+            btnDeseleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnDeseleccionarTodo.ForeColor = Color.White;
+            btnDeseleccionarTodo.Location = new Point(146, 8);
+            btnDeseleccionarTodo.Margin = new Padding(3, 2, 3, 2);
+            btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
+            btnDeseleccionarTodo.Size = new Size(130, 30);
+            btnDeseleccionarTodo.TabIndex = 5;
+            btnDeseleccionarTodo.Text = "Deseleccionar Todo";
+            btnDeseleccionarTodo.UseVisualStyleBackColor = false;
+            btnDeseleccionarTodo.Click += btnDeseleccionarTodo_Click;
+            // 
+            // btnSeleccionar10
+            // 
+            btnSeleccionar10.BackColor = Color.FromArgb(62, 62, 66);
+            btnSeleccionar10.FlatStyle = FlatStyle.Flat;
+            btnSeleccionar10.ForeColor = Color.White;
+            btnSeleccionar10.Location = new Point(284, 8);
+            btnSeleccionar10.Margin = new Padding(3, 2, 3, 2);
+            btnSeleccionar10.Name = "btnSeleccionar10";
+            btnSeleccionar10.Size = new Size(110, 30);
+            btnSeleccionar10.TabIndex = 6;
+            btnSeleccionar10.Text = "Seleccionar 10";
+            btnSeleccionar10.UseVisualStyleBackColor = false;
+            btnSeleccionar10.Click += btnSeleccionar10_Click;
             // 
             // FrmAsignacionLote
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(45, 45, 48);
-            ForeColor = Color.White;
             ClientSize = new Size(957, 444);
             Controls.Add(groupBoxLotes);
             Controls.Add(panelAcciones);
             Controls.Add(groupBoxFiltros);
+            ForeColor = Color.White;
             FormBorderStyle = FormBorderStyle.None;
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmAsignacionLote";
@@ -313,6 +374,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxFiltros.ResumeLayout(false);
             groupBoxFiltros.PerformLayout();
             groupBoxLotes.ResumeLayout(false);
+            groupBoxLotes.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dgvLotes).EndInit();
             panelAcciones.ResumeLayout(false);
             panelAcciones.PerformLayout();
@@ -339,5 +401,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private ComboBox cboUsuarios;
         private Button btnAsignarLotes;
         private Button btnCerrar;
+        private Button btnSeleccionarTodos;
+        private Button btnDeseleccionarTodo;
+        private Button btnSeleccionar10;
     }
 }

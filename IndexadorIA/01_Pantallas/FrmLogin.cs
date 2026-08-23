@@ -1,6 +1,8 @@
+using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
 using IndexadorIA.Negocio.Api;
+using ConfiguracionCore = IndexadorIA.Datos.Configuracion;
 
 namespace IndexadorIA.Pantallas
 {
@@ -17,6 +19,26 @@ namespace IndexadorIA.Pantallas
             InitializeComponent();
             _usuarioBL = new UsuarioBL();
             _apiCliente = new ApiClienteServicio();
+            string nombreBaseDeDatos = ConfiguracionCore.ObtenerNombreBaseDeDatos();
+            lblBaseDatos.Text = string.IsNullOrEmpty(nombreBaseDeDatos)
+                ? string.Empty
+                : $"Base de datos: {nombreBaseDeDatos}";
+
+            chkIngresoRemoto.CheckedChanged += ChkIngresoRemoto_CheckedChanged;
+        }
+
+        private void ChkIngresoRemoto_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkIngresoRemoto.Checked)
+            {
+                lblBaseDatos.Text = "Base de datos: Remoto (API)";
+                return;
+            }
+
+            string nombreBaseDeDatos = ConfiguracionCore.ObtenerNombreBaseDeDatos();
+            lblBaseDatos.Text = string.IsNullOrEmpty(nombreBaseDeDatos)
+                ? string.Empty
+                : $"Base de datos: {nombreBaseDeDatos}";
         }
 
         private void btnIngresar_Click(object sender, EventArgs e)

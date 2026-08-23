@@ -1,6 +1,7 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Utilidades;
+using System.Linq;
 
 namespace IndexadorIA.Negocio
 {
@@ -37,6 +38,23 @@ namespace IndexadorIA.Negocio
         /// Nombre de la subcarpeta donde se mueven los archivos ilegibles.
         /// </summary>
         public const string CarpetaIlegibles = "Planos ILEGIBLES";
+
+        /// <summary>
+        /// Longitud maxima permitida para el nombre de archivo PDF final (sin ruta).
+        /// </summary>
+        public const int MaxLongitudNombreArchivo = 260;
+
+        /// <summary>
+        /// Texto agregado a las observaciones cuando el nombre final del PDF debio
+        /// truncarse por exceder MaxLongitudNombreArchivo.
+        /// </summary>
+        public const string ObservacionNombreIncompleto = "NOMBRE DE ARCHIVO INCOMPLETO";
+
+        /// <summary>
+        /// Nombre (parcial, case-insensitive) de la carpeta a partir de la cual se
+        /// acorta la ruta mostrada en la columna "Ruta" del CSV.
+        /// </summary>
+        public const string PalabraClaveCarpetaEntrega = "Entrega";
 
         private readonly LoteDAL _loteDAL;
         private readonly LogDAL _logDAL;
@@ -187,6 +205,55 @@ namespace IndexadorIA.Negocio
             return carpetaOrigen;
         }
 
+        /// <summary>
+        /// Acorta una ruta completa para la columna "Ruta" del CSV: recorre las carpetas
+        /// del path hasta encontrar una que CONTENGA la palabra "Entrega" (sin distinguir
+        /// mayusculas/minusculas) y devuelve la ruta desde esa carpeta en adelante,
+        /// prefijada con "\\". Si no se encuentra ninguna carpeta con esa palabra,
+        /// devuelve la ruta completa original sin modificar.
+        /// </summary>
+        private static string AcortarRutaPorEntrega(string rutaCompleta)
+        {
+            if (string.IsNullOrWhiteSpace(rutaCompleta))
+                return rutaCompleta;
+
+            string[] partes = rutaCompleta.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            int indiceEntrega = -1;
+            for (int i = 0; i < partes.Length; i++)
+            {
+                if (partes[i].Contains(PalabraClaveCarpetaEntrega, StringComparison.OrdinalIgnoreCase))
+                {
+                    indiceEntrega = i;
+                    break;
+                }
+            }
+
+            if (indiceEntrega < 0)
+                return rutaCompleta;
+
+            string resto = string.Join(Path.DirectorySeparatorChar, partes.Skip(indiceEntrega));
+            return "\\\\" + resto;
+        }
+
+        /// <summary>
+        /// Elimina los archivos temporales de trabajo (.jpg y .b64) generados durante la
+        /// separacion/preparacion de imagenes, correspondientes unicamente al PDF original
+        /// indicado (mismo nombre base, misma carpeta "Planos Originales"). No afecta a los
+        /// archivos temporales de otras paginas que no formen parte del lote finalizado.
+        /// </summary>
+        private static void EliminarArchivosTemporales(string rutaPdfOriginal)
+        {
+            string rutaJpg = Path.ChangeExtension(rutaPdfOriginal, ".jpg");
+            string rutaB64 = Path.ChangeExtension(rutaPdfOriginal, ".b64");
+
+            if (File.Exists(rutaJpg))
+                File.Delete(rutaJpg);
+
+            if (File.Exists(rutaB64))
+                File.Delete(rutaB64);
+        }
+
         public List<RegistroMovimiento> MoverYRenombrarArchivos(List<FilaFinalizacion> filas)
         {
             var movimientos = new List<RegistroMovimiento>();
@@ -227,14 +294,27 @@ namespace IndexadorIA.Negocio
                         fila.Resultado.DsParcela,
                         fila.Resultado.DsExpediente);
 
+                bool nombreIncompleto = false;
+                if (nombreNuevo.Length > MaxLongitudNombreArchivo)
+                {
+                    string extension = Path.GetExtension(nombreNuevo);
+                    nombreNuevo = nombreNuevo.Substring(0, MaxLongitudNombreArchivo - extension.Length) + extension;
+                    nombreIncompleto = true;
+                }
+
                 nombreNuevo = GeneradorNombreArchivo.ResolverColision(carpetaDestino, nombreNuevo);
 
                 string rutaDestino = Path.Combine(carpetaDestino, nombreNuevo);
 
                 if (!string.Equals(rutaOrigen, rutaDestino, StringComparison.OrdinalIgnoreCase))
-                    File.Move(rutaOrigen, rutaDestino);
+                    File.Copy(rutaOrigen, rutaDestino, overwrite: true);
 
                 _loteDAL.ActualizarNombreArchivoFinal(fila.Archivo.CdArchivoPagina, nombreNuevo);
+
+                if (nombreIncompleto)
+                    _loteDAL.AgregarObservacion(fila.Archivo.CdArchivoPagina, ObservacionNombreIncompleto);
+
+                EliminarArchivosTemporales(rutaOrigen);
 
                 movimientos.Add(new RegistroMovimiento
                 {
@@ -322,7 +402,7 @@ namespace IndexadorIA.Negocio
 
                     var campos = new[]
                     {
-                        EscaparCampoCsv(f.DsRutaCompleta),
+                        EscaparCampoCsv(AcortarRutaPorEntrega(f.DsRutaCompleta)),
                         EscaparCampoCsv(f.DsNombreArchivoOriginal),
                         EscaparCampoCsv(f.DsNombreArchivoFinal),
                         EscaparCampoCsv(f.DsCategoriaPlano),
@@ -334,7 +414,7 @@ namespace IndexadorIA.Negocio
                         EscaparCampoCsv(f.DsParcela),
                         EscaparCampoCsv(f.DsExpediente),
                         EscaparCampoCsv(esCatastro ? f.DsNumeroPlano : string.Empty),
-                        string.Empty
+                        EscaparCampoCsv(f.DsObservaciones ?? string.Empty)
                     };
 
                     writer.WriteLine(string.Join(";", campos));
