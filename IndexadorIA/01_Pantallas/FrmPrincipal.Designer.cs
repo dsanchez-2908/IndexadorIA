@@ -163,7 +163,7 @@ namespace IndexadorIA.Pantallas
             menuConsultas.Font = new Font("Segoe UI", 10F);
             menuConsultas.ForeColor = Color.White;
             menuConsultas.Name = "menuConsultas";
-            menuConsultas.Size = new Size(90, 23);
+            menuConsultas.Size = new Size(81, 23);
             menuConsultas.Text = "Consultas";
             // 
             // menuReportes
@@ -172,7 +172,7 @@ namespace IndexadorIA.Pantallas
             menuReportes.Font = new Font("Segoe UI", 10F);
             menuReportes.ForeColor = Color.White;
             menuReportes.Name = "menuReportes";
-            menuReportes.Size = new Size(80, 23);
+            menuReportes.Size = new Size(75, 23);
             menuReportes.Text = "Reportes";
             // 
             // menuConsumosIA
@@ -180,7 +180,7 @@ namespace IndexadorIA.Pantallas
             menuConsumosIA.BackColor = Color.FromArgb(45, 45, 48);
             menuConsumosIA.ForeColor = Color.White;
             menuConsumosIA.Name = "menuConsumosIA";
-            menuConsumosIA.Size = new Size(180, 24);
+            menuConsumosIA.Size = new Size(160, 24);
             menuConsumosIA.Text = "Consumos IA";
             menuConsumosIA.Click += menuConsumosIA_Click;
             // 
@@ -309,7 +309,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20260821_v2)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260827)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;

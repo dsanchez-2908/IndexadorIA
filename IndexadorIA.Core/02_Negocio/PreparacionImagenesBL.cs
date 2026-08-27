@@ -27,11 +27,11 @@ namespace IndexadorIA.Negocio
         /// <summary>
         /// Obtiene los lotes disponibles para preparación
         /// </summary>
-        public List<LoteGridDto> ObtenerLotesParaPreparacion(string? filtroNombre = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null)
+        public List<LoteGridDto> ObtenerLotesParaPreparacion(string? filtroNombre = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null, bool incluirYaPreparados = false)
         {
             try
             {
-                return _dal.ObtenerLotesParaPreparacion(filtroNombre, fechaDesde, fechaHasta);
+                return _dal.ObtenerLotesParaPreparacion(filtroNombre, fechaDesde, fechaHasta, incluirYaPreparados);
             }
             catch (Exception ex)
             {

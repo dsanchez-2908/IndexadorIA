@@ -28,6 +28,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             public int NuCantidadArchivos => Lote.NuCantidadArchivos;
             public string? DsEstado => Lote.DsEstado;
             public DateTime FeAltaLote => Lote.FeAltaLote;
+            public int NuCorrectos => Lote.NuCorrectos;
+            public int NuIncorrectos => Lote.NuIncorrectos;
         }
 
         public FrmAsignacionLote()
@@ -105,6 +107,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 HeaderText = "Fecha Alta",
                 DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
             });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCorrectos",
+                DataPropertyName = "NuCorrectos",
+                HeaderText = "Correctos"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuIncorrectos",
+                DataPropertyName = "NuIncorrectos",
+                HeaderText = "Incorrectos"
+            });
         }
 
         private void CargarUsuarios()
@@ -177,6 +193,32 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             {
                 dgvLotes.EndEdit();
             }
+        }
+
+        private void dgvLotes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                AbrirVerLote();
+            }
+        }
+
+        private void btnVerLote_Click(object sender, EventArgs e)
+        {
+            AbrirVerLote();
+        }
+
+        private void AbrirVerLote()
+        {
+            if (dgvLotes.CurrentRow?.DataBoundItem is not LoteSeleccionable loteSeleccionado)
+            {
+                MessageBox.Show("Seleccione un lote para ver su detalle.",
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using var frm = new FrmVerLoteDetalle(loteSeleccionado.CdLote, loteSeleccionado.DsNombreLote);
+            frm.ShowDialog(this);
         }
 
         private void btnAsignarLotes_Click(object sender, EventArgs e)

@@ -30,6 +30,16 @@ namespace IndexadorIA.Datos
 
                 using (var tx = conn.BeginTransaction())
                 {
+                    // Eliminar primero las correcciones asociadas a resultados previos de esta página
+                    // (evita conflicto de FK_TD_CORRECIONES_RESULTADO_IA al borrar TD_001_RESULTADO_IA)
+                    using (var cmdDeleteCorrecciones = new SqlCommand(
+                        @"DELETE FROM TD_CORRECIONES WHERE cdResultado IN
+                          (SELECT cdResultado FROM TD_001_RESULTADO_IA WHERE cdArchivoPagina = @cdArchivoPagina)", conn, tx))
+                    {
+                        cmdDeleteCorrecciones.Parameters.AddWithValue("@cdArchivoPagina", resultado.CdArchivoPagina);
+                        cmdDeleteCorrecciones.ExecuteNonQuery();
+                    }
+
                     // Eliminar primero los tokens asociados a resultados previos de esta página
                     // (evita conflicto de FK_TD_TOKEN_RESULTADO al borrar TD_001_RESULTADO_IA)
                     using (var cmdDeleteTokens = new SqlCommand(

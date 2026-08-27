@@ -373,7 +373,9 @@ namespace IndexadorIA.Datos
             {
                 var sql = @"
                     SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, 
-                           l.cdEstadoLote, e.dsEstado, l.feAltaLote, l.cdUsuarioAsignado
+                           l.cdEstadoLote, e.dsEstado, l.feAltaLote, l.cdUsuarioAsignado,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote), 0) AS nuCorrectos,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA_ERROR er WHERE er.cdLote = l.cdLote), 0) AS nuIncorrectos
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
                     WHERE l.cdEstadoLote = @cdEstado";
@@ -428,7 +430,9 @@ namespace IndexadorIA.Datos
                             CdEstadoLote = lector.GetInt32(3),
                             DsEstado = lector.GetString(4),
                             FeAltaLote = lector.GetDateTime(5),
-                            CdUsuarioAsignado = lector.IsDBNull(6) ? null : lector.GetInt32(6)
+                            CdUsuarioAsignado = lector.IsDBNull(6) ? null : lector.GetInt32(6),
+                            NuCorrectos = lector.GetInt32(7),
+                            NuIncorrectos = lector.GetInt32(8)
                         });
                     }
                 }
@@ -775,6 +779,60 @@ namespace IndexadorIA.Datos
                             DsNumeroPlano = lector.IsDBNull(11) ? string.Empty : lector.GetString(11),
                             CdEstadoControl = lector.GetInt32(12),
                             DsObservaciones = lector.IsDBNull(13) ? null : lector.GetString(13)
+                        });
+                    }
+                }
+            }
+
+            return filas;
+        }
+
+        /// <summary>
+        /// Obtiene el detalle de registros de un lote desde VW_001_RESULTADO_IA,
+        /// para la pantalla de "Ver Lote" previa a la asignación.
+        /// </summary>
+        public List<Entidades.ResultadoIADetalleLoteDto> ObtenerDetalleLoteParaVer(int cdLote)
+        {
+            var filas = new List<Entidades.ResultadoIADetalleLoteDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    SELECT		a.cdLote,
+                                b.dsNombreLote,
+                                a.dsCategoriaPlano,
+                                a.dsTipoPlano,
+                                a.dsAcronimo,
+                                a.dsDireccion,
+                                a.dsSeccion,
+                                a.dsManzana,
+                                a.dsParcela,
+                                a.dsExpediente,
+                                a.dsNumeroPlano
+                    FROM		VW_001_RESULTADO_IA	a
+                    LEFT JOIN	TD_LOTE				b ON a.cdLote=b.cdLote
+                    WHERE		a.cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        filas.Add(new Entidades.ResultadoIADetalleLoteDto
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.IsDBNull(1) ? null : lector.GetString(1),
+                            DsCategoriaPlano = lector.IsDBNull(2) ? null : lector.GetString(2),
+                            DsTipoPlano = lector.IsDBNull(3) ? null : lector.GetString(3),
+                            DsAcronimo = lector.IsDBNull(4) ? null : lector.GetString(4),
+                            DsDireccion = lector.IsDBNull(5) ? null : lector.GetString(5),
+                            DsSeccion = lector.IsDBNull(6) ? null : lector.GetString(6),
+                            DsManzana = lector.IsDBNull(7) ? null : lector.GetString(7),
+                            DsParcela = lector.IsDBNull(8) ? null : lector.GetString(8),
+                            DsExpediente = lector.IsDBNull(9) ? null : lector.GetString(9),
+                            DsNumeroPlano = lector.IsDBNull(10) ? null : lector.GetString(10)
                         });
                     }
                 }

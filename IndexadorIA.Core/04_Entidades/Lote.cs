@@ -17,5 +17,10 @@ namespace IndexadorIA.Entidades
         public string? DsEstado { get; set; }
         public string? DsUsuario { get; set; }
         public string? DsUsuarioAsignado { get; set; }
+
+        // Conteo de resultados de IA correctos (TD_001_RESULTADO_IA) e incorrectos
+        // (TD_001_RESULTADO_IA_ERROR) para el lote, usado en pantallas de asignación/monitoreo.
+        public int NuCorrectos { get; set; }
+        public int NuIncorrectos { get; set; }
     }
 }

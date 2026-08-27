@@ -35,11 +35,32 @@ namespace IndexadorIA.Pantallas
                 lblBaseDatos.Text = string.IsNullOrEmpty(nombreBaseDeDatos)
                     ? string.Empty
                     : $"Base de datos: {nombreBaseDeDatos}";
+
+                AplicarColorEntornoSegunBaseDeDatos(nombreBaseDeDatos);
             }
 
             lblFecha.Text = DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy");
 
             AplicarPermisosPorRol();
+        }
+
+        /// <summary>
+        /// Si la aplicación está conectada localmente (no por API) a una base de datos cuyo
+        /// nombre contiene "QA" o "Test" (sin distinguir mayúsculas/minúsculas), pinta el menú
+        /// y la barra de estado de color naranja para advertir claramente que no es producción.
+        /// </summary>
+        private void AplicarColorEntornoSegunBaseDeDatos(string? nombreBaseDeDatos)
+        {
+            bool esEntornoNoProductivo = !string.IsNullOrEmpty(nombreBaseDeDatos) &&
+                (nombreBaseDeDatos.Contains("QA", StringComparison.OrdinalIgnoreCase) ||
+                 nombreBaseDeDatos.Contains("Test", StringComparison.OrdinalIgnoreCase));
+
+            Color colorFondo = esEntornoNoProductivo
+                ? Color.FromArgb(230, 126, 34)
+                : Color.FromArgb(45, 45, 48);
+
+            menuStrip.BackColor = colorFondo;
+            statusStrip.BackColor = colorFondo;
         }
 
         /// <summary>
@@ -59,6 +80,11 @@ namespace IndexadorIA.Pantallas
             {
                 // Oculta el menú "Lotes" completo
                 menuLotes.Visible = false;
+
+                // Oculta los menús de nivel superior "Consultas" y "Reportes" (y cualquier
+                // menú nuevo que se agregue a futuro a nivel del menuStrip queda oculto por defecto)
+                menuConsultas.Visible = false;
+                menuReportes.Visible = false;
 
                 // En "Planos de GCBA" solo deja visible "Control y Finalización"
                 menuIngresoArchivos.Visible = false;

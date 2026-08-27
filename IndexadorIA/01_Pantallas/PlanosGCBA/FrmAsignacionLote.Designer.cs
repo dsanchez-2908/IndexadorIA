@@ -41,6 +41,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnSeleccionarTodos = new Button();
             btnDeseleccionarTodo = new Button();
             btnSeleccionar10 = new Button();
+            btnVerLote = new Button();
             groupBoxFiltros.SuspendLayout();
             groupBoxLotes.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvLotes).BeginInit();
@@ -230,6 +231,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvLotes.Size = new Size(939, 257);
             dgvLotes.TabIndex = 0;
             dgvLotes.CellContentClick += dgvLotes_CellContentClick;
+            dgvLotes.CellDoubleClick += dgvLotes_CellDoubleClick;
             // 
             // lblTotalizadorLotes
             // 
@@ -251,15 +253,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelAcciones.Controls.Add(btnSeleccionarTodos);
             panelAcciones.Controls.Add(btnDeseleccionarTodo);
             panelAcciones.Controls.Add(btnSeleccionar10);
+            panelAcciones.Controls.Add(btnVerLote);
             panelAcciones.Controls.Add(lblAsignarAUsuarios);
             panelAcciones.Controls.Add(cboUsuarios);
             panelAcciones.Controls.Add(btnAsignarLotes);
             panelAcciones.Controls.Add(btnCerrar);
             panelAcciones.Dock = DockStyle.Bottom;
-            panelAcciones.Location = new Point(0, 398);
+            panelAcciones.Location = new Point(0, 362);
             panelAcciones.Margin = new Padding(3, 2, 3, 2);
             panelAcciones.Name = "panelAcciones";
-            panelAcciones.Size = new Size(957, 46);
+            panelAcciones.Size = new Size(957, 82);
             panelAcciones.TabIndex = 2;
             // 
             // btnCerrar
@@ -356,12 +359,26 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnSeleccionar10.UseVisualStyleBackColor = false;
             btnSeleccionar10.Click += btnSeleccionar10_Click;
             // 
+            // btnVerLote
+            // 
+            btnVerLote.BackColor = Color.FromArgb(62, 62, 66);
+            btnVerLote.FlatStyle = FlatStyle.Flat;
+            btnVerLote.ForeColor = Color.White;
+            btnVerLote.Location = new Point(18, 44);
+            btnVerLote.Margin = new Padding(3, 2, 3, 2);
+            btnVerLote.Name = "btnVerLote";
+            btnVerLote.Size = new Size(120, 30);
+            btnVerLote.TabIndex = 7;
+            btnVerLote.Text = "Ver Lote";
+            btnVerLote.UseVisualStyleBackColor = false;
+            btnVerLote.Click += btnVerLote_Click;
+            // 
             // FrmAsignacionLote
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(45, 45, 48);
-            ClientSize = new Size(957, 444);
+            ClientSize = new Size(957, 480);
             Controls.Add(groupBoxLotes);
             Controls.Add(panelAcciones);
             Controls.Add(groupBoxFiltros);
@@ -404,5 +421,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Button btnSeleccionarTodos;
         private Button btnDeseleccionarTodo;
         private Button btnSeleccionar10;
+        private Button btnVerLote;
     }
 }

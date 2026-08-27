@@ -731,6 +731,90 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
         }
 
+        private async void btnReprocesarResultado_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dgvTracking.SelectedRows.Count == 0 || dgvTracking.CurrentRow == null)
+                {
+                    MessageBox.Show("Seleccione un registro de la grilla para volver a procesar.",
+                        "Informaci\u00f3n", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var row = dgvTracking.CurrentRow;
+                string batchId = row.Cells["dsBatchId"].Value?.ToString() ?? "";
+                string estado = row.Cells["dsEstado"].Value?.ToString() ?? "";
+
+                if (string.IsNullOrEmpty(batchId))
+                {
+                    MessageBox.Show("El registro seleccionado no tiene un Batch ID v\u00e1lido.",
+                        "Informaci\u00f3n", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (estado != "completed")
+                {
+                    MessageBox.Show("Solo se pueden reprocesar batches en estado 'completed'.",
+                        "Informaci\u00f3n", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                int cdLote = Convert.ToInt32(row.Cells["cdLote"].Value);
+
+                var confirmResult = MessageBox.Show(
+                    $"Se volver\u00e1n a descargar y parsear los resultados del batch {batchId} (Lote {cdLote}).\n\n" +
+                    "Esto NO reenv\u00eda nada a OpenAI (no genera costo adicional), solo vuelve a leer el resultado ya generado " +
+                    "y a intentar parsearlo nuevamente.\n\n" +
+                    "Los datos ya guardados en TD_001_RESULTADO_IA para las p\u00e1ginas de este lote ser\u00e1n SOBRESCRITOS.\n\n" +
+                    "\u00bfDesea continuar?",
+                    "Confirmar Reproceso",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (confirmResult != DialogResult.Yes)
+                    return;
+
+                btnReprocesarResultado.Enabled = false;
+                lblEstado.Text = $"Reprocesando resultados del batch {batchId} (Lote {cdLote})...";
+                progressBar.Maximum = 100;
+                progressBar.Value = 50;
+
+                await OpenAIBL.ProcesarResultadosBatchAsync(batchId, cdLote, SesionActual.UsuarioActual?.CdUsuario ?? 1);
+
+                progressBar.Value = 100;
+                lblEstado.Text = $"Lote {cdLote} reprocesado correctamente.";
+
+                MessageBox.Show($"Se volvi\u00f3 a procesar el batch {batchId} del Lote {cdLote}.\n\n" +
+                    "Revise el estado de las p\u00e1ginas: las que sigan fallando quedar\u00e1n marcadas con el estado " +
+                    "'Error de Procesamiento IA'.",
+                    "Reproceso Completo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                CargarBatchesEnviados();
+                btnCargarLotes_Click(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                var logDAL = new Datos.LogDAL();
+                logDAL.Insertar(new Entidades.LogRegistro
+                {
+                    DsNivel = Entidades.LogRegistro.Niveles.ERROR,
+                    DsModulo = "FrmProcesamientoIA.btnReprocesarResultado_Click",
+                    DsMensaje = $"Error al reprocesar resultados: {ex.Message}",
+                    DsExcepcion = ex.ToString()
+                });
+
+                MessageBox.Show($"Error al reprocesar los resultados: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblEstado.Text = "Error al reprocesar resultados";
+            }
+            finally
+            {
+                btnReprocesarResultado.Enabled = true;
+                progressBar.Value = 0;
+            }
+        }
+
         private void CargarBatchesEnviados()
         {
             try
@@ -757,7 +841,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         bt.dsErrorFileId,
                         bt.snResultadoProcesado,
                         bt.feAlta,
-                        bt.feUltimaConsulta
+                        bt.feUltimaConsulta,
+                        ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA_ERROR e WHERE e.cdLote = bt.cdLote), 0) AS nuPaginasConError
                     FROM TD_BATCH_TRACKING bt
                     INNER JOIN TD_LOTE l ON l.cdLote = bt.cdLote
                     WHERE (bt.dsEstado IN ('created', 'validating', 'in_progress', 'finalizing', 'completed', 'failed', 'expired', 'cancelling', 'cancelled')
@@ -797,11 +882,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     dgvTracking.Columns["feAlta"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
                     dgvTracking.Columns["feUltimaConsulta"].HeaderText = "Última Consulta";
                     dgvTracking.Columns["feUltimaConsulta"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
+                    dgvTracking.Columns["nuPaginasConError"].HeaderText = "Pág. con Error";
+                    dgvTracking.Columns["nuPaginasConError"].Width = 90;
 
                     dgvTracking.Columns["dsFileId"].Width = 150;
                     dgvTracking.Columns["dsBatchId"].Width = 150;
                     dgvTracking.Columns["dsOutputFileId"].Width = 150;
                     dgvTracking.Columns["dsErrorFileId"].Width = 150;
+
+                    foreach (DataGridViewRow row in dgvTracking.Rows)
+                    {
+                        var valor = row.Cells["nuPaginasConError"].Value;
+                        if (valor != null && Convert.ToInt32(valor) > 0)
+                        {
+                            row.Cells["nuPaginasConError"].Style.BackColor = Color.FromArgb(193, 74, 10);
+                            row.Cells["nuPaginasConError"].Style.ForeColor = Color.White;
+                        }
+                    }
                 }
             }
             catch (Exception ex)

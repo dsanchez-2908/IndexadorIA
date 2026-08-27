@@ -219,7 +219,15 @@ namespace IndexadorIA.Negocio
                 return soloAlfanumerico.ToUpperInvariant();
             }
 
-            int numero = int.Parse(parteNumerica, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            // Si la parte numérica es demasiado larga para un int (dato mal reconocido por la IA),
+            // no formatear como número: devolver el valor tal cual, sin intentar rellenar con ceros.
+            if (!int.TryParse(parteNumerica, NumberStyles.Integer, CultureInfo.InvariantCulture, out int numero))
+            {
+                return letraMayuscula
+                    ? soloAlfanumerico.ToUpperInvariant()
+                    : soloAlfanumerico;
+            }
+
             bool esLL = parteTexto.Equals("LL", StringComparison.OrdinalIgnoreCase);
 
             if (esLL)
@@ -553,7 +561,8 @@ namespace IndexadorIA.Negocio
                                 }
                             }
                         },
-                        max_tokens = 2000
+                        max_tokens = 2000,
+                        response_format = new { type = "json_object" }
                     }
                 };
 
@@ -990,6 +999,8 @@ namespace IndexadorIA.Negocio
             var tipoPlanoDAL = new TipoPlanoDAL();
             var reparticionDAL = new ReparticionDAL();
             var reparticiones = reparticionDAL.ObtenerTodos();
+            var resultadoIAErrorDAL = new ResultadoIAErrorDAL();
+            int paginasConError = 0;
 
             try
             {
@@ -1191,6 +1202,16 @@ namespace IndexadorIA.Negocio
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
                             DsMensaje = $"Error en p�gina {cdArchivoPagina} del batch {batchId}: {errorMessage}"
                         });
+
+                        archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 5, cdUsuario);
+                        resultadoIAErrorDAL.Insertar(new ResultadoIAError
+                        {
+                            CdLote = cdLote,
+                            CdArchivoPagina = cdArchivoPagina,
+                            DsMotivoError = $"Error devuelto por OpenAI: {errorMessage}",
+                            DsRespuestaCruda = null
+                        });
+                        paginasConError++;
                         continue;
                     }
 
@@ -1252,6 +1273,16 @@ namespace IndexadorIA.Negocio
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
                             DsMensaje = $"Error al parsear JSON de p�gina {cdArchivoPagina}: {ex.Message}. JSON: {respuestaIA.Substring(0, Math.Min(500, respuestaIA.Length))}"
                         });
+
+                        archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 5, cdUsuario);
+                        resultadoIAErrorDAL.Insertar(new ResultadoIAError
+                        {
+                            CdLote = cdLote,
+                            CdArchivoPagina = cdArchivoPagina,
+                            DsMotivoError = $"Error al parsear JSON: {ex.Message}",
+                            DsRespuestaCruda = respuestaIA.Substring(0, Math.Min(4000, respuestaIA.Length))
+                        });
+                        paginasConError++;
                         continue;
                     }
 
@@ -1263,6 +1294,16 @@ namespace IndexadorIA.Negocio
                             DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
                             DsMensaje = $"JSON deserializado es null para p�gina {cdArchivoPagina}"
                         });
+
+                        archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 5, cdUsuario);
+                        resultadoIAErrorDAL.Insertar(new ResultadoIAError
+                        {
+                            CdLote = cdLote,
+                            CdArchivoPagina = cdArchivoPagina,
+                            DsMotivoError = "JSON deserializado resultó en null",
+                            DsRespuestaCruda = respuestaIA.Substring(0, Math.Min(4000, respuestaIA.Length))
+                        });
+                        paginasConError++;
                         continue;
                     }
 
@@ -1345,8 +1386,17 @@ namespace IndexadorIA.Negocio
                     archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 4, cdUsuario);
                 }
 
-                // 4. Actualizar estado del lote a "Procesado (4)"
-                loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
+                // 4. Actualizar estado del lote: solo se marca "Procesado (4)" si no hubo
+                //    paginas con error de procesamiento/parseo. Si hubo errores, se deja el
+                //    lote en estado "Listo para IA (2)" para que pueda reprocesarse.
+                if (paginasConError == 0)
+                {
+                    loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
+                }
+                else
+                {
+                    loteDAL.ActualizarEstado(cdLote, 2, cdUsuario);
+                }
 
                 // 5. Marcar batch como resultado procesado
                 using (var conexion = new SqlConnection(Configuracion.CadenaConexion))
@@ -1358,12 +1408,24 @@ namespace IndexadorIA.Negocio
                     comando.ExecuteNonQuery();
                 }
 
-                logDAL.Insertar(new LogRegistro
+                if (paginasConError == 0)
                 {
-                    DsNivel = LogRegistro.Niveles.INFO,
-                    DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
-                    DsMensaje = $"Batch {batchId} procesado exitosamente. Lote {cdLote} completado."
-                });
+                    logDAL.Insertar(new LogRegistro
+                    {
+                        DsNivel = LogRegistro.Niveles.INFO,
+                        DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
+                        DsMensaje = $"Batch {batchId} procesado exitosamente. Lote {cdLote} completado."
+                    });
+                }
+                else
+                {
+                    logDAL.Insertar(new LogRegistro
+                    {
+                        DsNivel = LogRegistro.Niveles.WARNING,
+                        DsModulo = "OpenAIBL.ProcesarResultadosBatchAsync",
+                        DsMensaje = $"Batch {batchId} procesado con {paginasConError} página(s) en error. Lote {cdLote} quedó en estado 'Listo para IA' para reprocesar."
+                    });
+                }
             }
             catch (Exception ex)
             {

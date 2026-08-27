@@ -200,6 +200,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnProcesar.Click += btnProcesar_Click;
             btnCerrar.Click += btnCerrar_Click;
 
+            // Filtro de lotes ya preparados
+            chkMostrarPreparados.CheckedChanged += (s, e) => CargarDatos();
+
             // Al cambiar configuración, guardar automáticamente
             cboEsquina.SelectedIndexChanged += (s, e) => GuardarConfiguracion();
             numDPI.ValueChanged += (s, e) => GuardarConfiguracion();
@@ -262,7 +265,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             {
                 Cursor = Cursors.WaitCursor;
 
-                _lotes = _bl.ObtenerLotesParaPreparacion();
+                _lotes = _bl.ObtenerLotesParaPreparacion(incluirYaPreparados: chkMostrarPreparados.Checked);
 
                 if (_lotes == null || !_lotes.Any())
                 {
@@ -299,7 +302,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 DateTime? fechaDesde = dtpDesde.Checked ? dtpDesde.Value.Date : null;
                 DateTime? fechaHasta = dtpHasta.Checked ? dtpHasta.Value.Date : null;
 
-                _lotes = _bl.ObtenerLotesParaPreparacion(filtroNombre, fechaDesde, fechaHasta);
+                _lotes = _bl.ObtenerLotesParaPreparacion(filtroNombre, fechaDesde, fechaHasta, chkMostrarPreparados.Checked);
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotes;
 
@@ -416,8 +419,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
                 if (_bitmapPreview != null)
                 {
-                    // Mostrar en PictureBox
-                    pictureBoxPreview.Image = _bitmapPreview;
+                    // Mostrar en PictureBox con el recuadro de recorte ya dibujado
+                    MostrarPreviewConRecuadro();
                     pictureBoxPreview.SizeMode = PictureBoxSizeMode.Zoom;
                 }
             }
@@ -426,6 +429,58 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 MessageBox.Show($"Error al renderizar PDF: {ex.Message}", "Error", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void MostrarPreviewConRecuadro()
+        {
+            if (_bitmapPreview == null)
+            {
+                return;
+            }
+
+            // Crear una copia exacta del bitmap original
+            var bitmapConRecuadro = (Bitmap)_bitmapPreview.Clone();
+
+            using (var graphics = Graphics.FromImage(bitmapConRecuadro))
+            {
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+                // Calcular rectángulo de recorte
+                var rectangulo = ProcesamientoImagenes.CalcularRectanguloRecorte(
+                    bitmapConRecuadro.Width,
+                    bitmapConRecuadro.Height,
+                    (EsquinaRecorte)cboEsquina.SelectedIndex,
+                    numPorcentajeVertical.Value,
+                    numPorcentajeHorizontal.Value);
+
+                // Dibujar rectángulo rojo
+                using (var pen = new Pen(Color.Red, 5))
+                {
+                    graphics.DrawRectangle(pen, rectangulo);
+                }
+
+                // Dibujar líneas diagonales para mejor visualización
+                using (var penDiagonal = new Pen(Color.Red, 2))
+                {
+                    penDiagonal.DashStyle = DashStyle.Dash;
+                    graphics.DrawLine(penDiagonal, 
+                        rectangulo.Left, rectangulo.Top, 
+                        rectangulo.Right, rectangulo.Bottom);
+                    graphics.DrawLine(penDiagonal, 
+                        rectangulo.Right, rectangulo.Top, 
+                        rectangulo.Left, rectangulo.Bottom);
+                }
+            }
+
+            // Disponer imagen anterior si existe y no es el bitmap original
+            if (pictureBoxPreview.Image != null && pictureBoxPreview.Image != _bitmapPreview)
+            {
+                pictureBoxPreview.Image.Dispose();
+            }
+
+            // Mostrar imagen con recuadro
+            pictureBoxPreview.Image = bitmapConRecuadro;
+            pictureBoxPreview.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
         private void btnActualizarImagen_Click(object? sender, EventArgs e)
@@ -439,49 +494,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     return;
                 }
 
-                // Crear una copia exacta del bitmap original
-                var bitmapConRecuadro = (Bitmap)_bitmapPreview.Clone();
-
-                using (var graphics = Graphics.FromImage(bitmapConRecuadro))
-                {
-                    graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-                    // Calcular rectángulo de recorte
-                    var rectangulo = ProcesamientoImagenes.CalcularRectanguloRecorte(
-                        bitmapConRecuadro.Width,
-                        bitmapConRecuadro.Height,
-                        (EsquinaRecorte)cboEsquina.SelectedIndex,
-                        numPorcentajeVertical.Value,
-                        numPorcentajeHorizontal.Value);
-
-                    // Dibujar rectángulo rojo
-                    using (var pen = new Pen(Color.Red, 3))
-                    {
-                        graphics.DrawRectangle(pen, rectangulo);
-                    }
-
-                    // Dibujar líneas diagonales para mejor visualización
-                    using (var penDiagonal = new Pen(Color.Red, 1))
-                    {
-                        penDiagonal.DashStyle = DashStyle.Dash;
-                        graphics.DrawLine(penDiagonal, 
-                            rectangulo.Left, rectangulo.Top, 
-                            rectangulo.Right, rectangulo.Bottom);
-                        graphics.DrawLine(penDiagonal, 
-                            rectangulo.Right, rectangulo.Top, 
-                            rectangulo.Left, rectangulo.Bottom);
-                    }
-                }
-
-                // Disponer imagen anterior si existe y no es el bitmap original
-                if (pictureBoxPreview.Image != null && pictureBoxPreview.Image != _bitmapPreview)
-                {
-                    pictureBoxPreview.Image.Dispose();
-                }
-
-                // Mostrar imagen con recuadro
-                pictureBoxPreview.Image = bitmapConRecuadro;
-                pictureBoxPreview.SizeMode = PictureBoxSizeMode.Zoom;
+                MostrarPreviewConRecuadro();
             }
             catch (Exception ex)
             {

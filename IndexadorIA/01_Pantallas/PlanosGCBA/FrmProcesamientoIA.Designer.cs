@@ -45,6 +45,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             chkMostrarProcesados = new CheckBox();
             btnVerificarEstado = new Button();
             btnProcesarResultados = new Button();
+            btnReprocesarResultado = new Button();
             btnActualizarTracking = new Button();
             panelSuperior.SuspendLayout();
             groupBoxAcciones.SuspendLayout();
@@ -386,6 +387,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelTrackingButtons.Controls.Add(chkMostrarProcesados);
             panelTrackingButtons.Controls.Add(btnVerificarEstado);
             panelTrackingButtons.Controls.Add(btnProcesarResultados);
+            panelTrackingButtons.Controls.Add(btnReprocesarResultado);
             panelTrackingButtons.Controls.Add(btnActualizarTracking);
             panelTrackingButtons.Dock = DockStyle.Top;
             panelTrackingButtons.Location = new Point(9, 24);
@@ -398,7 +400,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             chkMostrarProcesados.AutoSize = true;
             chkMostrarProcesados.ForeColor = Color.White;
-            chkMostrarProcesados.Location = new Point(445, 6);
+            chkMostrarProcesados.Location = new Point(645, 6);
             chkMostrarProcesados.Name = "chkMostrarProcesados";
             chkMostrarProcesados.Size = new Size(187, 19);
             chkMostrarProcesados.TabIndex = 3;
@@ -433,6 +435,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnProcesarResultados.Text = "Procesar Resultados";
             btnProcesarResultados.UseVisualStyleBackColor = false;
             btnProcesarResultados.Click += btnProcesarResultados_Click;
+            // 
+            // btnReprocesarResultado
+            // 
+            btnReprocesarResultado.BackColor = Color.FromArgb(193, 74, 10);
+            btnReprocesarResultado.FlatStyle = FlatStyle.Flat;
+            btnReprocesarResultado.ForeColor = Color.White;
+            btnReprocesarResultado.Location = new Point(439, 4);
+            btnReprocesarResultado.Margin = new Padding(3, 2, 3, 2);
+            btnReprocesarResultado.Name = "btnReprocesarResultado";
+            btnReprocesarResultado.Size = new Size(196, 22);
+            btnReprocesarResultado.TabIndex = 4;
+            btnReprocesarResultado.Text = "Volver a Procesar Resultado";
+            btnReprocesarResultado.UseVisualStyleBackColor = false;
+            btnReprocesarResultado.Click += btnReprocesarResultado_Click;
             // 
             // btnActualizarTracking
             // 
@@ -499,6 +515,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Button btnActualizarTracking;
         private Button btnVerificarEstado;
         private Button btnProcesarResultados;
+        private Button btnReprocesarResultado;
         private GroupBox groupBoxAcciones;
         private Label lblEstado;
         private ProgressBar progressBar;

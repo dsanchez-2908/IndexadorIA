@@ -12,7 +12,7 @@ namespace IndexadorIA.Datos
         /// <summary>
         /// Obtiene los lotes disponibles para preparación de imágenes
         /// </summary>
-        public List<LoteGridDto> ObtenerLotesParaPreparacion(string? filtroNombre = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null)
+        public List<LoteGridDto> ObtenerLotesParaPreparacion(string? filtroNombre = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null, bool incluirYaPreparados = false)
         {
             var lotes = new List<LoteGridDto>();
 
@@ -27,11 +27,13 @@ namespace IndexadorIA.Datos
                         e.dsEstado AS DsEstado
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
-                    WHERE l.cdEstadoLote IN (1, 2)"; // Estado 1: Pendiente de preparar imágenes.
-                    // Estado 2: ya "preparado", pero se incluye para permitir reprocesar lotes cuyas
-                    // páginas Base64 falten o se hayan eliminado externamente (ver validación en
-                    // OpenAIBL.CrearArchivoBatchAsync). ProcesarLote es idempotente: sobreescribe
-                    // JPG/Base64 existentes y solo vuelve a marcar el lote como estado 2 si no hubo errores.
+                    WHERE l.cdEstadoLote " + (incluirYaPreparados ? "IN (1, 2)" : "= 1");
+                    // Estado 1: Pendiente de preparar imágenes.
+                    // Estado 2: ya "preparado"; solo se incluye cuando incluirYaPreparados es true, para
+                    // permitir reprocesar lotes cuyas páginas Base64 falten o se hayan eliminado
+                    // externamente (ver validación en OpenAIBL.CrearArchivoBatchAsync). ProcesarLote es
+                    // idempotente: sobreescribe JPG/Base64 existentes y solo vuelve a marcar el lote como
+                    // estado 2 si no hubo errores.
 
                 // Agregar filtros opcionales
                 if (!string.IsNullOrWhiteSpace(filtroNombre))

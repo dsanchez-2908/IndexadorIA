@@ -35,6 +35,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblDesde = new Label();
             txtFiltroNombre = new TextBox();
             lblFiltroNombre = new Label();
+            chkMostrarPreparados = new CheckBox();
             panelDerecha = new Panel();
             groupBoxPreview = new GroupBox();
             panelVisor = new Panel();
@@ -195,6 +196,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             panelFiltros.Controls.Add(btnLimpiar);
             panelFiltros.Controls.Add(btnBuscar);
+            panelFiltros.Controls.Add(chkMostrarPreparados);
             panelFiltros.Controls.Add(dtpHasta);
             panelFiltros.Controls.Add(dtpDesde);
             panelFiltros.Controls.Add(lblHasta);
@@ -204,7 +206,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelFiltros.Dock = DockStyle.Top;
             panelFiltros.Location = new Point(10, 26);
             panelFiltros.Name = "panelFiltros";
-            panelFiltros.Size = new Size(680, 90);
+            panelFiltros.Size = new Size(680, 120);
             panelFiltros.TabIndex = 0;
             // 
             // btnLimpiar
@@ -230,7 +232,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnBuscar.TabIndex = 6;
             btnBuscar.Text = "Buscar";
             btnBuscar.UseVisualStyleBackColor = false;
-            // 
+            //
+            // chkMostrarPreparados
+            //
+            chkMostrarPreparados.AutoSize = true;
+            chkMostrarPreparados.ForeColor = Color.White;
+            chkMostrarPreparados.Location = new Point(10, 90);
+            chkMostrarPreparados.Name = "chkMostrarPreparados";
+            chkMostrarPreparados.Size = new Size(210, 19);
+            chkMostrarPreparados.TabIndex = 8;
+            chkMostrarPreparados.Text = "Mostrar lotes ya preparados";
+            chkMostrarPreparados.UseVisualStyleBackColor = true;
+            //
             // dtpHasta
             // 
             dtpHasta.Format = DateTimePickerFormat.Short;
@@ -579,6 +592,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblHasta;
         private Button btnBuscar;
         private Button btnLimpiar;
+        private CheckBox chkMostrarPreparados;
         private Panel panelBotonesSeleccion;
         private Button btnSeleccionarTodo;
         private Button btnDeseleccionarTodo;
