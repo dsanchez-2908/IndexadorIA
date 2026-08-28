@@ -308,6 +308,14 @@ namespace IndexadorIA.Negocio
                     progreso?.Report($"Subiendo archivo a OpenAI{subLoteDesc}");
                     string fileId = await SubirArchivoAsync(batchFilePath);
 
+                    // Esperar a que OpenAI termine de procesar el archivo subido antes de crear
+                    // el batch job. Con archivos grandes, el file_id puede tardar unos segundos
+                    // en quedar disponible (consistencia eventual del lado de OpenAI); si se crea
+                    // el batch antes de tiempo, OpenAI responde "Cannot find file ... or organization
+                    // does not have access to it" y el batch queda en estado failed.
+                    progreso?.Report($"Esperando que OpenAI procese el archivo subido{subLoteDesc}");
+                    await EsperarArchivoProcesadoAsync(fileId);
+
                     // 3.3 Crear batch job
                     progreso?.Report($"Creando batch job en OpenAI{subLoteDesc}");
                     string batchId = await CrearBatchJobAsync(fileId);
@@ -675,6 +683,69 @@ namespace IndexadorIA.Negocio
 
             return json.RootElement.GetProperty("id").GetString() 
                 ?? throw new Exception("No se pudo obtener el ID del archivo subido");
+        }
+
+        /// <summary>
+        /// Consulta GET /v1/files/{fileId} en un bucle con esperas cortas hasta que OpenAI
+        /// reporte el archivo como "processed" (o un estado terminal), para evitar crear el
+        /// batch job contra un file_id que todavia no esta disponible para la organizacion
+        /// (error tipico: "Cannot find file ..., or organization ... does not have access to it").
+        /// </summary>
+        private static async Task EsperarArchivoProcesadoAsync(string fileId)
+        {
+            var parametroDAL = new ParametrosDAL();
+            string apiKey = parametroDAL.ObtenerValor("OPENAI_API_KEY")
+                ?? throw new Exception("No se encontro la API Key de OpenAI en parametros");
+
+            var logDAL = new LogDAL();
+            const int maxIntentos = 10;
+            const int esperaMs = 2000;
+
+            for (int intento = 1; intento <= maxIntentos; intento++)
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.openai.com/v1/files/{fileId}");
+                request.Headers.Add("Authorization", $"Bearer {apiKey}");
+
+                var response = await _httpClient.SendAsync(request);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = JsonDocument.Parse(responseContent);
+                    string? estado = json.RootElement.TryGetProperty("status", out var statusProp)
+                        ? statusProp.GetString()
+                        : null;
+
+                    if (string.Equals(estado, "processed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return;
+                    }
+
+                    if (string.Equals(estado, "error", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new Exception($"OpenAI reporto error al procesar el archivo {fileId}: {responseContent}");
+                    }
+                }
+
+                logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.INFO,
+                    DsModulo = "OpenAIBL.EsperarArchivoProcesadoAsync",
+                    DsMensaje = $"Intento {intento}/{maxIntentos} - fileId={fileId}, Status HTTP={response.StatusCode}, Content={responseContent}"
+                });
+
+                await Task.Delay(esperaMs);
+            }
+
+            // Si tras los reintentos no se confirmo el estado "processed", se continua igualmente:
+            // puede que OpenAI ya lo tenga disponible pero no reporte el campo status como se espera.
+            // El error real (si lo hay) se vera al crear el batch job.
+            logDAL.Insertar(new LogRegistro
+            {
+                DsNivel = LogRegistro.Niveles.WARNING,
+                DsModulo = "OpenAIBL.EsperarArchivoProcesadoAsync",
+                DsMensaje = $"No se confirmo el estado 'processed' del archivo {fileId} tras {maxIntentos} intentos. Se continua con la creacion del batch job."
+            });
         }
 
         private static async Task<string> CrearBatchJobAsync(string fileId)

@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Icono IndexadorIA.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +33,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>tessdata\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Icono IndexadorIA.ico" />
   </ItemGroup>
 
 </Project>

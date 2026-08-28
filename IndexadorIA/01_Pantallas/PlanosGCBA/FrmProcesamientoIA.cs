@@ -352,7 +352,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     }
 
                     lblEstado.Text = $"Estado: Procesando lote {lote.CdLote} ({lote.DsNombreLote})...";
-                    Application.DoEvents();
 
                     bool resultado = await OpenAIBL.ProcesarLoteAsync(
                         lote.CdLote,
