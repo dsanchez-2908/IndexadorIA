@@ -12,11 +12,35 @@ namespace IndexadorIA.Api.Controllers
     {
         private readonly LoteDAL _loteDAL;
         private readonly LogDAL _logDAL;
+        private readonly ParametrosDAL _parametrosDAL;
 
         public ArchivosController()
         {
             _loteDAL = new LoteDAL();
             _logDAL = new LogDAL();
+            _parametrosDAL = new ParametrosDAL();
+        }
+
+        /// <summary>
+        /// Resuelve la ruta fisica que debe usar el proceso de la API para acceder a un archivo,
+        /// reemplazando el prefijo de unidad mapeada con la que se guardo la ruta en BD (ej: "P:\")
+        /// por el path UNC equivalente (ej: "\\FS-CLUSTER01\Recursos3\"), ya que el proceso de IIS
+        /// (Application Pool) no tiene visibilidad de unidades de red mapeadas por sesion interactiva.
+        /// El mapeo se toma de TD_PARAMETROS (RUTA_ORIGEN_UNIDAD / RUTA_DESTINO_UNC) para no requerir
+        /// recompilar si cambia el servidor o el recurso compartido.
+        /// </summary>
+        private string ResolverRutaFisica(string rutaGuardada)
+        {
+            string? origen = _parametrosDAL.ObtenerValor("RUTA_ORIGEN_UNIDAD");
+            string? destino = _parametrosDAL.ObtenerValor("RUTA_DESTINO_UNC");
+
+            if (string.IsNullOrWhiteSpace(origen) || string.IsNullOrWhiteSpace(destino))
+                return rutaGuardada;
+
+            if (rutaGuardada.StartsWith(origen, StringComparison.OrdinalIgnoreCase))
+                return destino + rutaGuardada.Substring(origen.Length);
+
+            return rutaGuardada;
         }
 
         /// <summary>
@@ -32,13 +56,15 @@ namespace IndexadorIA.Api.Controllers
             if (archivo == null)
                 return NotFound(new { mensaje = "Archivo no encontrado en el lote indicado" });
 
-            if (!System.IO.File.Exists(archivo.DsRutaCompleta))
+            string rutaPdf = ResolverRutaFisica(archivo.DsRutaCompleta);
+
+            if (!System.IO.File.Exists(rutaPdf))
             {
-                RegistrarErrorArchivoNoEncontrado("ObtenerPdf", cdLote, cdArchivoPagina, archivo.DsRutaCompleta);
-                return NotFound(new { mensaje = "El archivo PDF no existe en el servidor", ruta = archivo.DsRutaCompleta });
+                RegistrarErrorArchivoNoEncontrado("ObtenerPdf", cdLote, cdArchivoPagina, rutaPdf);
+                return NotFound(new { mensaje = "El archivo PDF no existe en el servidor", ruta = rutaPdf });
             }
 
-            byte[] bytes = System.IO.File.ReadAllBytes(archivo.DsRutaCompleta);
+            byte[] bytes = System.IO.File.ReadAllBytes(rutaPdf);
             string nombreArchivo = archivo.DsNombreArchivoPagina;
 
             return File(bytes, "application/pdf", nombreArchivo);
@@ -57,7 +83,7 @@ namespace IndexadorIA.Api.Controllers
             if (archivo == null)
                 return NotFound(new { mensaje = "Archivo no encontrado en el lote indicado" });
 
-            string rutaJpg = System.IO.Path.ChangeExtension(archivo.DsRutaCompleta, ".jpg");
+            string rutaJpg = System.IO.Path.ChangeExtension(ResolverRutaFisica(archivo.DsRutaCompleta), ".jpg");
 
             if (!System.IO.File.Exists(rutaJpg))
             {

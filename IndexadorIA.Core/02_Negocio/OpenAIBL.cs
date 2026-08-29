@@ -316,16 +316,37 @@ namespace IndexadorIA.Negocio
                     progreso?.Report($"Esperando que OpenAI procese el archivo subido{subLoteDesc}");
                     await EsperarArchivoProcesadoAsync(fileId);
 
-                    // 3.3 Crear batch job
-                    progreso?.Report($"Creando batch job en OpenAI{subLoteDesc}");
-                    string batchId = await CrearBatchJobAsync(fileId);
+                    // 3.3/3.4/3.5 Crear el batch job y esperar resultados. Aun con el archivo en estado
+                    // "processed", el servicio de Batches de OpenAI puede tardar mas en verlo disponible
+                    // (consistencia eventual entre servicios internos), lo que produce el mismo error
+                    // "Cannot find file ... or organization does not have access to it" pero recien al
+                    // validar el batch (no al crearlo). Como un batch fallido no puede reintentarse,
+                    // se crea un batch NUEVO tras una espera adicional si se detecta este error puntual.
+                    const int maxIntentosBatch = 3;
+                    string batchId;
+                    string resultFileId;
+                    for (int intentoBatch = 1; ; intentoBatch++)
+                    {
+                        progreso?.Report($"Creando batch job en OpenAI{subLoteDesc} (intento {intentoBatch}/{maxIntentosBatch})");
+                        batchId = await CrearBatchJobAsync(fileId);
 
-                    // 3.4 Guardar batch tracking en BD
-                    GuardarBatchTracking(cdLote, batchId, fileId);
+                        GuardarBatchTracking(cdLote, batchId, fileId);
 
-                    // 3.5 Esperar resultados
-                    progreso?.Report($"Esperando resultados del batch {batchId}{subLoteDesc} (esto puede tardar varios minutos)");
-                    string resultFileId = await EsperarResultadosAsync(batchId, progreso, cancellationToken);
+                        progreso?.Report($"Esperando resultados del batch {batchId}{subLoteDesc} (esto puede tardar varios minutos)");
+                        try
+                        {
+                            resultFileId = await EsperarResultadosAsync(batchId, progreso, cancellationToken);
+                            break;
+                        }
+                        catch (Exception ex) when (
+                            intentoBatch < maxIntentosBatch &&
+                            ex.Message.Contains("Cannot find file", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int esperaSegundos = 15 * intentoBatch;
+                            progreso?.Report($"OpenAI aun no reconoce el archivo para Batches. Reintentando en {esperaSegundos}s{subLoteDesc}");
+                            await Task.Delay(TimeSpan.FromSeconds(esperaSegundos), cancellationToken);
+                        }
+                    }
 
                     // 3.6 Procesar resultados
                     progreso?.Report($"Descargando y procesando resultados{subLoteDesc}");
@@ -850,7 +871,7 @@ namespace IndexadorIA.Negocio
                         DsMensaje = $"Batch {batchId} fall�. Respuesta completa: {responseContent}"
                     });
 
-                    throw new Exception($"El batch fall� con estado: {status}");
+                    throw new Exception($"El batch fall� con estado: {status}. Respuesta: {responseContent}");
                 }
 
                 // Esperar 5 segundos antes de volver a consultar
