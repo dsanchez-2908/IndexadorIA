@@ -161,11 +161,12 @@ namespace IndexadorIA.Negocio
 
         /// <summary>
         /// Marca el lote con el estado "Pendiente de Finalizar" (usado desde FrmVerLote
-        /// cuando el control de todas las páginas del lote se completó).
+        /// cuando el control de todas las páginas del lote se completó), dejando registro
+        /// de la fecha/hora y el usuario que finalizó el control.
         /// </summary>
         public void MarcarLotePendienteFinalizar(int cdLote, int cdUsuario)
         {
-            _loteDAL.ActualizarEstado(cdLote, EstadoLotePendienteFinalizar, cdUsuario);
+            _loteDAL.MarcarFinControl(cdLote, EstadoLotePendienteFinalizar, cdUsuario);
         }
 
         /// <summary>

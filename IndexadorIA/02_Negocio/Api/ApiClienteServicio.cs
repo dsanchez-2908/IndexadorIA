@@ -171,6 +171,22 @@ namespace IndexadorIA.Negocio.Api
         }
 
         /// <summary>
+        /// Llama a POST /api/resultados/{cdResultado}/correcciones (equivalente remoto de
+        /// FrmVerLote.RegistrarCorreccionesSiCorresponde(...)).
+        /// </summary>
+        public async Task RegistrarCorreccionesResultadoAsync(int cdResultado, RegistrarCorreccionesApiRequestDto request)
+        {
+            if (request.Correcciones.Count == 0)
+                return;
+
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PostAsJsonAsync($"api/resultados/{cdResultado}/correcciones", request).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        /// <summary>
         /// Llama a GET /api/archivos/lotes/{cdLote}/paginas/{cdArchivoPagina}/pdf y devuelve los bytes del PDF.
         /// </summary>
         public async Task<byte[]> ObtenerPdfAsync(int cdLote, int cdArchivoPagina)

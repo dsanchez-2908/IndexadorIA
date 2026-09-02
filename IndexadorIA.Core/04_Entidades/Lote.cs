@@ -12,6 +12,8 @@ namespace IndexadorIA.Entidades
         public DateTime FeAltaLote { get; set; }
         public int? CdUsuarioAltaLote { get; set; }
         public int? CdUsuarioAsignado { get; set; }
+        public DateTime? FeFinControl { get; set; }
+        public int? CdUsuarioFinControl { get; set; }
 
         // Propiedades navegación/display
         public string? DsEstado { get; set; }

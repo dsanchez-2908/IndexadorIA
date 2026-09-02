@@ -124,6 +124,18 @@ namespace IndexadorIA.Api.Dtos
         public string? DsObservaciones { get; set; }
     }
 
+    public class CorreccionRequestDto
+    {
+        public string DsCampo { get; set; } = string.Empty;
+        public string? DsValorAnterior { get; set; }
+        public string? DsValorNuevo { get; set; }
+    }
+
+    public class RegistrarCorreccionesRequestDto
+    {
+        public List<CorreccionRequestDto> Correcciones { get; set; } = new();
+    }
+
     public class CategoriaPlanoDto
     {
         public int CdCategoriaPlano { get; set; }

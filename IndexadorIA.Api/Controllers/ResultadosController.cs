@@ -60,5 +60,30 @@ namespace IndexadorIA.Api.Controllers
 
             return Ok(new { mensaje = "Estado de control actualizado correctamente" });
         }
+
+        /// <summary>
+        /// Registra en TD_CORRECIONES las correcciones manuales de campos de un resultado.
+        /// Equivalente remoto de FrmVerLote.RegistrarCorreccionesSiCorresponde(...).
+        /// </summary>
+        [HttpPost("{cdResultado:int}/correcciones")]
+        public IActionResult RegistrarCorrecciones(int cdResultado, [FromBody] RegistrarCorreccionesRequestDto request)
+        {
+            int cdUsuario = ObtenerCdUsuarioActual();
+            var correccionDAL = new CorreccionDAL();
+
+            foreach (var c in request.Correcciones)
+            {
+                correccionDAL.Insertar(new Correccion
+                {
+                    CdResultado = cdResultado,
+                    DsCampo = c.DsCampo,
+                    DsValorAnterior = c.DsValorAnterior,
+                    DsValorNuevo = c.DsValorNuevo,
+                    CdUsuarioControl = cdUsuario
+                });
+            }
+
+            return Ok(new { mensaje = "Correcciones registradas correctamente" });
+        }
     }
 }

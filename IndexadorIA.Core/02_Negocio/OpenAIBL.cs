@@ -254,13 +254,18 @@ namespace IndexadorIA.Negocio
         {
             var loteDAL = new LoteDAL();
             var logDAL = new LogDAL();
+            bool batchCreadoYTrackeado = false;
 
             try
             {
                 progreso?.Report($"Iniciando procesamiento del lote {cdLote}");
 
-                // Cambiar estado del lote a "Procesando (3)"
-                loteDAL.ActualizarEstado(cdLote, 3, cdUsuario);
+                // No se cambia el estado del lote aqui: cdEstado=2 (Imagenes preparadas) es el
+                // unico estado seguro mientras se envia/espera el batch en OpenAI. cdEstado=3
+                // significa "Finalizado" (estado terminal usado por FrmFinalizarLote al cerrar
+                // todo el proceso del lote) y NO debe usarse como "procesando". El lote solo
+                // avanza a cdEstado=4 (Procesado por IA) cuando ProcesarResultadosBatchAsync
+                // termina de parsear los resultados reales.
 
                 // 1. Obtener el prompt configurado
                 progreso?.Report("Obteniendo prompt configurado");
@@ -324,18 +329,18 @@ namespace IndexadorIA.Negocio
                     // se crea un batch NUEVO tras una espera adicional si se detecta este error puntual.
                     const int maxIntentosBatch = 3;
                     string batchId;
-                    string resultFileId;
                     for (int intentoBatch = 1; ; intentoBatch++)
                     {
                         progreso?.Report($"Creando batch job en OpenAI{subLoteDesc} (intento {intentoBatch}/{maxIntentosBatch})");
                         batchId = await CrearBatchJobAsync(fileId);
 
                         GuardarBatchTracking(cdLote, batchId, fileId);
+                        batchCreadoYTrackeado = true;
 
                         progreso?.Report($"Esperando resultados del batch {batchId}{subLoteDesc} (esto puede tardar varios minutos)");
                         try
                         {
-                            resultFileId = await EsperarResultadosAsync(batchId, progreso, cancellationToken);
+                            await EsperarResultadosAsync(batchId, progreso, cancellationToken);
                             break;
                         }
                         catch (Exception ex) when (
@@ -348,34 +353,37 @@ namespace IndexadorIA.Negocio
                         }
                     }
 
-                    // 3.6 Procesar resultados
-                    progreso?.Report($"Descargando y procesando resultados{subLoteDesc}");
-                    await ProcesarResultadosAsync(resultFileId, subPaginas, cdLote, cdProyecto, cdUsuario);
-
-                    // Limpiar archivo temporal del sub-lote
+                    // 3.6 El resultado se procesa (parseo real, con normalizacion y control de
+                    // errores por pagina) desde btnProcesarResultados -> ProcesarResultadosBatchAsync,
+                    // que es el UNICO lugar que debe insertar en TD_001_RESULTADO_IA y decidir el
+                    // estado final del lote. Aqui solo se limpia el archivo temporal del sub-lote;
+                    // el lote queda en estado "Procesando (3)" hasta que el usuario verifique el
+                    // batch y procese sus resultados.
                     if (File.Exists(batchFilePath))
                     {
                         File.Delete(batchFilePath);
                     }
                 }
 
-                // 4. Cambiar estado del lote a "Procesado IA (4)"
-                loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
-
+                // 4. El batch fue enviado y ya se descargaron/validaron los resultados en OpenAI,
+                // pero el parseo real (insercion en TD_001_RESULTADO_IA) recien ocurre cuando el
+                // usuario presiona "Procesar Resultados" (ProcesarResultadosBatchAsync), que es
+                // quien marca el lote como "Procesado IA (4)". Se deja el lote en estado
+                // "Procesando (3)" para que btnProcesarResultados lo tome desde dgvTracking.
                 logDAL.Insertar(new LogRegistro
                 {
                     DsNivel = LogRegistro.Niveles.INFO,
                     DsModulo = "OpenAIBL.ProcesarLoteAsync",
-                    DsMensaje = $"Lote {cdLote} procesado exitosamente con OpenAI"
+                    DsMensaje = $"Lote {cdLote} enviado y procesado por OpenAI. Pendiente de 'Procesar Resultados' para parsear y marcar el lote como Procesado IA (4)"
                 });
 
-                progreso?.Report($"Lote {cdLote} procesado exitosamente");
+                progreso?.Report($"Lote {cdLote} enviado a OpenAI. Presione 'Procesar Resultados' para finalizar");
                 return true;
             }
             catch (TimeoutException timeoutEx)
             {
                 // El batch fue enviado exitosamente pero a�n est� proces�ndose
-                // NO revertir el estado del lote - dejarlo en estado 3 (Procesando)
+                // NO revertir el estado del lote - el lote sigue en 2 (Imagenes preparadas)
 
                 logDAL.Insertar(new LogRegistro
                 {
@@ -387,11 +395,10 @@ namespace IndexadorIA.Negocio
                 progreso?.Report($"Lote enviado a OpenAI - Procesando en segundo plano");
                 return true; // Retornar true porque el batch S� fue creado exitosamente
             }
-            catch (HttpRequestException httpEx)
+            catch (HttpRequestException httpEx) when (batchCreadoYTrackeado)
             {
-                // Error de red/conexi�n DESPU�S de que el batch fue creado
                 // Si llegamos aqu� despu�s de GuardarBatchTracking, el batch S� existe en OpenAI
-                // NO revertir el estado del lote - dejarlo en estado 3 (Procesando)
+                // NO revertir el estado del lote - el lote sigue en 2 (Imagenes preparadas)
 
                 logDAL.Insertar(new LogRegistro
                 {
@@ -402,6 +409,25 @@ namespace IndexadorIA.Negocio
 
                 progreso?.Report($"Lote enviado a OpenAI - Error de red al consultar estado, pero el batch sigue proces�ndose");
                 return true; // Retornar true porque el batch fue creado exitosamente
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // El batch NUNCA se creo (ej: CrearBatchJobAsync devolvio 400 por
+                // "billing_hard_limit_reached" u otro error de la API antes de
+                // GuardarBatchTracking). No existe fila en TD_BATCH_TRACKING; el lote debe
+                // quedar disponible para reintentar, no reportarse como enviado exitosamente.
+                loteDAL.ActualizarEstado(cdLote, 2, cdUsuario);
+
+                logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.ERROR,
+                    DsModulo = "OpenAIBL.ProcesarLoteAsync",
+                    DsMensaje = $"Lote {cdLote}: el batch NO pudo crearse en OpenAI (fallo antes de GuardarBatchTracking). Error: {httpEx.Message}",
+                    DsExcepcion = httpEx.ToString()
+                });
+
+                progreso?.Report($"Error al crear el batch para el lote {cdLote}: {httpEx.Message}");
+                return false;
             }
             catch (OperationCanceledException)
             {
@@ -1478,17 +1504,11 @@ namespace IndexadorIA.Negocio
                     archivoPaginaDAL.ActualizarEstado(cdArchivoPagina, 4, cdUsuario);
                 }
 
-                // 4. Actualizar estado del lote: solo se marca "Procesado (4)" si no hubo
-                //    paginas con error de procesamiento/parseo. Si hubo errores, se deja el
-                //    lote en estado "Listo para IA (2)" para que pueda reprocesarse.
-                if (paginasConError == 0)
-                {
-                    loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
-                }
-                else
-                {
-                    loteDAL.ActualizarEstado(cdLote, 2, cdUsuario);
-                }
+                // 4. Actualizar estado del lote: se marca "Procesado (4)" en cuanto el batch
+                //    quedo parseado, tenga o no paginas con error. FrmAsignacionLote.cs informa
+                //    al usuario el total de registros correctos vs con error, y desde alli se
+                //    podra reprocesar el lote completo o solo las paginas con error.
+                loteDAL.ActualizarEstado(cdLote, 4, cdUsuario);
 
                 // 5. Marcar batch como resultado procesado
                 using (var conexion = new SqlConnection(Configuracion.CadenaConexion))

@@ -100,6 +100,11 @@ namespace IndexadorIA.Pantallas
                 menuUsuarios.Visible = false;
                 toolStripSeparator1.Visible = false;
             }
+
+            // "Producción x Usuarios" es un reporte local (no tiene soporte remoto vía API)
+            // y solo debe estar disponible para usuarios con rol ADMIN.
+            bool esAdmin = string.Equals(SesionActual.UsuarioActual.CdRol, "ADMIN", StringComparison.OrdinalIgnoreCase);
+            menuProduccionUsuarios.Visible = esAdmin && !SesionApi.ModoRemoto;
         }
 
         private void menuUsuarios_Click(object sender, EventArgs e)
@@ -160,6 +165,11 @@ namespace IndexadorIA.Pantallas
         private void menuConsumosIA_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmConsumosIA());
+        }
+
+        private void menuProduccionUsuarios_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Reportes.FrmProduccionUsuarios());
         }
 
         private void menuCambiarClave_Click(object sender, EventArgs e)

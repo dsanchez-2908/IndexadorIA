@@ -1029,6 +1029,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         SnModificaDatos = modificoDatos ? "SI" : "NO",
                         DsObservaciones = dsObservaciones
                     }).GetAwaiter().GetResult();
+
+                    var correccionesApi = ObtenerCorreccionesSiCorresponde(resultado);
+                    if (correccionesApi.Count > 0)
+                    {
+                        _apiCliente!.RegistrarCorreccionesResultadoAsync(resultado.CdResultado, new RegistrarCorreccionesApiRequestDto
+                        {
+                            Correcciones = correccionesApi
+                        }).GetAwaiter().GetResult();
+                    }
                 }
                 else
                 {
@@ -1082,38 +1091,63 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             if (_valoresOriginalesResultado == null)
                 return;
 
-            var original = _valoresOriginalesResultado;
             var correccionDAL = new CorreccionDAL();
+            foreach (var c in ObtenerCorreccionesSiCorresponde(resultadoActualizado))
+            {
+                correccionDAL.Insertar(new Correccion
+                {
+                    CdResultado = resultadoActualizado.CdResultado,
+                    DsCampo = c.DsCampo,
+                    DsValorAnterior = c.DsValorAnterior,
+                    DsValorNuevo = c.DsValorNuevo,
+                    CdUsuarioControl = cdUsuario
+                });
+            }
+        }
 
-            void RegistrarSiDistinto(string dsCampo, string? valorAnterior, string? valorNuevo)
+        /// <summary>
+        /// Compara los valores originales contra los actualizados y arma la lista de campos
+        /// modificados manualmente, usada tanto en modo local (inserción directa en TD_CORRECIONES)
+        /// como en modo remoto (envío al endpoint de la API).
+        /// </summary>
+        private List<CorreccionApiRequestDto> ObtenerCorreccionesSiCorresponde(ResultadoIA resultadoActualizado)
+        {
+            var correcciones = new List<CorreccionApiRequestDto>();
+
+            if (_valoresOriginalesResultado == null)
+                return correcciones;
+
+            var original = _valoresOriginalesResultado;
+
+            void AgregarSiDistinto(string dsCampo, string? valorAnterior, string? valorNuevo)
             {
                 if (valorAnterior == valorNuevo)
                     return;
 
-                correccionDAL.Insertar(new Correccion
+                correcciones.Add(new CorreccionApiRequestDto
                 {
-                    CdResultado = resultadoActualizado.CdResultado,
                     DsCampo = dsCampo,
                     DsValorAnterior = valorAnterior,
-                    DsValorNuevo = valorNuevo,
-                    CdUsuarioControl = cdUsuario
+                    DsValorNuevo = valorNuevo
                 });
             }
 
-            RegistrarSiDistinto(Correccion.Campos.Categoria,
+            AgregarSiDistinto(Correccion.Campos.Categoria,
                 ObtenerDescripcionCategoria(original.CdCategoriaPlano),
                 ObtenerDescripcionCategoria(resultadoActualizado.CdCategoriaPlano));
 
-            RegistrarSiDistinto(Correccion.Campos.TipoPlano,
+            AgregarSiDistinto(Correccion.Campos.TipoPlano,
                 ObtenerDescripcionTipoPlano(original.CdTipoPlano),
                 ObtenerDescripcionTipoPlano(resultadoActualizado.CdTipoPlano));
 
-            RegistrarSiDistinto(Correccion.Campos.Direccion, original.DsDireccion, resultadoActualizado.DsDireccion);
-            RegistrarSiDistinto(Correccion.Campos.Seccion, original.DsSeccion, resultadoActualizado.DsSeccion);
-            RegistrarSiDistinto(Correccion.Campos.Manzana, original.DsManzana, resultadoActualizado.DsManzana);
-            RegistrarSiDistinto(Correccion.Campos.Parcela, original.DsParcela, resultadoActualizado.DsParcela);
-            RegistrarSiDistinto(Correccion.Campos.Expediente, original.DsExpediente, resultadoActualizado.DsExpediente);
-            RegistrarSiDistinto(Correccion.Campos.NumeroPlano, original.DsNumeroPlano, resultadoActualizado.DsNumeroPlano);
+            AgregarSiDistinto(Correccion.Campos.Direccion, original.DsDireccion, resultadoActualizado.DsDireccion);
+            AgregarSiDistinto(Correccion.Campos.Seccion, original.DsSeccion, resultadoActualizado.DsSeccion);
+            AgregarSiDistinto(Correccion.Campos.Manzana, original.DsManzana, resultadoActualizado.DsManzana);
+            AgregarSiDistinto(Correccion.Campos.Parcela, original.DsParcela, resultadoActualizado.DsParcela);
+            AgregarSiDistinto(Correccion.Campos.Expediente, original.DsExpediente, resultadoActualizado.DsExpediente);
+            AgregarSiDistinto(Correccion.Campos.NumeroPlano, original.DsNumeroPlano, resultadoActualizado.DsNumeroPlano);
+
+            return correcciones;
         }
 
         private string? ObtenerDescripcionCategoria(int? cdCategoriaPlano)

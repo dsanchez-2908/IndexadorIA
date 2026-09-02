@@ -119,6 +119,18 @@ namespace IndexadorIA.Negocio.Api
         public string? DsObservaciones { get; set; }
     }
 
+    public class CorreccionApiRequestDto
+    {
+        public string DsCampo { get; set; } = string.Empty;
+        public string? DsValorAnterior { get; set; }
+        public string? DsValorNuevo { get; set; }
+    }
+
+    public class RegistrarCorreccionesApiRequestDto
+    {
+        public List<CorreccionApiRequestDto> Correcciones { get; set; } = new();
+    }
+
     public class CategoriaPlanoApiDto
     {
         public int CdCategoriaPlano { get; set; }

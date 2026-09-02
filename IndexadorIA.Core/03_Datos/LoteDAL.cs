@@ -185,7 +185,7 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
-        /// Actualiza el estado de un lote
+        /// Actualiza el estado de un lote.
         /// </summary>
         public void ActualizarEstado(int cdLote, int cdEstado, int cdUsuario)
         {
@@ -198,6 +198,31 @@ namespace IndexadorIA.Datos
 
                 comando.Parameters.AddWithValue("@cdLote", cdLote);
                 comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el estado de un lote a "Pendiente de Finalizar" (usado desde
+        /// FrmVerLote.btnMarcarLoteCompletado_Click) y deja registro de la fecha/hora
+        /// y el usuario que finalizó el control (feFinControl / cdUsuarioFinControl).
+        /// </summary>
+        public void MarcarFinControl(int cdLote, int cdEstado, int cdUsuario)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_LOTE 
+                    SET cdEstadoLote = @cdEstado,
+                        feFinControl = GETDATE(),
+                        cdUsuarioFinControl = @cdUsuario
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+                comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+                comando.Parameters.AddWithValue("@cdUsuario", cdUsuario == 0 ? (object)DBNull.Value : cdUsuario);
 
                 conexion.Open();
                 comando.ExecuteNonQuery();

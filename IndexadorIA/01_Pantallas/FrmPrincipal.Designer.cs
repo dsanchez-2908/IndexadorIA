@@ -30,6 +30,7 @@ namespace IndexadorIA.Pantallas
             menuConsultas = new ToolStripMenuItem();
             menuReportes = new ToolStripMenuItem();
             menuConsumosIA = new ToolStripMenuItem();
+            menuProduccionUsuarios = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -168,7 +169,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuReportes
             // 
-            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA });
+            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA, menuProduccionUsuarios });
             menuReportes.Font = new Font("Segoe UI", 10F);
             menuReportes.ForeColor = Color.White;
             menuReportes.Name = "menuReportes";
@@ -180,9 +181,18 @@ namespace IndexadorIA.Pantallas
             menuConsumosIA.BackColor = Color.FromArgb(45, 45, 48);
             menuConsumosIA.ForeColor = Color.White;
             menuConsumosIA.Name = "menuConsumosIA";
-            menuConsumosIA.Size = new Size(160, 24);
+            menuConsumosIA.Size = new Size(213, 24);
             menuConsumosIA.Text = "Consumos IA";
             menuConsumosIA.Click += menuConsumosIA_Click;
+            // 
+            // menuProduccionUsuarios
+            // 
+            menuProduccionUsuarios.BackColor = Color.FromArgb(45, 45, 48);
+            menuProduccionUsuarios.ForeColor = Color.White;
+            menuProduccionUsuarios.Name = "menuProduccionUsuarios";
+            menuProduccionUsuarios.Size = new Size(213, 24);
+            menuProduccionUsuarios.Text = "Producción x Usuarios";
+            menuProduccionUsuarios.Click += menuProduccionUsuarios_Click;
             // 
             // menuConfiguracion
             // 
@@ -309,7 +319,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20260829)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260902)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
@@ -337,6 +347,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuConsultas;
         private ToolStripMenuItem menuReportes;
         private ToolStripMenuItem menuConsumosIA;
+        private ToolStripMenuItem menuProduccionUsuarios;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuProyectos;
         private ToolStripMenuItem menuUsuarios;
