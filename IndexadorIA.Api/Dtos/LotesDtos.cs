@@ -17,6 +17,8 @@ namespace IndexadorIA.Api.Dtos
         public string? DsEstado { get; set; }
         public DateTime FeAltaLote { get; set; }
         public DateTime? FeProcesamientoIA { get; set; }
+        public int NuControlados { get; set; }
+        public int NuPendientes { get; set; }
 
         public static LoteResumenDto DesdeEntidad(Lote lote) => new()
         {
@@ -25,7 +27,9 @@ namespace IndexadorIA.Api.Dtos
             NuCantidadArchivos = lote.NuCantidadArchivos,
             CdEstadoLote = lote.CdEstadoLote,
             DsEstado = lote.DsEstado,
-            FeAltaLote = lote.FeAltaLote
+            FeAltaLote = lote.FeAltaLote,
+            NuControlados = lote.NuControlados,
+            NuPendientes = lote.NuPendientes
         };
     }
 
@@ -99,6 +103,22 @@ namespace IndexadorIA.Api.Dtos
         };
     }
 
+    public class ResumenProduccionUsuarioDto
+    {
+        public int CantidadProcesadosHoy { get; set; }
+        public int CantidadAsignados { get; set; }
+        public int CantidadProcesados { get; set; }
+        public int CantidadPendientes { get; set; }
+
+        public static ResumenProduccionUsuarioDto DesdeEntidad(ResumenProduccionUsuario r) => new()
+        {
+            CantidadProcesadosHoy = r.CantidadProcesadosHoy,
+            CantidadAsignados = r.CantidadAsignados,
+            CantidadProcesados = r.CantidadProcesados,
+            CantidadPendientes = r.CantidadPendientes
+        };
+    }
+
     public class FilaLoteDetalleDto
     {
         public ArchivoPaginaDto Archivo { get; set; } = new();
@@ -153,5 +173,31 @@ namespace IndexadorIA.Api.Dtos
     {
         public int CdReparticion { get; set; }
         public string DsReparticion { get; set; } = string.Empty;
+    }
+
+    public class AyudaControlDto
+    {
+        public string? DsCategoriaPlano { get; set; }
+        public string? DsTipoPlano { get; set; }
+        public string? DsExpediente { get; set; }
+        public string? DsSeccion { get; set; }
+        public string? DsManzana { get; set; }
+        public string? DsParcela { get; set; }
+        public string? DsDireccion { get; set; }
+        public string? DsNumeroPlano { get; set; }
+        public string? DsObservaciones { get; set; }
+
+        public static AyudaControlDto DesdeEntidad(AyudaControl? ayuda) => new()
+        {
+            DsCategoriaPlano = ayuda?.DsCategoriaPlano,
+            DsTipoPlano = ayuda?.DsTipoPlano,
+            DsExpediente = ayuda?.DsExpediente,
+            DsSeccion = ayuda?.DsSeccion,
+            DsManzana = ayuda?.DsManzana,
+            DsParcela = ayuda?.DsParcela,
+            DsDireccion = ayuda?.DsDireccion,
+            DsNumeroPlano = ayuda?.DsNumeroPlano,
+            DsObservaciones = ayuda?.DsObservaciones
+        };
     }
 }

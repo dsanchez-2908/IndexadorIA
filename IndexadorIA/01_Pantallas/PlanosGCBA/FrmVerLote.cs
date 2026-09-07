@@ -18,6 +18,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private List<CategoriaPlano> _categoriasPlano = new();
         private List<TipoPlano> _tiposPlano = new();
         private List<Reparticion> _reparticiones = new();
+        private AyudaControl? _ayudaControl;
         private FilaArchivoPagina? _filaSeleccionada;
         private ResultadoIA? _valoresOriginalesResultado;
         private float _factorZoom = 1.0f;
@@ -110,12 +111,68 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 CargarCategoriasYTiposPlano();
                 LimpiarPanelDetalle();
                 CargarDatosGrilla();
+                ActualizarPanelProduccion();
+                CargarAyudaControl();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al inicializar la pantalla de Ver Lote: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// Actualiza el panel de producción (esquina superior derecha de panelEncabezado) con
+        /// los totales de planos procesados hoy, asignados, procesados y pendientes del
+        /// usuario logueado, funcionando tanto en modo local como remoto (API).
+        /// </summary>
+        private void ActualizarPanelProduccion()
+        {
+            try
+            {
+                ResumenProduccionUsuario resumen;
+
+                if (SesionApi.ModoRemoto)
+                {
+                    var resumenApi = _apiCliente!.ObtenerResumenProduccionAsync().GetAwaiter().GetResult();
+                    resumen = new ResumenProduccionUsuario
+                    {
+                        CantidadProcesadosHoy = resumenApi.CantidadProcesadosHoy,
+                        CantidadAsignados = resumenApi.CantidadAsignados,
+                        CantidadProcesados = resumenApi.CantidadProcesados,
+                        CantidadPendientes = resumenApi.CantidadPendientes
+                    };
+                }
+                else
+                {
+                    int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+                    var resultadoIADAL = new ResultadoIADAL();
+                    resumen = resultadoIADAL.ObtenerResumenProduccionUsuario(cdUsuario);
+                }
+
+                lblProcesadosHoy.Text = resumen.CantidadProcesadosHoy.ToString();
+                lblAsignados.Text = resumen.CantidadAsignados.ToString();
+                lblProcesados.Text = resumen.CantidadProcesados.ToString();
+                lblPendientes.Text = resumen.CantidadPendientes.ToString();
+
+                ConfigurarBarraProgreso(progressBarProduccion, resumen.CantidadProcesados, resumen.CantidadAsignados);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo actualizar el panel de producción: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Configura una barra de progreso mostrando <paramref name="valor"/> sobre
+        /// <paramref name="total"/> (ambos con respecto al total de planos asignados).
+        /// </summary>
+        private static void ConfigurarBarraProgreso(ProgressBar progressBar, int valor, int total)
+        {
+            progressBar.Minimum = 0;
+            progressBar.Maximum = total > 0 ? total : 1;
+            progressBar.Value = Math.Max(0, Math.Min(valor, progressBar.Maximum));
         }
 
         #region Carga de datos
@@ -203,6 +260,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             autoCompleteTiposPlano.AddRange(_tiposPlano.Select(t => t.DsTipoPlano).ToArray());
             cboTipoPlanoFiltro.AutoCompleteCustomSource = autoCompleteTiposPlano;
             cboTipoPlanoDetalle.AutoCompleteCustomSource = autoCompleteTiposPlano;
+
+            var listaReparticiones = _reparticiones.Select(r => r.DsReparticion).ToList();
+            txtExpedienteReparticion.DataSource = listaReparticiones;
+
+            var autoCompleteReparticiones = new AutoCompleteStringCollection();
+            autoCompleteReparticiones.AddRange(listaReparticiones.ToArray());
+            txtExpedienteReparticion.AutoCompleteCustomSource = autoCompleteReparticiones;
 
             cboCategoriaPlanoDetalle.DisplayMember = "DsCategoriaPlano";
             cboCategoriaPlanoDetalle.ValueMember = "CdCategoriaPlano";
@@ -1054,6 +1118,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 }
 
                 CargarDatosGrilla();
+                ActualizarPanelProduccion();
             }
             catch (Exception ex)
             {
@@ -1344,6 +1409,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 CargarDatosGrilla();
+                ActualizarPanelProduccion();
             }
             catch (Exception ex)
             {
@@ -1483,6 +1549,104 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private void btnCerrar_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        #endregion
+
+        #region Ayuda Control
+
+        /// <summary>
+        /// Carga en memoria (una sola vez, al abrir el formulario) el texto de ayuda de
+        /// control configurado por el administrador (TD_AYUDA_CONTROL), para que los 9
+        /// botones "?" del panel de detalle puedan mostrarlo sin llamadas adicionales a
+        /// la API. Funciona tanto en modo local como remoto.
+        /// </summary>
+        private void CargarAyudaControl()
+        {
+            try
+            {
+                if (SesionApi.ModoRemoto)
+                {
+                    var ayudaApi = _apiCliente!.ObtenerAyudaControlAsync().GetAwaiter().GetResult();
+                    _ayudaControl = new AyudaControl
+                    {
+                        DsCategoriaPlano = ayudaApi.DsCategoriaPlano,
+                        DsTipoPlano = ayudaApi.DsTipoPlano,
+                        DsExpediente = ayudaApi.DsExpediente,
+                        DsSeccion = ayudaApi.DsSeccion,
+                        DsManzana = ayudaApi.DsManzana,
+                        DsParcela = ayudaApi.DsParcela,
+                        DsDireccion = ayudaApi.DsDireccion,
+                        DsNumeroPlano = ayudaApi.DsNumeroPlano,
+                        DsObservaciones = ayudaApi.DsObservaciones
+                    };
+                }
+                else
+                {
+                    var ayudaControlDAL = new AyudaControlDAL();
+                    _ayudaControl = ayudaControlDAL.Obtener();
+                }
+            }
+            catch
+            {
+                // La ayuda es un complemento informativo: si falla su carga, no debe
+                // impedir el uso normal de la pantalla de control.
+                _ayudaControl = null;
+            }
+        }
+
+        private void MostrarAyuda(string titulo, string? texto)
+        {
+            string mensaje = string.IsNullOrWhiteSpace(texto)
+                ? "No hay ayuda configurada para este campo."
+                : texto;
+
+            MessageBox.Show(mensaje, $"Ayuda - {titulo}", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void btnAyudaCategoriaPlano_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Categoría de Plano", _ayudaControl?.DsCategoriaPlano);
+        }
+
+        private void btnAyudaTipoPlano_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Tipo de Plano", _ayudaControl?.DsTipoPlano);
+        }
+
+        private void btnAyudaExpediente_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Expediente", _ayudaControl?.DsExpediente);
+        }
+
+        private void btnAyudaSeccion_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Sección", _ayudaControl?.DsSeccion);
+        }
+
+        private void btnAyudaManzana_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Manzana", _ayudaControl?.DsManzana);
+        }
+
+        private void btnAyudaParcela_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Parcela", _ayudaControl?.DsParcela);
+        }
+
+        private void btnAyudaDireccion_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Dirección", _ayudaControl?.DsDireccion);
+        }
+
+        private void btnAyudaNumeroPlano_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Número de Plano", _ayudaControl?.DsNumeroPlano);
+        }
+
+        private void btnAyudaObservaciones_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda("Observaciones", _ayudaControl?.DsObservaciones);
         }
 
         #endregion

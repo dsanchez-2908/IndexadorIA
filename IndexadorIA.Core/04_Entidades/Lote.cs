@@ -24,5 +24,10 @@ namespace IndexadorIA.Entidades
         // (TD_001_RESULTADO_IA_ERROR) para el lote, usado en pantallas de asignación/monitoreo.
         public int NuCorrectos { get; set; }
         public int NuIncorrectos { get; set; }
+
+        // Conteo de registros controlados (feControl IS NOT NULL) y pendientes
+        // (feControl IS NULL) en TD_001_RESULTADO_IA, usado en FrmControlFinalizacion.
+        public int NuControlados { get; set; }
+        public int NuPendientes { get; set; }
     }
 }

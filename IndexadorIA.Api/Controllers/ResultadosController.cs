@@ -24,6 +24,18 @@ namespace IndexadorIA.Api.Controllers
         }
 
         /// <summary>
+        /// Obtiene el resumen de producción del usuario autenticado (planos procesados hoy,
+        /// asignados, procesados y pendientes). Equivalente remoto del panel de encabezado
+        /// de FrmVerLote.
+        /// </summary>
+        [HttpGet("resumen-produccion")]
+        public IActionResult ObtenerResumenProduccion()
+        {
+            var resumen = _resultadoIADAL.ObtenerResumenProduccionUsuario(ObtenerCdUsuarioActual());
+            return Ok(ResumenProduccionUsuarioDto.DesdeEntidad(resumen));
+        }
+
+        /// <summary>
         /// Actualiza los datos corregidos de un resultado IA.
         /// Equivalente remoto de la corrección de datos en FrmVerLote (btnGuardarControlada_Click).
         /// </summary>

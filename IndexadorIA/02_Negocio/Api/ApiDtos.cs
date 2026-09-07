@@ -51,6 +51,8 @@ namespace IndexadorIA.Negocio.Api
         public string? DsEstado { get; set; }
         public DateTime FeAltaLote { get; set; }
         public DateTime? FeProcesamientoIA { get; set; }
+        public int NuControlados { get; set; }
+        public int NuPendientes { get; set; }
     }
 
     public class ResultadoIAApiDto
@@ -148,5 +150,26 @@ namespace IndexadorIA.Negocio.Api
     {
         public int CdReparticion { get; set; }
         public string DsReparticion { get; set; } = string.Empty;
+    }
+
+    public class ResumenProduccionUsuarioApiDto
+    {
+        public int CantidadProcesadosHoy { get; set; }
+        public int CantidadAsignados { get; set; }
+        public int CantidadProcesados { get; set; }
+        public int CantidadPendientes { get; set; }
+    }
+
+    public class AyudaControlApiDto
+    {
+        public string? DsCategoriaPlano { get; set; }
+        public string? DsTipoPlano { get; set; }
+        public string? DsExpediente { get; set; }
+        public string? DsSeccion { get; set; }
+        public string? DsManzana { get; set; }
+        public string? DsParcela { get; set; }
+        public string? DsDireccion { get; set; }
+        public string? DsNumeroPlano { get; set; }
+        public string? DsObservaciones { get; set; }
     }
 }

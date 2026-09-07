@@ -67,6 +67,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
+                Name = "nuControlados",
+                DataPropertyName = "NuControlados",
+                HeaderText = "Controlado"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuPendientes",
+                DataPropertyName = "NuPendientes",
+                HeaderText = "Pendiente"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
                 Name = "dsEstado",
                 DataPropertyName = "DsEstado",
                 HeaderText = "Estado"
@@ -103,7 +117,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         NuCantidadArchivos = l.NuCantidadArchivos,
                         CdEstadoLote = l.CdEstadoLote,
                         DsEstado = l.DsEstado,
-                        FeAltaLote = l.FeAltaLote
+                        FeAltaLote = l.FeAltaLote,
+                        NuControlados = l.NuControlados,
+                        NuPendientes = l.NuPendientes
                     }).ToList();
                 }
                 else

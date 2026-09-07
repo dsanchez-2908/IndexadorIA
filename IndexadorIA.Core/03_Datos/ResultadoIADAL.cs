@@ -316,5 +316,44 @@ namespace IndexadorIA.Datos
                 throw;
             }
         }
+
+        /// <summary>
+        /// Obtiene el resumen de producción del usuario indicado: cantidad de planos
+        /// controlados hoy, cantidad de planos asignados (en lotes asignados al usuario),
+        /// cantidad ya procesados y cantidad pendiente. Se usa en el encabezado de FrmVerLote.
+        /// </summary>
+        public ResumenProduccionUsuario ObtenerResumenProduccionUsuario(int cdUsuario)
+        {
+            var resumen = new ResumenProduccionUsuario();
+
+            using var conn = new SqlConnection(_cadenaConexion);
+            var cmd = new SqlCommand(@"
+                SELECT
+                    (SELECT COUNT(*) FROM TD_001_RESULTADO_IA
+                        WHERE CAST(feControl AS DATE) = CAST(GETDATE() AS DATE)
+                          AND cdUsuarioControl = @cdUsuario) AS CantidadProcesadosHoy,
+                    (SELECT COUNT(*) FROM TD_001_RESULTADO_IA
+                        WHERE cdLote IN (SELECT cdLote FROM TD_LOTE WHERE cdUsuarioAsignado = @cdUsuario)) AS CantidadAsignados,
+                    (SELECT COUNT(*) FROM TD_001_RESULTADO_IA
+                        WHERE cdLote IN (SELECT cdLote FROM TD_LOTE WHERE cdUsuarioAsignado = @cdUsuario)
+                          AND feControl IS NOT NULL) AS CantidadProcesados,
+                    (SELECT COUNT(*) FROM TD_001_RESULTADO_IA
+                        WHERE cdLote IN (SELECT cdLote FROM TD_LOTE WHERE cdUsuarioAsignado = @cdUsuario)
+                          AND feControl IS NULL) AS CantidadPendientes", conn);
+
+            cmd.Parameters.AddWithValue("@cdUsuario", cdUsuario);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                resumen.CantidadProcesadosHoy = reader.GetInt32(0);
+                resumen.CantidadAsignados = reader.GetInt32(1);
+                resumen.CantidadProcesados = reader.GetInt32(2);
+                resumen.CantidadPendientes = reader.GetInt32(3);
+            }
+
+            return resumen;
+        }
     }
 }

@@ -400,7 +400,9 @@ namespace IndexadorIA.Datos
                     SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, 
                            l.cdEstadoLote, e.dsEstado, l.feAltaLote, l.cdUsuarioAsignado,
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote), 0) AS nuCorrectos,
-                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA_ERROR er WHERE er.cdLote = l.cdLote), 0) AS nuIncorrectos
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA_ERROR er WHERE er.cdLote = l.cdLote), 0) AS nuIncorrectos,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.feControl IS NOT NULL), 0) AS nuControlados,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.feControl IS NULL), 0) AS nuPendientes
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
                     WHERE l.cdEstadoLote = @cdEstado";
@@ -457,7 +459,9 @@ namespace IndexadorIA.Datos
                             FeAltaLote = lector.GetDateTime(5),
                             CdUsuarioAsignado = lector.IsDBNull(6) ? null : lector.GetInt32(6),
                             NuCorrectos = lector.GetInt32(7),
-                            NuIncorrectos = lector.GetInt32(8)
+                            NuIncorrectos = lector.GetInt32(8),
+                            NuControlados = lector.GetInt32(9),
+                            NuPendientes = lector.GetInt32(10)
                         });
                     }
                 }

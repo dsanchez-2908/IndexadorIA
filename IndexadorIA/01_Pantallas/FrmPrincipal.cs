@@ -105,6 +105,10 @@ namespace IndexadorIA.Pantallas
             // y solo debe estar disponible para usuarios con rol ADMIN.
             bool esAdmin = string.Equals(SesionActual.UsuarioActual.CdRol, "ADMIN", StringComparison.OrdinalIgnoreCase);
             menuProduccionUsuarios.Visible = esAdmin && !SesionApi.ModoRemoto;
+
+            // "Ayuda Control" es un mantenimiento solo para el rol ADMIN (funciona tanto local
+            // como remoto, ya que el texto de ayuda se lee/escribe también vía API).
+            menuAyudaControl.Visible = esAdmin;
         }
 
         private void menuUsuarios_Click(object sender, EventArgs e)
@@ -170,6 +174,11 @@ namespace IndexadorIA.Pantallas
         private void menuProduccionUsuarios_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmProduccionUsuarios());
+        }
+
+        private void menuAyudaControl_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmAyudaControl());
         }
 
         private void menuCambiarClave_Click(object sender, EventArgs e)

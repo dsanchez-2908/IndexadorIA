@@ -41,6 +41,30 @@ namespace IndexadorIA.Datos
                           AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
                         GROUP BY cdUsuarioControl, CAST(feControl AS DATE)
                     ),
+                    Total AS (
+                        SELECT cdUsuarioControl, CAST(feControl AS DATE) AS Fecha, COUNT(*) AS Cantidad
+                        FROM TD_001_RESULTADO_IA
+                        WHERE cdEstadoControl IN (2, 3, 4)
+                          AND feControl BETWEEN @feDesde AND @feHasta
+                          AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
+                        GROUP BY cdUsuarioControl, CAST(feControl AS DATE)
+                    ),
+                    DatosIlegibles AS (
+                        SELECT cdUsuarioControl, CAST(feControl AS DATE) AS Fecha, COUNT(*) AS Cantidad
+                        FROM TD_001_RESULTADO_IA
+                        WHERE cdEstadoControl = 4
+                          AND feControl BETWEEN @feDesde AND @feHasta
+                          AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
+                        GROUP BY cdUsuarioControl, CAST(feControl AS DATE)
+                    ),
+                    PaginaIlegible AS (
+                        SELECT cdUsuarioControl, CAST(feControl AS DATE) AS Fecha, COUNT(*) AS Cantidad
+                        FROM TD_001_RESULTADO_IA
+                        WHERE cdEstadoControl = 3
+                          AND feControl BETWEEN @feDesde AND @feHasta
+                          AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
+                        GROUP BY cdUsuarioControl, CAST(feControl AS DATE)
+                    ),
                     Correcciones AS (
                         SELECT r.cdUsuarioControl, CAST(r.feControl AS DATE) AS Fecha, COUNT(*) AS Cantidad
                         FROM TD_CORRECIONES c
@@ -68,12 +92,18 @@ namespace IndexadorIA.Datos
                         u.cdUsuario,
                         u.dsNombreCompleto,
                         f.Fecha,
+                        ISNULL(t.Cantidad, 0) AS CantidadTotal,
                         ISNULL(co.Cantidad, 0) AS CantidadControlada,
+                        ISNULL(di.Cantidad, 0) AS CantidadDatosIlegibles,
+                        ISNULL(pi.Cantidad, 0) AS CantidadPaginaIlegible,
                         ISNULL(l.Cantidad, 0) AS CantidadLotesCompletos,
                         ISNULL(cr.Cantidad, 0) AS CantidadCamposCorregidos
                     FROM Fechas f
                     INNER JOIN TD_USUARIOS u ON u.cdUsuario = f.cdUsuario
                     LEFT JOIN Controlado co ON co.cdUsuarioControl = f.cdUsuario AND co.Fecha = f.Fecha
+                    LEFT JOIN Total t ON t.cdUsuarioControl = f.cdUsuario AND t.Fecha = f.Fecha
+                    LEFT JOIN DatosIlegibles di ON di.cdUsuarioControl = f.cdUsuario AND di.Fecha = f.Fecha
+                    LEFT JOIN PaginaIlegible pi ON pi.cdUsuarioControl = f.cdUsuario AND pi.Fecha = f.Fecha
                     LEFT JOIN Correcciones cr ON cr.cdUsuarioControl = f.cdUsuario AND cr.Fecha = f.Fecha
                     LEFT JOIN LotesCompletos l ON l.cdUsuarioFinControl = f.cdUsuario AND l.Fecha = f.Fecha
                     ORDER BY u.dsNombreCompleto, f.Fecha"
@@ -82,6 +112,30 @@ namespace IndexadorIA.Datos
                         SELECT cdUsuarioControl, COUNT(*) AS Cantidad
                         FROM TD_001_RESULTADO_IA
                         WHERE cdEstadoControl = 2
+                          AND feControl BETWEEN @feDesde AND @feHasta
+                          AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
+                        GROUP BY cdUsuarioControl
+                    ),
+                    Total AS (
+                        SELECT cdUsuarioControl, COUNT(*) AS Cantidad
+                        FROM TD_001_RESULTADO_IA
+                        WHERE cdEstadoControl IN (2, 3, 4)
+                          AND feControl BETWEEN @feDesde AND @feHasta
+                          AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
+                        GROUP BY cdUsuarioControl
+                    ),
+                    DatosIlegibles AS (
+                        SELECT cdUsuarioControl, COUNT(*) AS Cantidad
+                        FROM TD_001_RESULTADO_IA
+                        WHERE cdEstadoControl = 4
+                          AND feControl BETWEEN @feDesde AND @feHasta
+                          AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
+                        GROUP BY cdUsuarioControl
+                    ),
+                    PaginaIlegible AS (
+                        SELECT cdUsuarioControl, COUNT(*) AS Cantidad
+                        FROM TD_001_RESULTADO_IA
+                        WHERE cdEstadoControl = 3
                           AND feControl BETWEEN @feDesde AND @feHasta
                           AND (@cdUsuario = 0 OR cdUsuarioControl = @cdUsuario)
                         GROUP BY cdUsuarioControl
@@ -106,15 +160,21 @@ namespace IndexadorIA.Datos
                         u.cdUsuario,
                         u.dsNombreCompleto,
                         NULL AS Fecha,
+                        ISNULL(t.Cantidad, 0) AS CantidadTotal,
                         ISNULL(co.Cantidad, 0) AS CantidadControlada,
+                        ISNULL(di.Cantidad, 0) AS CantidadDatosIlegibles,
+                        ISNULL(pi.Cantidad, 0) AS CantidadPaginaIlegible,
                         ISNULL(l.Cantidad, 0) AS CantidadLotesCompletos,
                         ISNULL(cr.Cantidad, 0) AS CantidadCamposCorregidos
                     FROM TD_USUARIOS u
                     LEFT JOIN Controlado co ON co.cdUsuarioControl = u.cdUsuario
+                    LEFT JOIN Total t ON t.cdUsuarioControl = u.cdUsuario
+                    LEFT JOIN DatosIlegibles di ON di.cdUsuarioControl = u.cdUsuario
+                    LEFT JOIN PaginaIlegible pi ON pi.cdUsuarioControl = u.cdUsuario
                     LEFT JOIN Correcciones cr ON cr.cdUsuarioControl = u.cdUsuario
                     LEFT JOIN LotesCompletos l ON l.cdUsuarioFinControl = u.cdUsuario
                     WHERE (@cdUsuario = 0 OR u.cdUsuario = @cdUsuario)
-                      AND (@cdUsuario <> 0 OR co.Cantidad IS NOT NULL OR l.Cantidad IS NOT NULL OR cr.Cantidad IS NOT NULL)
+                      AND (@cdUsuario <> 0 OR t.Cantidad IS NOT NULL OR l.Cantidad IS NOT NULL OR cr.Cantidad IS NOT NULL)
                     ORDER BY u.dsNombreCompleto";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -133,9 +193,12 @@ namespace IndexadorIA.Datos
                             CdUsuario = reader.GetInt32(0),
                             DsUsuario = reader.GetString(1),
                             Fecha = reader.IsDBNull(2) ? (DateTime?)null : reader.GetDateTime(2),
-                            CantidadControlada = reader.GetInt32(3),
-                            CantidadLotesCompletos = reader.GetInt32(4),
-                            CantidadCamposCorregidos = reader.GetInt32(5)
+                            CantidadTotal = reader.GetInt32(3),
+                            CantidadControlada = reader.GetInt32(4),
+                            CantidadDatosIlegibles = reader.GetInt32(5),
+                            CantidadPaginaIlegible = reader.GetInt32(6),
+                            CantidadLotesCompletos = reader.GetInt32(7),
+                            CantidadCamposCorregidos = reader.GetInt32(8)
                         });
                     }
                 }

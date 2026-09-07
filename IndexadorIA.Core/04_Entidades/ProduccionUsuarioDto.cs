@@ -15,7 +15,10 @@ namespace IndexadorIA.Entidades
         /// (sin el filtro "Detalle por Fecha").
         /// </summary>
         public DateTime? Fecha { get; set; }
+        public int CantidadTotal { get; set; }
         public int CantidadControlada { get; set; }
+        public int CantidadDatosIlegibles { get; set; }
+        public int CantidadPaginaIlegible { get; set; }
         public int CantidadLotesCompletos { get; set; }
         public int CantidadCamposCorregidos { get; set; }
     }

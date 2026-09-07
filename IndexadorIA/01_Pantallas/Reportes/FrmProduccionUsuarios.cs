@@ -86,9 +86,36 @@ namespace IndexadorIA.Pantallas.Reportes
 
             dgvProduccion.Columns.Add(new DataGridViewTextBoxColumn
             {
+                Name = "cantidadTotal",
+                DataPropertyName = "CantidadTotal",
+                HeaderText = "Cantidad Total",
+                ReadOnly = true,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "N0" }
+            });
+
+            dgvProduccion.Columns.Add(new DataGridViewTextBoxColumn
+            {
                 Name = "cantidadControlada",
                 DataPropertyName = "CantidadControlada",
                 HeaderText = "Cantidad Controlada",
+                ReadOnly = true,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "N0" }
+            });
+
+            dgvProduccion.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "cantidadDatosIlegibles",
+                DataPropertyName = "CantidadDatosIlegibles",
+                HeaderText = "Cantidad Datos Ilegible",
+                ReadOnly = true,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "N0" }
+            });
+
+            dgvProduccion.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "cantidadPaginaIlegible",
+                DataPropertyName = "CantidadPaginaIlegible",
+                HeaderText = "Cantidad Pagina Ilegible",
                 ReadOnly = true,
                 DefaultCellStyle = new DataGridViewCellStyle { Format = "N0" }
             });

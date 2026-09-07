@@ -17,9 +17,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             panelEncabezado = new Panel();
             lblFechaProcesamientoIATitulo = new Label();
             lblFechaProcesamientoIA = new Label();
@@ -29,6 +29,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCantidadArchivos = new Label();
             lblNombreLoteTitulo = new Label();
             lblNombreLote = new Label();
+            panelProduccion = new Panel();
+            lblProcesadosHoyTitulo = new Label();
+            lblProcesadosHoy = new Label();
+            lblAsignadosTitulo = new Label();
+            lblAsignados = new Label();
+            lblProcesadosTitulo = new Label();
+            lblProcesados = new Label();
+            lblPendientesTitulo = new Label();
+            lblPendientes = new Label();
+            progressBarProduccion = new ProgressBar();
             lblDireccionLote = new Label();
             splitContainerPrincipal = new SplitContainer();
             panelIzquierdo = new Panel();
@@ -54,18 +64,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             splitContainerDetalle = new SplitContainer();
             panelCentro = new Panel();
             groupBoxDetalle = new GroupBox();
+            btnAyudaDireccion = new Button();
             txtDireccion = new TextBox();
             lblConfianzaDireccion = new Label();
             lblDireccionCampo = new Label();
+            btnAyudaParcela = new Button();
             txtParcela = new TextBox();
             lblConfianzaParcela = new Label();
             lblParcelaCampo = new Label();
+            btnAyudaManzana = new Button();
             txtManzana = new TextBox();
             lblConfianzaManzana = new Label();
             lblManzanaCampo = new Label();
+            btnAyudaSeccion = new Button();
             txtSeccion = new TextBox();
             lblConfianzaSeccion = new Label();
             lblSeccionCampo = new Label();
+            btnAyudaExpediente = new Button();
             txtExpedienteEx = new TextBox();
             lblExpedienteGuion1 = new Label();
             txtExpedienteAnio = new TextBox();
@@ -74,16 +89,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteGuion3 = new Label();
             txtExpedienteGcaba = new TextBox();
             lblExpedienteGuion4 = new Label();
-            txtExpedienteReparticion = new TextBox();
+            txtExpedienteReparticion = new ComboBox();
             lblConfianzaExpediente = new Label();
             btnParsearExpedienteDeArchivo = new Button();
             lblExpedienteCampo = new Label();
+            btnAyudaTipoPlano = new Button();
             cboTipoPlanoDetalle = new ComboBox();
             lblConfianzaTipoPlano = new Label();
             lblTipoPlanoCampo = new Label();
+            btnAyudaCategoriaPlano = new Button();
             cboCategoriaPlanoDetalle = new ComboBox();
             lblConfianzaCategoriaPlano = new Label();
             lblCategoriaPlanoCampo = new Label();
+            btnAyudaNumeroPlano = new Button();
             txtNumeroPlano = new TextBox();
             lblConfianzaNumeroPlano = new Label();
             lblNumeroPlanoCampo = new Label();
@@ -92,6 +110,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblNuPagina = new Label();
             lblNombreArchivoOriginal = new Label();
             lblCabeceraArchivo = new Label();
+            btnAyudaObservaciones = new Button();
             txtObservaciones = new TextBox();
             lblObservacionesCampo = new Label();
             panelDerecho = new Panel();
@@ -113,6 +132,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnCerrar = new Button();
             btnGuardarControlada = new Button();
             panelEncabezado.SuspendLayout();
+            panelProduccion.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerPrincipal).BeginInit();
             splitContainerPrincipal.Panel1.SuspendLayout();
             splitContainerPrincipal.Panel2.SuspendLayout();
@@ -146,6 +166,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelEncabezado.Controls.Add(lblCantidadArchivos);
             panelEncabezado.Controls.Add(lblNombreLoteTitulo);
             panelEncabezado.Controls.Add(lblNombreLote);
+            panelEncabezado.Controls.Add(panelProduccion);
             panelEncabezado.Dock = DockStyle.Top;
             panelEncabezado.Location = new Point(0, 0);
             panelEncabezado.Name = "panelEncabezado";
@@ -236,6 +257,114 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblNombreLote.TabIndex = 1;
             lblNombreLote.Text = "-";
             // 
+            // panelProduccion
+            // 
+            panelProduccion.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            panelProduccion.Controls.Add(lblProcesadosHoyTitulo);
+            panelProduccion.Controls.Add(lblProcesadosHoy);
+            panelProduccion.Controls.Add(lblAsignadosTitulo);
+            panelProduccion.Controls.Add(lblAsignados);
+            panelProduccion.Controls.Add(lblProcesadosTitulo);
+            panelProduccion.Controls.Add(lblProcesados);
+            panelProduccion.Controls.Add(lblPendientesTitulo);
+            panelProduccion.Controls.Add(lblPendientes);
+            panelProduccion.Controls.Add(progressBarProduccion);
+            panelProduccion.Location = new Point(935, 5);
+            panelProduccion.Name = "panelProduccion";
+            panelProduccion.Size = new Size(460, 45);
+            panelProduccion.TabIndex = 8;
+            // 
+            // lblProcesadosHoyTitulo
+            // 
+            lblProcesadosHoyTitulo.AutoSize = true;
+            lblProcesadosHoyTitulo.ForeColor = Color.Gainsboro;
+            lblProcesadosHoyTitulo.Location = new Point(0, 0);
+            lblProcesadosHoyTitulo.Name = "lblProcesadosHoyTitulo";
+            lblProcesadosHoyTitulo.Size = new Size(95, 15);
+            lblProcesadosHoyTitulo.TabIndex = 0;
+            lblProcesadosHoyTitulo.Text = "Procesados Hoy:";
+            // 
+            // lblProcesadosHoy
+            // 
+            lblProcesadosHoy.AutoSize = true;
+            lblProcesadosHoy.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblProcesadosHoy.ForeColor = Color.White;
+            lblProcesadosHoy.Location = new Point(107, 0);
+            lblProcesadosHoy.Name = "lblProcesadosHoy";
+            lblProcesadosHoy.Size = new Size(12, 15);
+            lblProcesadosHoy.TabIndex = 1;
+            lblProcesadosHoy.Text = "-";
+            // 
+            // lblAsignadosTitulo
+            // 
+            lblAsignadosTitulo.AutoSize = true;
+            lblAsignadosTitulo.ForeColor = Color.Gainsboro;
+            lblAsignadosTitulo.Location = new Point(150, 0);
+            lblAsignadosTitulo.Name = "lblAsignadosTitulo";
+            lblAsignadosTitulo.Size = new Size(65, 15);
+            lblAsignadosTitulo.TabIndex = 2;
+            lblAsignadosTitulo.Text = "Asignados:";
+            // 
+            // lblAsignados
+            // 
+            lblAsignados.AutoSize = true;
+            lblAsignados.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblAsignados.ForeColor = Color.White;
+            lblAsignados.Location = new Point(218, 0);
+            lblAsignados.Name = "lblAsignados";
+            lblAsignados.Size = new Size(12, 15);
+            lblAsignados.TabIndex = 3;
+            lblAsignados.Text = "-";
+            // 
+            // lblProcesadosTitulo
+            // 
+            lblProcesadosTitulo.AutoSize = true;
+            lblProcesadosTitulo.ForeColor = Color.Gainsboro;
+            lblProcesadosTitulo.Location = new Point(255, 0);
+            lblProcesadosTitulo.Name = "lblProcesadosTitulo";
+            lblProcesadosTitulo.Size = new Size(70, 15);
+            lblProcesadosTitulo.TabIndex = 5;
+            lblProcesadosTitulo.Text = "Procesados:";
+            // 
+            // lblProcesados
+            // 
+            lblProcesados.AutoSize = true;
+            lblProcesados.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblProcesados.ForeColor = Color.White;
+            lblProcesados.Location = new Point(329, 0);
+            lblProcesados.Name = "lblProcesados";
+            lblProcesados.Size = new Size(12, 15);
+            lblProcesados.TabIndex = 6;
+            lblProcesados.Text = "-";
+            // 
+            // lblPendientesTitulo
+            // 
+            lblPendientesTitulo.AutoSize = true;
+            lblPendientesTitulo.ForeColor = Color.Gainsboro;
+            lblPendientesTitulo.Location = new Point(366, 0);
+            lblPendientesTitulo.Name = "lblPendientesTitulo";
+            lblPendientesTitulo.Size = new Size(68, 15);
+            lblPendientesTitulo.TabIndex = 8;
+            lblPendientesTitulo.Text = "Pendientes:";
+            // 
+            // lblPendientes
+            // 
+            lblPendientes.AutoSize = true;
+            lblPendientes.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblPendientes.ForeColor = Color.White;
+            lblPendientes.Location = new Point(436, 0);
+            lblPendientes.Name = "lblPendientes";
+            lblPendientes.Size = new Size(12, 15);
+            lblPendientes.TabIndex = 9;
+            lblPendientes.Text = "-";
+            // 
+            // progressBarProduccion
+            // 
+            progressBarProduccion.Location = new Point(0, 22);
+            progressBarProduccion.Name = "progressBarProduccion";
+            progressBarProduccion.Size = new Size(460, 18);
+            progressBarProduccion.TabIndex = 10;
+            // 
             // lblDireccionLote
             // 
             lblDireccionLote.Location = new Point(0, 0);
@@ -275,28 +404,28 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             dgvArchivos.AllowUserToAddRows = false;
             dgvArchivos.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle7.BackColor = Color.FromArgb(40, 40, 40);
-            dgvArchivos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(40, 40, 40);
+            dgvArchivos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvArchivos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvArchivos.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvArchivos.BorderStyle = BorderStyle.None;
-            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = Color.FromArgb(60, 60, 60);
-            dataGridViewCellStyle8.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle8.ForeColor = Color.White;
-            dataGridViewCellStyle8.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = DataGridViewTriState.True;
-            dgvArchivos.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(60, 60, 60);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dgvArchivos.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvArchivos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = Color.FromArgb(30, 30, 30);
-            dataGridViewCellStyle9.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle9.ForeColor = Color.White;
-            dataGridViewCellStyle9.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dataGridViewCellStyle9.SelectionForeColor = Color.White;
-            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.False;
-            dgvArchivos.DefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(30, 30, 30);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle3.ForeColor = Color.White;
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvArchivos.DefaultCellStyle = dataGridViewCellStyle3;
             dgvArchivos.Dock = DockStyle.Fill;
             dgvArchivos.EnableHeadersVisualStyles = false;
             dgvArchivos.GridColor = Color.FromArgb(63, 63, 70);
@@ -549,18 +678,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // groupBoxDetalle
             // 
             groupBoxDetalle.BackColor = Color.FromArgb(45, 45, 48);
+            groupBoxDetalle.Controls.Add(btnAyudaDireccion);
             groupBoxDetalle.Controls.Add(txtDireccion);
             groupBoxDetalle.Controls.Add(lblConfianzaDireccion);
             groupBoxDetalle.Controls.Add(lblDireccionCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaParcela);
             groupBoxDetalle.Controls.Add(txtParcela);
             groupBoxDetalle.Controls.Add(lblConfianzaParcela);
             groupBoxDetalle.Controls.Add(lblParcelaCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaManzana);
             groupBoxDetalle.Controls.Add(txtManzana);
             groupBoxDetalle.Controls.Add(lblConfianzaManzana);
             groupBoxDetalle.Controls.Add(lblManzanaCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaSeccion);
             groupBoxDetalle.Controls.Add(txtSeccion);
             groupBoxDetalle.Controls.Add(lblConfianzaSeccion);
             groupBoxDetalle.Controls.Add(lblSeccionCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaExpediente);
             groupBoxDetalle.Controls.Add(txtExpedienteEx);
             groupBoxDetalle.Controls.Add(lblExpedienteGuion1);
             groupBoxDetalle.Controls.Add(txtExpedienteAnio);
@@ -576,12 +710,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.Controls.Add(cboTipoPlanoDetalle);
             groupBoxDetalle.Controls.Add(lblConfianzaTipoPlano);
             groupBoxDetalle.Controls.Add(lblTipoPlanoCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaTipoPlano);
             groupBoxDetalle.Controls.Add(cboCategoriaPlanoDetalle);
             groupBoxDetalle.Controls.Add(lblConfianzaCategoriaPlano);
             groupBoxDetalle.Controls.Add(lblCategoriaPlanoCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaCategoriaPlano);
             groupBoxDetalle.Controls.Add(txtNumeroPlano);
             groupBoxDetalle.Controls.Add(lblConfianzaNumeroPlano);
             groupBoxDetalle.Controls.Add(lblNumeroPlanoCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaNumeroPlano);
             groupBoxDetalle.Controls.Add(lblSnPosibleBlanca);
             groupBoxDetalle.Controls.Add(lblSnGirada);
             groupBoxDetalle.Controls.Add(lblNuPagina);
@@ -589,6 +726,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.Controls.Add(lblCabeceraArchivo);
             groupBoxDetalle.Controls.Add(txtObservaciones);
             groupBoxDetalle.Controls.Add(lblObservacionesCampo);
+            groupBoxDetalle.Controls.Add(btnAyudaObservaciones);
             groupBoxDetalle.Dock = DockStyle.Fill;
             groupBoxDetalle.ForeColor = Color.White;
             groupBoxDetalle.Location = new Point(0, 0);
@@ -597,6 +735,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.TabIndex = 0;
             groupBoxDetalle.TabStop = false;
             groupBoxDetalle.Text = "Detalle de la Página";
+            // 
+            // btnAyudaDireccion
+            // 
+            btnAyudaDireccion.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaDireccion.FlatStyle = FlatStyle.Flat;
+            btnAyudaDireccion.ForeColor = Color.White;
+            btnAyudaDireccion.Location = new Point(95, 428);
+            btnAyudaDireccion.Name = "btnAyudaDireccion";
+            btnAyudaDireccion.Size = new Size(22, 20);
+            btnAyudaDireccion.TabIndex = 23;
+            btnAyudaDireccion.Text = "?";
+            btnAyudaDireccion.UseVisualStyleBackColor = false;
+            btnAyudaDireccion.Click += btnAyudaDireccion_Click;
             // 
             // txtDireccion
             // 
@@ -632,6 +783,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblDireccionCampo.TabIndex = 20;
             lblDireccionCampo.Text = "Dirección (*):";
             // 
+            // btnAyudaParcela
+            // 
+            btnAyudaParcela.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaParcela.FlatStyle = FlatStyle.Flat;
+            btnAyudaParcela.ForeColor = Color.White;
+            btnAyudaParcela.Location = new Point(85, 372);
+            btnAyudaParcela.Name = "btnAyudaParcela";
+            btnAyudaParcela.Size = new Size(22, 20);
+            btnAyudaParcela.TabIndex = 20;
+            btnAyudaParcela.Text = "?";
+            btnAyudaParcela.UseVisualStyleBackColor = false;
+            btnAyudaParcela.Click += btnAyudaParcela_Click;
+            // 
             // txtParcela
             // 
             txtParcela.BackColor = Color.FromArgb(30, 30, 30);
@@ -662,6 +826,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblParcelaCampo.Size = new Size(64, 15);
             lblParcelaCampo.TabIndex = 17;
             lblParcelaCampo.Text = "Parcela (*):";
+            // 
+            // btnAyudaManzana
+            // 
+            btnAyudaManzana.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaManzana.FlatStyle = FlatStyle.Flat;
+            btnAyudaManzana.ForeColor = Color.White;
+            btnAyudaManzana.Location = new Point(95, 319);
+            btnAyudaManzana.Name = "btnAyudaManzana";
+            btnAyudaManzana.Size = new Size(22, 20);
+            btnAyudaManzana.TabIndex = 17;
+            btnAyudaManzana.Text = "?";
+            btnAyudaManzana.UseVisualStyleBackColor = false;
+            btnAyudaManzana.Click += btnAyudaManzana_Click;
             // 
             // txtManzana
             // 
@@ -695,6 +872,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblManzanaCampo.TabIndex = 14;
             lblManzanaCampo.Text = "Manzana (*):";
             // 
+            // btnAyudaSeccion
+            // 
+            btnAyudaSeccion.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaSeccion.FlatStyle = FlatStyle.Flat;
+            btnAyudaSeccion.ForeColor = Color.White;
+            btnAyudaSeccion.Location = new Point(88, 266);
+            btnAyudaSeccion.Name = "btnAyudaSeccion";
+            btnAyudaSeccion.Size = new Size(22, 20);
+            btnAyudaSeccion.TabIndex = 15;
+            btnAyudaSeccion.Text = "?";
+            btnAyudaSeccion.UseVisualStyleBackColor = false;
+            btnAyudaSeccion.Click += btnAyudaSeccion_Click;
+            // 
             // txtSeccion
             // 
             txtSeccion.BackColor = Color.FromArgb(30, 30, 30);
@@ -726,6 +916,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblSeccionCampo.Size = new Size(67, 15);
             lblSeccionCampo.TabIndex = 11;
             lblSeccionCampo.Text = "Sección (*):";
+            // 
+            // btnAyudaExpediente
+            // 
+            btnAyudaExpediente.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaExpediente.FlatStyle = FlatStyle.Flat;
+            btnAyudaExpediente.ForeColor = Color.White;
+            btnAyudaExpediente.Location = new Point(88, 215);
+            btnAyudaExpediente.Name = "btnAyudaExpediente";
+            btnAyudaExpediente.Size = new Size(22, 20);
+            btnAyudaExpediente.TabIndex = 9;
+            btnAyudaExpediente.Text = "?";
+            btnAyudaExpediente.UseVisualStyleBackColor = false;
+            btnAyudaExpediente.Click += btnAyudaExpediente_Click;
             // 
             // txtExpedienteEx
             // 
@@ -823,11 +1026,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // txtExpedienteReparticion
             // 
+            txtExpedienteReparticion.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            txtExpedienteReparticion.AutoCompleteSource = AutoCompleteSource.ListItems;
             txtExpedienteReparticion.BackColor = Color.FromArgb(30, 30, 30);
-            txtExpedienteReparticion.BorderStyle = BorderStyle.FixedSingle;
-            txtExpedienteReparticion.CharacterCasing = CharacterCasing.Upper;
+            txtExpedienteReparticion.DropDownWidth = 250;
             txtExpedienteReparticion.Font = new Font("Segoe UI", 12F);
             txtExpedienteReparticion.ForeColor = Color.White;
+            txtExpedienteReparticion.FormattingEnabled = true;
             txtExpedienteReparticion.Location = new Point(297, 236);
             txtExpedienteReparticion.Name = "txtExpedienteReparticion";
             txtExpedienteReparticion.Size = new Size(120, 29);
@@ -866,6 +1071,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteCampo.TabIndex = 8;
             lblExpedienteCampo.Text = "Expediente:";
             // 
+            // btnAyudaTipoPlano
+            // 
+            btnAyudaTipoPlano.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaTipoPlano.FlatStyle = FlatStyle.Flat;
+            btnAyudaTipoPlano.ForeColor = Color.White;
+            btnAyudaTipoPlano.Location = new Point(120, 161);
+            btnAyudaTipoPlano.Name = "btnAyudaTipoPlano";
+            btnAyudaTipoPlano.Size = new Size(22, 20);
+            btnAyudaTipoPlano.TabIndex = 23;
+            btnAyudaTipoPlano.Text = "?";
+            btnAyudaTipoPlano.UseVisualStyleBackColor = false;
+            btnAyudaTipoPlano.Click += btnAyudaTipoPlano_Click;
+            // 
             // cboTipoPlanoDetalle
             // 
             cboTipoPlanoDetalle.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
@@ -900,6 +1118,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblTipoPlanoCampo.TabIndex = 22;
             lblTipoPlanoCampo.Text = "Tipo de Plano (*):";
             // 
+            // btnAyudaCategoriaPlano
+            // 
+            btnAyudaCategoriaPlano.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaCategoriaPlano.FlatStyle = FlatStyle.Flat;
+            btnAyudaCategoriaPlano.ForeColor = Color.White;
+            btnAyudaCategoriaPlano.Location = new Point(147, 104);
+            btnAyudaCategoriaPlano.Name = "btnAyudaCategoriaPlano";
+            btnAyudaCategoriaPlano.Size = new Size(22, 20);
+            btnAyudaCategoriaPlano.TabIndex = 20;
+            btnAyudaCategoriaPlano.Text = "?";
+            btnAyudaCategoriaPlano.UseVisualStyleBackColor = false;
+            btnAyudaCategoriaPlano.Click += btnAyudaCategoriaPlano_Click;
+            // 
             // cboCategoriaPlanoDetalle
             // 
             cboCategoriaPlanoDetalle.BackColor = Color.FromArgb(30, 30, 30);
@@ -932,6 +1163,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCategoriaPlanoCampo.Size = new Size(126, 15);
             lblCategoriaPlanoCampo.TabIndex = 19;
             lblCategoriaPlanoCampo.Text = "Categoría de Plano (*):";
+            // 
+            // btnAyudaNumeroPlano
+            // 
+            btnAyudaNumeroPlano.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaNumeroPlano.FlatStyle = FlatStyle.Flat;
+            btnAyudaNumeroPlano.ForeColor = Color.White;
+            btnAyudaNumeroPlano.Location = new Point(124, 543);
+            btnAyudaNumeroPlano.Name = "btnAyudaNumeroPlano";
+            btnAyudaNumeroPlano.Size = new Size(22, 20);
+            btnAyudaNumeroPlano.TabIndex = 19;
+            btnAyudaNumeroPlano.Text = "?";
+            btnAyudaNumeroPlano.UseVisualStyleBackColor = false;
+            btnAyudaNumeroPlano.Click += btnAyudaNumeroPlano_Click;
             // 
             // txtNumeroPlano
             // 
@@ -1015,6 +1259,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCabeceraArchivo.Size = new Size(154, 17);
             lblCabeceraArchivo.TabIndex = 0;
             lblCabeceraArchivo.Text = "(seleccione una página)";
+            // 
+            // btnAyudaObservaciones
+            // 
+            btnAyudaObservaciones.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaObservaciones.FlatStyle = FlatStyle.Flat;
+            btnAyudaObservaciones.ForeColor = Color.White;
+            btnAyudaObservaciones.Location = new Point(108, 598);
+            btnAyudaObservaciones.Name = "btnAyudaObservaciones";
+            btnAyudaObservaciones.Size = new Size(22, 20);
+            btnAyudaObservaciones.TabIndex = 26;
+            btnAyudaObservaciones.Text = "?";
+            btnAyudaObservaciones.UseVisualStyleBackColor = false;
+            btnAyudaObservaciones.Click += btnAyudaObservaciones_Click;
             // 
             // txtObservaciones
             // 
@@ -1297,6 +1554,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             Load += FrmVerLote_Load;
             panelEncabezado.ResumeLayout(false);
             panelEncabezado.PerformLayout();
+            panelProduccion.ResumeLayout(false);
+            panelProduccion.PerformLayout();
             splitContainerPrincipal.Panel1.ResumeLayout(false);
             splitContainerPrincipal.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerPrincipal).EndInit();
@@ -1335,6 +1594,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblCantidadArchivos;
         private Label lblNombreLoteTitulo;
         private Label lblNombreLote;
+        private Panel panelProduccion;
+        private Label lblProcesadosHoyTitulo;
+        private Label lblProcesadosHoy;
+        private Label lblAsignadosTitulo;
+        private Label lblAsignados;
+        private Label lblProcesadosTitulo;
+        private Label lblProcesados;
+        private Label lblPendientesTitulo;
+        private Label lblPendientes;
+        private ProgressBar progressBarProduccion;
         private SplitContainer splitContainerPrincipal;
         private Panel panelIzquierdo;
         private DataGridView dgvArchivos;
@@ -1379,7 +1648,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblExpedienteGuion3;
         private TextBox txtExpedienteGcaba;
         private Label lblExpedienteGuion4;
-        private TextBox txtExpedienteReparticion;
+        private ComboBox txtExpedienteReparticion;
         private Label lblConfianzaExpediente;
         private Button btnParsearExpedienteDeArchivo;
         private Label lblExpedienteCampo;
@@ -1417,5 +1686,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Button btnMarcarDatosIlegible;
         private Button btnCerrar;
         private Button btnMarcarLoteCompletado;
+        private Button btnAyudaDireccion;
+        private Button btnAyudaParcela;
+        private Button btnAyudaManzana;
+        private Button btnAyudaSeccion;
+        private Button btnAyudaExpediente;
+        private Button btnAyudaTipoPlano;
+        private Button btnAyudaCategoriaPlano;
+        private Button btnAyudaNumeroPlano;
+        private Button btnAyudaObservaciones;
     }
 }

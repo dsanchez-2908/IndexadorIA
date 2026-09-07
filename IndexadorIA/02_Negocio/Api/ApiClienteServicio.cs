@@ -272,6 +272,51 @@ namespace IndexadorIA.Negocio.Api
             return resultado ?? new List<ReparticionApiDto>();
         }
 
+        /// <summary>
+        /// Llama a GET /api/resultados/resumen-produccion (equivalente remoto del panel
+        /// de encabezado de producción en FrmVerLote).
+        /// </summary>
+        public async Task<ResumenProduccionUsuarioApiDto> ObtenerResumenProduccionAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/resultados/resumen-produccion").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<ResumenProduccionUsuarioApiDto>().ConfigureAwait(false);
+            return resultado ?? throw new ApiException("Respuesta vacía del servidor.");
+        }
+
+        /// <summary>
+        /// Llama a GET /api/ayuda-control para obtener el texto de ayuda de los 9 campos
+        /// del panel de detalle de FrmVerLote.
+        /// </summary>
+        public async Task<AyudaControlApiDto> ObtenerAyudaControlAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/ayuda-control").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<AyudaControlApiDto>().ConfigureAwait(false);
+            return resultado ?? throw new ApiException("Respuesta vacía del servidor.");
+        }
+
+        /// <summary>
+        /// Llama a PUT /api/ayuda-control para guardar el texto de ayuda configurado por
+        /// el administrador (pantalla FrmAyudaControl).
+        /// </summary>
+        public async Task GuardarAyudaControlAsync(AyudaControlApiDto ayuda)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PutAsJsonAsync("api/ayuda-control", ayuda).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
         private static async Task<string> ObtenerMensajeErrorAsync(HttpResponseMessage respuesta)
         {
             try
