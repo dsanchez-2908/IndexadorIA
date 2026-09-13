@@ -157,6 +157,49 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Obtiene un archivo/página por su Id (usado por las pantallas de detalle
+        /// para acceder a la ruta del PDF/JPG y al estado de rotación).
+        /// </summary>
+        public ArchivoPagina? ObtenerPorId(int cdArchivoPagina)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    SELECT cdArchivoPagina, cdArchivoOriginal, nuPagina, dsNombreArchivoPagina,
+                           dsRutaCompleta, snGirada, snPosibleBlanca, dsProceso, cdEstado,
+                           feAlta, cdUsuarioAlta
+                    FROM TD_ARCHIVOS_PAGINAS
+                    WHERE cdArchivoPagina = @cdArchivoPagina", conexion);
+
+                comando.Parameters.AddWithValue("@cdArchivoPagina", cdArchivoPagina);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    if (lector.Read())
+                    {
+                        return new ArchivoPagina
+                        {
+                            CdArchivoPagina = lector.GetInt32(0),
+                            CdArchivoOriginal = lector.GetInt32(1),
+                            NuPagina = lector.GetInt32(2),
+                            DsNombreArchivoPagina = lector.GetString(3),
+                            DsRutaCompleta = lector.GetString(4),
+                            SnGirada = lector.GetString(5),
+                            SnPosibleBlanca = lector.GetString(6),
+                            DsProceso = lector.GetString(7),
+                            CdEstado = lector.GetInt32(8),
+                            FeAlta = lector.GetDateTime(9),
+                            CdUsuarioAlta = lector.GetInt32(10)
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Actualiza la marca de rotación manual (snGirada) de un archivo/página.
         /// </summary>
         public int ActualizarSnGirada(int cdArchivoPagina, string snGirada)

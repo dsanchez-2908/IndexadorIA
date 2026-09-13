@@ -26,11 +26,14 @@ namespace IndexadorIA.Pantallas
             menuProcesamientoIA = new ToolStripMenuItem();
             menuAsignacionLote = new ToolStripMenuItem();
             menuControlFinalizacion = new ToolStripMenuItem();
+            menuAsignarAuditoria = new ToolStripMenuItem();
+            menuAuditar = new ToolStripMenuItem();
             menuFinalizarLote = new ToolStripMenuItem();
             menuConsultas = new ToolStripMenuItem();
             menuReportes = new ToolStripMenuItem();
             menuConsumosIA = new ToolStripMenuItem();
             menuProduccionUsuarios = new ToolStripMenuItem();
+            menuEstadoProyecto = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -81,7 +84,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuPlanosGCBA
             // 
-            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuAsignacionLote, menuControlFinalizacion, menuFinalizarLote });
+            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuAsignacionLote, menuControlFinalizacion, menuAsignarAuditoria, menuAuditar, menuFinalizarLote });
             menuPlanosGCBA.Font = new Font("Segoe UI", 10F);
             menuPlanosGCBA.ForeColor = Color.White;
             menuPlanosGCBA.Name = "menuPlanosGCBA";
@@ -151,6 +154,24 @@ namespace IndexadorIA.Pantallas
             menuControlFinalizacion.Text = "Control de Lotes";
             menuControlFinalizacion.Click += menuControlFinalizacion_Click;
             // 
+            // menuAsignarAuditoria
+            // 
+            menuAsignarAuditoria.BackColor = Color.FromArgb(45, 45, 48);
+            menuAsignarAuditoria.ForeColor = Color.White;
+            menuAsignarAuditoria.Name = "menuAsignarAuditoria";
+            menuAsignarAuditoria.Size = new Size(244, 24);
+            menuAsignarAuditoria.Text = "Asignar Auditoria";
+            menuAsignarAuditoria.Click += menuAsignarAuditoria_Click;
+            // 
+            // menuAuditar
+            // 
+            menuAuditar.BackColor = Color.FromArgb(45, 45, 48);
+            menuAuditar.ForeColor = Color.White;
+            menuAuditar.Name = "menuAuditar";
+            menuAuditar.Size = new Size(244, 24);
+            menuAuditar.Text = "Auditar";
+            menuAuditar.Click += menuAuditar_Click;
+            // 
             // menuFinalizarLote
             // 
             menuFinalizarLote.BackColor = Color.FromArgb(45, 45, 48);
@@ -170,7 +191,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuReportes
             // 
-            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA, menuProduccionUsuarios });
+            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA, menuProduccionUsuarios, menuEstadoProyecto });
             menuReportes.Font = new Font("Segoe UI", 10F);
             menuReportes.ForeColor = Color.White;
             menuReportes.Name = "menuReportes";
@@ -194,6 +215,15 @@ namespace IndexadorIA.Pantallas
             menuProduccionUsuarios.Size = new Size(213, 24);
             menuProduccionUsuarios.Text = "Producción x Usuarios";
             menuProduccionUsuarios.Click += menuProduccionUsuarios_Click;
+            // 
+            // menuEstadoProyecto
+            // 
+            menuEstadoProyecto.BackColor = Color.FromArgb(45, 45, 48);
+            menuEstadoProyecto.ForeColor = Color.White;
+            menuEstadoProyecto.Name = "menuEstadoProyecto";
+            menuEstadoProyecto.Size = new Size(213, 24);
+            menuEstadoProyecto.Text = "Estado Proyecto Planos";
+            menuEstadoProyecto.Click += menuEstadoProyecto_Click;
             // 
             // menuConfiguracion
             // 
@@ -329,7 +359,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20260907)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260910)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
@@ -351,6 +381,8 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuProcesamientoIA;
         private ToolStripMenuItem menuAsignacionLote;
         private ToolStripMenuItem menuControlFinalizacion;
+        private ToolStripMenuItem menuAsignarAuditoria;
+        private ToolStripMenuItem menuAuditar;
         private ToolStripMenuItem menuFinalizarLote;
         private ToolStripMenuItem menuLotes;
         private ToolStripMenuItem menuMonitorLotes;
@@ -358,6 +390,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuReportes;
         private ToolStripMenuItem menuConsumosIA;
         private ToolStripMenuItem menuProduccionUsuarios;
+        private ToolStripMenuItem menuEstadoProyecto;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuAyudaControl;
         private ToolStripMenuItem menuProyectos;

@@ -390,7 +390,8 @@ namespace IndexadorIA.Datos
         /// y opcionalmente por usuario asignado
         /// </summary>
         public List<Lote> ObtenerLotesPorEstadoFiltrado(int cdEstado, string? dsNombreLote = null,
-            DateTime? feAltaDesde = null, DateTime? feAltaHasta = null, int? cdUsuarioAsignado = null)
+            DateTime? feAltaDesde = null, DateTime? feAltaHasta = null, int? cdUsuarioAsignado = null,
+            int? cdUsuarioAuditor = null)
         {
             var lotes = new List<Lote>();
 
@@ -427,6 +428,11 @@ namespace IndexadorIA.Datos
                     sql += " AND l.cdUsuarioAsignado = @cdUsuarioAsignado";
                 }
 
+                if (cdUsuarioAuditor.HasValue)
+                {
+                    sql += " AND l.cdUsuarioAuditor = @cdUsuarioAuditor";
+                }
+
                 sql += " ORDER BY l.feAltaLote DESC";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -443,6 +449,9 @@ namespace IndexadorIA.Datos
 
                 if (cdUsuarioAsignado.HasValue)
                     comando.Parameters.AddWithValue("@cdUsuarioAsignado", cdUsuarioAsignado.Value);
+
+                if (cdUsuarioAuditor.HasValue)
+                    comando.Parameters.AddWithValue("@cdUsuarioAuditor", cdUsuarioAuditor.Value);
 
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
@@ -499,6 +508,77 @@ namespace IndexadorIA.Datos
 
                             comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_CONTROLANDO);
                             comando.Parameters.AddWithValue("@cdUsuarioAsignado", cdUsuarioAsignado);
+                            comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                            comando.ExecuteNonQuery();
+                        }
+
+                        transaccion.Commit();
+                    }
+                    catch
+                    {
+                        transaccion.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Marca un lote como auditado: lo pasa a cdEstado=9 ("Pendiente de Finalizar")
+        /// y registra la fecha y el usuario que completó la auditoría
+        /// </summary>
+        public void MarcarLoteAuditado(int cdLote, int cdUsuarioAuditado)
+        {
+            const int CD_ESTADO_PENDIENTE_FINALIZAR = 9;
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_LOTE
+                    SET cdEstadoLote = @cdEstadoLote,
+                        feAuditado = GETDATE(),
+                        cdUsuarioAuditado = @cdUsuarioAuditado
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_PENDIENTE_FINALIZAR);
+                comando.Parameters.AddWithValue("@cdUsuarioAuditado", cdUsuarioAuditado);
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Asigna una lista de lotes a un usuario auditor, cambiando su estado a "Auditando" (cdEstado=8)
+        /// </summary>
+        public void AsignarAuditoria(List<int> cdLotes, int cdUsuarioAuditor)
+        {
+            const int CD_ESTADO_AUDITANDO = 8;
+
+            if (cdLotes == null || cdLotes.Count == 0)
+            {
+                return;
+            }
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                conexion.Open();
+                using (var transaccion = conexion.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (int cdLote in cdLotes)
+                        {
+                            var comando = new SqlCommand(@"
+                                UPDATE TD_LOTE
+                                SET cdEstadoLote = @cdEstadoLote,
+                                    cdUsuarioAuditor = @cdUsuarioAuditor
+                                WHERE cdLote = @cdLote", conexion, transaccion);
+
+                            comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_AUDITANDO);
+                            comando.Parameters.AddWithValue("@cdUsuarioAuditor", cdUsuarioAuditor);
                             comando.Parameters.AddWithValue("@cdLote", cdLote);
 
                             comando.ExecuteNonQuery();

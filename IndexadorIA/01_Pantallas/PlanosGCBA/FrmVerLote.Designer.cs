@@ -77,6 +77,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblConfianzaManzana = new Label();
             lblManzanaCampo = new Label();
             btnAyudaSeccion = new Button();
+            btnPegarUltimaDireccion = new Button();
             txtSeccion = new TextBox();
             lblConfianzaSeccion = new Label();
             lblSeccionCampo = new Label();
@@ -93,26 +94,26 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblConfianzaExpediente = new Label();
             btnParsearExpedienteDeArchivo = new Button();
             lblExpedienteCampo = new Label();
-            btnAyudaTipoPlano = new Button();
             cboTipoPlanoDetalle = new ComboBox();
             lblConfianzaTipoPlano = new Label();
             lblTipoPlanoCampo = new Label();
-            btnAyudaCategoriaPlano = new Button();
+            btnAyudaTipoPlano = new Button();
             cboCategoriaPlanoDetalle = new ComboBox();
             lblConfianzaCategoriaPlano = new Label();
             lblCategoriaPlanoCampo = new Label();
-            btnAyudaNumeroPlano = new Button();
+            btnAyudaCategoriaPlano = new Button();
             txtNumeroPlano = new TextBox();
             lblConfianzaNumeroPlano = new Label();
             lblNumeroPlanoCampo = new Label();
+            btnAyudaNumeroPlano = new Button();
             lblSnPosibleBlanca = new Label();
             lblSnGirada = new Label();
             lblNuPagina = new Label();
             lblNombreArchivoOriginal = new Label();
             lblCabeceraArchivo = new Label();
-            btnAyudaObservaciones = new Button();
             txtObservaciones = new TextBox();
             lblObservacionesCampo = new Label();
+            btnAyudaObservaciones = new Button();
             panelDerecho = new Panel();
             panelImagenScroll = new Panel();
             pictureBoxImagen = new PictureBox();
@@ -177,7 +178,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblFechaProcesamientoIATitulo.AutoSize = true;
             lblFechaProcesamientoIATitulo.ForeColor = Color.Gainsboro;
-            lblFechaProcesamientoIATitulo.Location = new Point(800, 10);
+            lblFechaProcesamientoIATitulo.Location = new Point(727, 10);
             lblFechaProcesamientoIATitulo.Name = "lblFechaProcesamientoIATitulo";
             lblFechaProcesamientoIATitulo.Size = new Size(137, 15);
             lblFechaProcesamientoIATitulo.TabIndex = 6;
@@ -188,7 +189,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblFechaProcesamientoIA.AutoSize = true;
             lblFechaProcesamientoIA.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblFechaProcesamientoIA.ForeColor = Color.White;
-            lblFechaProcesamientoIA.Location = new Point(800, 28);
+            lblFechaProcesamientoIA.Location = new Point(727, 28);
             lblFechaProcesamientoIA.Name = "lblFechaProcesamientoIA";
             lblFechaProcesamientoIA.Size = new Size(12, 15);
             lblFechaProcesamientoIA.TabIndex = 7;
@@ -198,7 +199,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             lblFechaCreacionTitulo.AutoSize = true;
             lblFechaCreacionTitulo.ForeColor = Color.Gainsboro;
-            lblFechaCreacionTitulo.Location = new Point(540, 10);
+            lblFechaCreacionTitulo.Location = new Point(535, 10);
             lblFechaCreacionTitulo.Name = "lblFechaCreacionTitulo";
             lblFechaCreacionTitulo.Size = new Size(91, 15);
             lblFechaCreacionTitulo.TabIndex = 4;
@@ -209,7 +210,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblFechaCreacion.AutoSize = true;
             lblFechaCreacion.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblFechaCreacion.ForeColor = Color.White;
-            lblFechaCreacion.Location = new Point(540, 28);
+            lblFechaCreacion.Location = new Point(535, 28);
             lblFechaCreacion.Name = "lblFechaCreacion";
             lblFechaCreacion.Size = new Size(12, 15);
             lblFechaCreacion.TabIndex = 5;
@@ -269,9 +270,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelProduccion.Controls.Add(lblPendientesTitulo);
             panelProduccion.Controls.Add(lblPendientes);
             panelProduccion.Controls.Add(progressBarProduccion);
-            panelProduccion.Location = new Point(935, 5);
+            panelProduccion.Location = new Point(912, 5);
             panelProduccion.Name = "panelProduccion";
-            panelProduccion.Size = new Size(460, 45);
+            panelProduccion.Size = new Size(483, 45);
             panelProduccion.TabIndex = 8;
             // 
             // lblProcesadosHoyTitulo
@@ -360,9 +361,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // progressBarProduccion
             // 
-            progressBarProduccion.Location = new Point(0, 22);
+            progressBarProduccion.Location = new Point(3, 22);
             progressBarProduccion.Name = "progressBarProduccion";
-            progressBarProduccion.Size = new Size(460, 18);
+            progressBarProduccion.Size = new Size(477, 18);
             progressBarProduccion.TabIndex = 10;
             // 
             // lblDireccionLote
@@ -437,6 +438,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvArchivos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvArchivos.Size = new Size(459, 390);
             dgvArchivos.TabIndex = 1;
+            dgvArchivos.CellFormatting += dgvArchivos_CellFormatting;
             dgvArchivos.SelectionChanged += dgvArchivos_SelectionChanged;
             // 
             // groupBoxFiltros
@@ -691,6 +693,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDetalle.Controls.Add(lblConfianzaManzana);
             groupBoxDetalle.Controls.Add(lblManzanaCampo);
             groupBoxDetalle.Controls.Add(btnAyudaSeccion);
+            groupBoxDetalle.Controls.Add(btnPegarUltimaDireccion);
             groupBoxDetalle.Controls.Add(txtSeccion);
             groupBoxDetalle.Controls.Add(lblConfianzaSeccion);
             groupBoxDetalle.Controls.Add(lblSeccionCampo);
@@ -744,7 +747,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnAyudaDireccion.Location = new Point(95, 428);
             btnAyudaDireccion.Name = "btnAyudaDireccion";
             btnAyudaDireccion.Size = new Size(22, 20);
-            btnAyudaDireccion.TabIndex = 23;
+            btnAyudaDireccion.TabIndex = 59;
             btnAyudaDireccion.Text = "?";
             btnAyudaDireccion.UseVisualStyleBackColor = false;
             btnAyudaDireccion.Click += btnAyudaDireccion_Click;
@@ -761,7 +764,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtDireccion.Name = "txtDireccion";
             txtDireccion.ScrollBars = ScrollBars.Vertical;
             txtDireccion.Size = new Size(401, 94);
-            txtDireccion.TabIndex = 17;
+            txtDireccion.TabIndex = 25;
             // 
             // lblConfianzaDireccion
             // 
@@ -791,7 +794,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnAyudaParcela.Location = new Point(85, 372);
             btnAyudaParcela.Name = "btnAyudaParcela";
             btnAyudaParcela.Size = new Size(22, 20);
-            btnAyudaParcela.TabIndex = 20;
+            btnAyudaParcela.TabIndex = 58;
             btnAyudaParcela.Text = "?";
             btnAyudaParcela.UseVisualStyleBackColor = false;
             btnAyudaParcela.Click += btnAyudaParcela_Click;
@@ -805,7 +808,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtParcela.Location = new Point(15, 393);
             txtParcela.Name = "txtParcela";
             txtParcela.Size = new Size(300, 29);
-            txtParcela.TabIndex = 16;
+            txtParcela.TabIndex = 24;
             // 
             // lblConfianzaParcela
             // 
@@ -835,7 +838,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnAyudaManzana.Location = new Point(95, 319);
             btnAyudaManzana.Name = "btnAyudaManzana";
             btnAyudaManzana.Size = new Size(22, 20);
-            btnAyudaManzana.TabIndex = 17;
+            btnAyudaManzana.TabIndex = 57;
             btnAyudaManzana.Text = "?";
             btnAyudaManzana.UseVisualStyleBackColor = false;
             btnAyudaManzana.Click += btnAyudaManzana_Click;
@@ -850,7 +853,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtManzana.Location = new Point(15, 340);
             txtManzana.Name = "txtManzana";
             txtManzana.Size = new Size(300, 29);
-            txtManzana.TabIndex = 15;
+            txtManzana.TabIndex = 23;
             // 
             // lblConfianzaManzana
             // 
@@ -880,10 +883,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnAyudaSeccion.Location = new Point(88, 266);
             btnAyudaSeccion.Name = "btnAyudaSeccion";
             btnAyudaSeccion.Size = new Size(22, 20);
-            btnAyudaSeccion.TabIndex = 15;
+            btnAyudaSeccion.TabIndex = 56;
             btnAyudaSeccion.Text = "?";
             btnAyudaSeccion.UseVisualStyleBackColor = false;
             btnAyudaSeccion.Click += btnAyudaSeccion_Click;
+            // 
+            // btnPegarUltimaDireccion
+            // 
+            btnPegarUltimaDireccion.BackColor = Color.FromArgb(0, 122, 204);
+            btnPegarUltimaDireccion.FlatStyle = FlatStyle.Flat;
+            btnPegarUltimaDireccion.ForeColor = Color.White;
+            btnPegarUltimaDireccion.Location = new Point(368, 284);
+            btnPegarUltimaDireccion.Name = "btnPegarUltimaDireccion";
+            btnPegarUltimaDireccion.Size = new Size(68, 138);
+            btnPegarUltimaDireccion.TabIndex = 62;
+            btnPegarUltimaDireccion.Text = "Pegar Última Dirección";
+            btnPegarUltimaDireccion.UseVisualStyleBackColor = false;
+            btnPegarUltimaDireccion.Click += btnPegarUltimaDireccion_Click;
             // 
             // txtSeccion
             // 
@@ -895,7 +911,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtSeccion.Location = new Point(15, 287);
             txtSeccion.Name = "txtSeccion";
             txtSeccion.Size = new Size(300, 29);
-            txtSeccion.TabIndex = 14;
+            txtSeccion.TabIndex = 22;
             // 
             // lblConfianzaSeccion
             // 
@@ -925,7 +941,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnAyudaExpediente.Location = new Point(88, 215);
             btnAyudaExpediente.Name = "btnAyudaExpediente";
             btnAyudaExpediente.Size = new Size(22, 20);
-            btnAyudaExpediente.TabIndex = 9;
+            btnAyudaExpediente.TabIndex = 55;
             btnAyudaExpediente.Text = "?";
             btnAyudaExpediente.UseVisualStyleBackColor = false;
             btnAyudaExpediente.Click += btnAyudaExpediente_Click;
@@ -941,7 +957,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteEx.Location = new Point(15, 236);
             txtExpedienteEx.Name = "txtExpedienteEx";
             txtExpedienteEx.Size = new Size(35, 29);
-            txtExpedienteEx.TabIndex = 9;
+            txtExpedienteEx.TabIndex = 53;
             txtExpedienteEx.Text = "EX";
             // 
             // lblExpedienteGuion1
@@ -965,7 +981,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteAnio.MaxLength = 4;
             txtExpedienteAnio.Name = "txtExpedienteAnio";
             txtExpedienteAnio.Size = new Size(48, 29);
-            txtExpedienteAnio.TabIndex = 10;
+            txtExpedienteAnio.TabIndex = 19;
             // 
             // lblExpedienteGuion2
             // 
@@ -988,7 +1004,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteNumero.MaxLength = 8;
             txtExpedienteNumero.Name = "txtExpedienteNumero";
             txtExpedienteNumero.Size = new Size(85, 29);
-            txtExpedienteNumero.TabIndex = 11;
+            txtExpedienteNumero.TabIndex = 20;
             // 
             // lblExpedienteGuion3
             // 
@@ -1011,7 +1027,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteGcaba.Location = new Point(227, 236);
             txtExpedienteGcaba.Name = "txtExpedienteGcaba";
             txtExpedienteGcaba.Size = new Size(55, 29);
-            txtExpedienteGcaba.TabIndex = 12;
+            txtExpedienteGcaba.TabIndex = 54;
             txtExpedienteGcaba.Text = "GCABA";
             // 
             // lblExpedienteGuion4
@@ -1036,7 +1052,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteReparticion.Location = new Point(297, 236);
             txtExpedienteReparticion.Name = "txtExpedienteReparticion";
             txtExpedienteReparticion.Size = new Size(120, 29);
-            txtExpedienteReparticion.TabIndex = 13;
+            txtExpedienteReparticion.TabIndex = 21;
             // 
             // lblConfianzaExpediente
             // 
@@ -1056,7 +1072,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnParsearExpedienteDeArchivo.Location = new Point(458, 237);
             btnParsearExpedienteDeArchivo.Name = "btnParsearExpedienteDeArchivo";
             btnParsearExpedienteDeArchivo.Size = new Size(30, 30);
-            btnParsearExpedienteDeArchivo.TabIndex = 19;
+            btnParsearExpedienteDeArchivo.TabIndex = 55;
             btnParsearExpedienteDeArchivo.Text = "E";
             btnParsearExpedienteDeArchivo.UseVisualStyleBackColor = false;
             btnParsearExpedienteDeArchivo.Click += btnParsearExpedienteDeArchivo_Click;
@@ -1071,19 +1087,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpedienteCampo.TabIndex = 8;
             lblExpedienteCampo.Text = "Expediente:";
             // 
-            // btnAyudaTipoPlano
-            // 
-            btnAyudaTipoPlano.BackColor = Color.FromArgb(60, 60, 63);
-            btnAyudaTipoPlano.FlatStyle = FlatStyle.Flat;
-            btnAyudaTipoPlano.ForeColor = Color.White;
-            btnAyudaTipoPlano.Location = new Point(120, 161);
-            btnAyudaTipoPlano.Name = "btnAyudaTipoPlano";
-            btnAyudaTipoPlano.Size = new Size(22, 20);
-            btnAyudaTipoPlano.TabIndex = 23;
-            btnAyudaTipoPlano.Text = "?";
-            btnAyudaTipoPlano.UseVisualStyleBackColor = false;
-            btnAyudaTipoPlano.Click += btnAyudaTipoPlano_Click;
-            // 
             // cboTipoPlanoDetalle
             // 
             cboTipoPlanoDetalle.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
@@ -1096,7 +1099,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboTipoPlanoDetalle.Location = new Point(15, 182);
             cboTipoPlanoDetalle.Name = "cboTipoPlanoDetalle";
             cboTipoPlanoDetalle.Size = new Size(401, 29);
-            cboTipoPlanoDetalle.TabIndex = 20;
+            cboTipoPlanoDetalle.TabIndex = 18;
             // 
             // lblConfianzaTipoPlano
             // 
@@ -1118,18 +1121,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblTipoPlanoCampo.TabIndex = 22;
             lblTipoPlanoCampo.Text = "Tipo de Plano (*):";
             // 
-            // btnAyudaCategoriaPlano
+            // btnAyudaTipoPlano
             // 
-            btnAyudaCategoriaPlano.BackColor = Color.FromArgb(60, 60, 63);
-            btnAyudaCategoriaPlano.FlatStyle = FlatStyle.Flat;
-            btnAyudaCategoriaPlano.ForeColor = Color.White;
-            btnAyudaCategoriaPlano.Location = new Point(147, 104);
-            btnAyudaCategoriaPlano.Name = "btnAyudaCategoriaPlano";
-            btnAyudaCategoriaPlano.Size = new Size(22, 20);
-            btnAyudaCategoriaPlano.TabIndex = 20;
-            btnAyudaCategoriaPlano.Text = "?";
-            btnAyudaCategoriaPlano.UseVisualStyleBackColor = false;
-            btnAyudaCategoriaPlano.Click += btnAyudaCategoriaPlano_Click;
+            btnAyudaTipoPlano.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaTipoPlano.FlatStyle = FlatStyle.Flat;
+            btnAyudaTipoPlano.ForeColor = Color.White;
+            btnAyudaTipoPlano.Location = new Point(120, 161);
+            btnAyudaTipoPlano.Name = "btnAyudaTipoPlano";
+            btnAyudaTipoPlano.Size = new Size(22, 20);
+            btnAyudaTipoPlano.TabIndex = 51;
+            btnAyudaTipoPlano.Text = "?";
+            btnAyudaTipoPlano.UseVisualStyleBackColor = false;
+            btnAyudaTipoPlano.Click += btnAyudaTipoPlano_Click;
             // 
             // cboCategoriaPlanoDetalle
             // 
@@ -1164,18 +1167,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCategoriaPlanoCampo.TabIndex = 19;
             lblCategoriaPlanoCampo.Text = "Categoría de Plano (*):";
             // 
-            // btnAyudaNumeroPlano
+            // btnAyudaCategoriaPlano
             // 
-            btnAyudaNumeroPlano.BackColor = Color.FromArgb(60, 60, 63);
-            btnAyudaNumeroPlano.FlatStyle = FlatStyle.Flat;
-            btnAyudaNumeroPlano.ForeColor = Color.White;
-            btnAyudaNumeroPlano.Location = new Point(124, 543);
-            btnAyudaNumeroPlano.Name = "btnAyudaNumeroPlano";
-            btnAyudaNumeroPlano.Size = new Size(22, 20);
-            btnAyudaNumeroPlano.TabIndex = 19;
-            btnAyudaNumeroPlano.Text = "?";
-            btnAyudaNumeroPlano.UseVisualStyleBackColor = false;
-            btnAyudaNumeroPlano.Click += btnAyudaNumeroPlano_Click;
+            btnAyudaCategoriaPlano.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaCategoriaPlano.FlatStyle = FlatStyle.Flat;
+            btnAyudaCategoriaPlano.ForeColor = Color.White;
+            btnAyudaCategoriaPlano.Location = new Point(147, 104);
+            btnAyudaCategoriaPlano.Name = "btnAyudaCategoriaPlano";
+            btnAyudaCategoriaPlano.Size = new Size(22, 20);
+            btnAyudaCategoriaPlano.TabIndex = 50;
+            btnAyudaCategoriaPlano.Text = "?";
+            btnAyudaCategoriaPlano.UseVisualStyleBackColor = false;
+            btnAyudaCategoriaPlano.Click += btnAyudaCategoriaPlano_Click;
             // 
             // txtNumeroPlano
             // 
@@ -1187,7 +1190,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtNumeroPlano.Location = new Point(15, 564);
             txtNumeroPlano.Name = "txtNumeroPlano";
             txtNumeroPlano.Size = new Size(300, 29);
-            txtNumeroPlano.TabIndex = 18;
+            txtNumeroPlano.TabIndex = 26;
             // 
             // lblConfianzaNumeroPlano
             // 
@@ -1208,6 +1211,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblNumeroPlanoCampo.Size = new Size(103, 15);
             lblNumeroPlanoCampo.TabIndex = 25;
             lblNumeroPlanoCampo.Text = "Número de Plano:";
+            // 
+            // btnAyudaNumeroPlano
+            // 
+            btnAyudaNumeroPlano.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaNumeroPlano.FlatStyle = FlatStyle.Flat;
+            btnAyudaNumeroPlano.ForeColor = Color.White;
+            btnAyudaNumeroPlano.Location = new Point(124, 543);
+            btnAyudaNumeroPlano.Name = "btnAyudaNumeroPlano";
+            btnAyudaNumeroPlano.Size = new Size(22, 20);
+            btnAyudaNumeroPlano.TabIndex = 60;
+            btnAyudaNumeroPlano.Text = "?";
+            btnAyudaNumeroPlano.UseVisualStyleBackColor = false;
+            btnAyudaNumeroPlano.Click += btnAyudaNumeroPlano_Click;
             // 
             // lblSnPosibleBlanca
             // 
@@ -1260,19 +1276,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCabeceraArchivo.TabIndex = 0;
             lblCabeceraArchivo.Text = "(seleccione una página)";
             // 
-            // btnAyudaObservaciones
-            // 
-            btnAyudaObservaciones.BackColor = Color.FromArgb(60, 60, 63);
-            btnAyudaObservaciones.FlatStyle = FlatStyle.Flat;
-            btnAyudaObservaciones.ForeColor = Color.White;
-            btnAyudaObservaciones.Location = new Point(108, 598);
-            btnAyudaObservaciones.Name = "btnAyudaObservaciones";
-            btnAyudaObservaciones.Size = new Size(22, 20);
-            btnAyudaObservaciones.TabIndex = 26;
-            btnAyudaObservaciones.Text = "?";
-            btnAyudaObservaciones.UseVisualStyleBackColor = false;
-            btnAyudaObservaciones.Click += btnAyudaObservaciones_Click;
-            // 
             // txtObservaciones
             // 
             txtObservaciones.BackColor = Color.FromArgb(30, 30, 30);
@@ -1284,7 +1287,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtObservaciones.Name = "txtObservaciones";
             txtObservaciones.ScrollBars = ScrollBars.Vertical;
             txtObservaciones.Size = new Size(430, 67);
-            txtObservaciones.TabIndex = 26;
+            txtObservaciones.TabIndex = 27;
             // 
             // lblObservacionesCampo
             // 
@@ -1295,6 +1298,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblObservacionesCampo.Size = new Size(87, 15);
             lblObservacionesCampo.TabIndex = 27;
             lblObservacionesCampo.Text = "Observaciones:";
+            // 
+            // btnAyudaObservaciones
+            // 
+            btnAyudaObservaciones.BackColor = Color.FromArgb(60, 60, 63);
+            btnAyudaObservaciones.FlatStyle = FlatStyle.Flat;
+            btnAyudaObservaciones.ForeColor = Color.White;
+            btnAyudaObservaciones.Location = new Point(108, 598);
+            btnAyudaObservaciones.Name = "btnAyudaObservaciones";
+            btnAyudaObservaciones.Size = new Size(22, 20);
+            btnAyudaObservaciones.TabIndex = 61;
+            btnAyudaObservaciones.Text = "?";
+            btnAyudaObservaciones.UseVisualStyleBackColor = false;
+            btnAyudaObservaciones.Click += btnAyudaObservaciones_Click;
             // 
             // panelDerecho
             // 
@@ -1472,7 +1488,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnMarcarPaginaIlegible.Margin = new Padding(3, 3, 8, 3);
             btnMarcarPaginaIlegible.Name = "btnMarcarPaginaIlegible";
             btnMarcarPaginaIlegible.Size = new Size(170, 34);
-            btnMarcarPaginaIlegible.TabIndex = 4;
+            btnMarcarPaginaIlegible.TabIndex = 30;
             btnMarcarPaginaIlegible.Text = "Marcar Página ILEGIBLE";
             btnMarcarPaginaIlegible.UseVisualStyleBackColor = false;
             btnMarcarPaginaIlegible.Click += btnMarcarPaginaIlegible_Click;
@@ -1487,7 +1503,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnMarcarDatosIlegible.Margin = new Padding(3, 3, 8, 3);
             btnMarcarDatosIlegible.Name = "btnMarcarDatosIlegible";
             btnMarcarDatosIlegible.Size = new Size(170, 34);
-            btnMarcarDatosIlegible.TabIndex = 5;
+            btnMarcarDatosIlegible.TabIndex = 29;
             btnMarcarDatosIlegible.Text = "Marcar Datos ILEGIBLE";
             btnMarcarDatosIlegible.UseVisualStyleBackColor = false;
             btnMarcarDatosIlegible.Click += btnMarcarDatosIlegible_Click;
@@ -1531,7 +1547,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnGuardarControlada.Margin = new Padding(3, 3, 8, 3);
             btnGuardarControlada.Name = "btnGuardarControlada";
             btnGuardarControlada.Size = new Size(190, 34);
-            btnGuardarControlada.TabIndex = 1;
+            btnGuardarControlada.TabIndex = 28;
             btnGuardarControlada.Text = "Guardar y Marcar Controlada";
             btnGuardarControlada.UseVisualStyleBackColor = false;
             btnGuardarControlada.Click += btnGuardarControlada_Click;
@@ -1695,5 +1711,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Button btnAyudaCategoriaPlano;
         private Button btnAyudaNumeroPlano;
         private Button btnAyudaObservaciones;
+        private Button btnPegarUltimaDireccion;
     }
 }

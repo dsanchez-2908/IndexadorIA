@@ -355,5 +355,138 @@ namespace IndexadorIA.Datos
 
             return resumen;
         }
+
+        /// <summary>
+        /// Obtiene los registros de TD_001_RESULTADO_IA de un lote en auditoría (cdEstadoLote=8),
+        /// junto con los datos de lote, categoría, tipo de plano y usuarios de control,
+        /// para la pantalla de auditoría (FrmAuditarLote). Permite filtrar opcionalmente
+        /// por una lista de estados de control (cdEstadoControl).
+        /// </summary>
+        public List<RegistroAuditoria> ObtenerParaAuditoria(int cdLote, List<int>? cdEstadosControl = null)
+        {
+            var registros = new List<RegistroAuditoria>();
+
+            using var conn = new SqlConnection(_cadenaConexion);
+
+            var sql = @"
+                SELECT		a.cdResultado			AS cdResultado,			
+            a.cdLote				AS cdLote,				
+            b.dsNombreLote			AS dsNombreLote,		
+            b.cdEstadoLote			AS cdEstadoLote,
+            c.dsEstado				AS dsEstadoLote,			
+            b.feFinControl			AS feFinControl,		
+            b.cdUsuarioFinControl	AS cdUsuarioFinControl,
+            d.dsNombreCompleto		AS dsUsuarioFinControl,	
+            a.cdArchivoPagina		AS cdArchivoPagina,
+            a.cdCategoriaPlano		AS cdCategoriaPlano,
+            e.dsCategoriaPlano		AS dsCategoriaPlano,	
+            a.cdTipoPlano			AS cdTipoPlano,
+            f.dsTipoPlano			AS dsTipoPlano,			
+            a.dsExpediente			AS dsExpediente,		
+            a.dsSeccion				AS dsSeccion,			
+            a.dsManzana				AS dsManzana,			
+            a.dsParcela				AS dsParcela,			
+            a.dsDireccion			AS dsDireccion,			
+            a.dsNumeroPlano			AS dsNumeroPlano,		
+            a.dsObservaciones		AS dsObservaciones,		
+            a.cdEstadoControl		AS cdEstadoControl,
+            g.dsEstado				AS dsEstadoControl,
+            a.feControl				AS feControl,			
+            a.cdUsuarioControl		AS cdUsuarioControl,
+            h.dsNombreCompleto		AS dsUsuarioControl,
+            a.snModificaDatos		AS snModificaDatos
+FROM		TD_001_RESULTADO_IA a
+LEFT JOIN	TD_LOTE				b ON a.cdLote=b.cdLote
+LEFT JOIN	TD_ESTADOS			c ON c.dsProceso='LOTE' AND b.cdEstadoLote=c.cdEstado
+LEFT JOIN	TD_USUARIOS			d ON b.cdUsuarioFinControl=d.cdUsuario
+LEFT JOIN	TD_CATEGORIA_PLANO	e ON a.cdCategoriaPlano=e.cdCategoriaPlano
+LEFT JOIN	TD_TIPOS_PLANO		f ON a.cdTipoPlano=f.cdTipoPlano
+LEFT JOIN	TD_ESTADOS			g ON g.dsProceso='CONTROL' AND a.cdEstadoControl=g.cdEstado
+LEFT JOIN	TD_USUARIOS			h ON a.cdUsuarioControl=h.cdUsuario
+WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
+
+            if (cdEstadosControl != null && cdEstadosControl.Count > 0)
+            {
+                var nombresParametros = new List<string>();
+                for (int i = 0; i < cdEstadosControl.Count; i++)
+                {
+                    nombresParametros.Add($"@cdEstadoControl{i}");
+                }
+
+                sql += $" AND a.cdEstadoControl IN ({string.Join(",", nombresParametros)})";
+            }
+
+            sql += " ORDER BY a.cdResultado";
+
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@cdLote", cdLote);
+
+            if (cdEstadosControl != null && cdEstadosControl.Count > 0)
+            {
+                for (int i = 0; i < cdEstadosControl.Count; i++)
+                {
+                    cmd.Parameters.AddWithValue($"@cdEstadoControl{i}", cdEstadosControl[i]);
+                }
+            }
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                registros.Add(new RegistroAuditoria
+                {
+                    CdResultado = reader.GetInt32(0),
+                    CdLote = reader.GetInt32(1),
+                    DsNombreLote = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    CdEstadoLote = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                    DsEstadoLote = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    FeFinControl = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                    CdUsuarioFinControl = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                    DsUsuarioFinControl = reader.IsDBNull(7) ? null : reader.GetString(7),
+                    CdArchivoPagina = reader.GetInt32(8),
+                    CdCategoriaPlano = reader.IsDBNull(9) ? null : reader.GetInt32(9),
+                    DsCategoriaPlano = reader.IsDBNull(10) ? null : reader.GetString(10),
+                    CdTipoPlano = reader.IsDBNull(11) ? null : reader.GetInt32(11),
+                    DsTipoPlano = reader.IsDBNull(12) ? null : reader.GetString(12),
+                    DsExpediente = reader.IsDBNull(13) ? null : reader.GetString(13),
+                    DsSeccion = reader.IsDBNull(14) ? null : reader.GetString(14),
+                    DsManzana = reader.IsDBNull(15) ? null : reader.GetString(15),
+                    DsParcela = reader.IsDBNull(16) ? null : reader.GetString(16),
+                    DsDireccion = reader.IsDBNull(17) ? null : reader.GetString(17),
+                    DsNumeroPlano = reader.IsDBNull(18) ? null : reader.GetString(18),
+                    DsObservaciones = reader.IsDBNull(19) ? null : reader.GetString(19),
+                    CdEstadoControl = reader.GetInt32(20),
+                    DsEstadoControl = reader.IsDBNull(21) ? null : reader.GetString(21),
+                    FeControl = reader.IsDBNull(22) ? null : reader.GetDateTime(22),
+                    CdUsuarioControl = reader.IsDBNull(23) ? null : reader.GetInt32(23),
+                    DsUsuarioControl = reader.IsDBNull(24) ? null : reader.GetString(24),
+                    SnModificaDatos = reader.IsDBNull(25) ? null : reader.GetString(25)
+                });
+            }
+
+            return registros;
+        }
+
+        /// <summary>
+        /// Obtiene los estados de control (dsProceso='CONTROL') utilizados como filtro
+        /// en la pantalla de auditoría (FrmAuditarLote): Controlado, Página Ilegible, Datos Ilegibles.
+        /// </summary>
+        public List<KeyValuePair<int, string>> ObtenerEstadosControlParaFiltro()
+        {
+            var estados = new List<KeyValuePair<int, string>>();
+
+            using var conn = new SqlConnection(_cadenaConexion);
+            using var cmd = new SqlCommand(
+                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (2,3,4) ORDER BY 1", conn);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                estados.Add(new KeyValuePair<int, string>(reader.GetInt32(0), reader.GetString(1)));
+            }
+
+            return estados;
+        }
     }
 }

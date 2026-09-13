@@ -26,6 +26,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Point _puntoInicialArrastre;
         private readonly ApiClienteServicio? _apiCliente;
         private LoteDetalleApiDto? _detalleRemoto;
+        private string? _ultimaSeccion;
+        private string? _ultimaManzana;
+        private string? _ultimaParcela;
+        private string? _ultimaDireccion;
 
         /// <summary>
         /// Combina la información de ArchivoPagina + ResultadoIA para mostrar en la grilla
@@ -504,6 +508,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 filas = filas.Where(f => f.ExactitudPromedio >= nudExactitudMinima.Value);
 
             dgvArchivos.DataSource = filas.ToList();
+        }
+
+        private void dgvArchivos_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= dgvArchivos.Rows.Count)
+                return;
+
+            if (dgvArchivos.Rows[e.RowIndex].DataBoundItem is FilaArchivoPagina fila
+                && fila.Resultado != null
+                && (fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
+                    || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible
+                    || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles))
+            {
+                dgvArchivos.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.FromArgb(30, 90, 30);
+                dgvArchivos.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.White;
+                dgvArchivos.Rows[e.RowIndex].DefaultCellStyle.SelectionBackColor = Color.FromArgb(50, 130, 50);
+            }
         }
 
         #endregion
@@ -1053,6 +1074,22 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && ContieneCaracteresInvalidos(txtDireccion.Text, out char caracterInvalido))
+            {
+                MessageBox.Show(
+                    $"El campo Dirección no puede contener el carácter \"{caracterInvalido}\". Corríjalo antes de guardar.",
+                    "Dirección inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtNumeroPlano.Text) && !EsNumeroPlanoValido(txtNumeroPlano.Text, out string mensajeErrorNumeroPlano))
+            {
+                MessageBox.Show(
+                    $"El campo Número de Plano no tiene un formato válido (M-9999-Año). {mensajeErrorNumeroPlano}",
+                    "Número de Plano inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             try
             {
                 var resultado = _filaSeleccionada.Resultado;
@@ -1066,6 +1103,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 resultado.DsManzana = txtManzana.Text;
                 resultado.DsParcela = txtParcela.Text;
                 resultado.DsDireccion = txtDireccion.Text;
+
+                _ultimaSeccion = txtSeccion.Text;
+                _ultimaManzana = txtManzana.Text;
+                _ultimaParcela = txtParcela.Text;
+                _ultimaDireccion = txtDireccion.Text;
 
                 bool modificoDatos = DatosFueronModificados(resultado);
                 string? dsObservaciones = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim();
@@ -1125,6 +1167,64 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 MessageBox.Show($"No se pudo guardar y marcar como controlada: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// Verifica que la dirección no contenga los caracteres no permitidos: / - ° ,
+        /// </summary>
+        private static bool ContieneCaracteresInvalidos(string valor, out char caracterInvalido)
+        {
+            char[] caracteresInvalidos = { '/', '-', '°', ',' };
+
+            foreach (char c in valor)
+            {
+                if (Array.IndexOf(caracteresInvalidos, c) >= 0)
+                {
+                    caracterInvalido = c;
+                    return true;
+                }
+            }
+
+            caracterInvalido = '\0';
+            return false;
+        }
+
+        /// <summary>
+        /// Valida que el número de plano tenga el formato M-9999-Año: 3 partes separadas por "-",
+        /// la segunda parte de 4 dígitos numéricos y la tercera un año de 4 dígitos entre 1900 y 2030.
+        /// </summary>
+        private static bool EsNumeroPlanoValido(string valor, out string mensajeError)
+        {
+            var partes = valor.Trim().Split('-');
+
+            if (partes.Length != 3)
+            {
+                mensajeError = "Debe tener el formato M-9999-Año (3 partes separadas por \"-\").";
+                return false;
+            }
+
+            if (partes[1].Length != 4 || !partes[1].All(char.IsDigit))
+            {
+                mensajeError = "La segunda parte debe ser un número de 4 dígitos.";
+                return false;
+            }
+
+            if (partes[2].Length != 4 || !partes[2].All(char.IsDigit) || !int.TryParse(partes[2], out int anio) || anio < 1900 || anio > 2030)
+            {
+                mensajeError = "La tercera parte debe ser un año de 4 dígitos entre 1900 y 2030.";
+                return false;
+            }
+
+            mensajeError = string.Empty;
+            return true;
+        }
+
+        private void btnPegarUltimaDireccion_Click(object sender, EventArgs e)
+        {
+            txtSeccion.Text = _ultimaSeccion ?? string.Empty;
+            txtManzana.Text = _ultimaManzana ?? string.Empty;
+            txtParcela.Text = _ultimaParcela ?? string.Empty;
+            txtDireccion.Text = _ultimaDireccion ?? string.Empty;
         }
 
         /// <summary>

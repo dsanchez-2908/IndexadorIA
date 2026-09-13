@@ -14,6 +14,10 @@ namespace IndexadorIA.Entidades
         public int? CdUsuarioAsignado { get; set; }
         public DateTime? FeFinControl { get; set; }
         public int? CdUsuarioFinControl { get; set; }
+        public int? CdUsuarioAuditor { get; set; }
+        public DateTime? FeFinAuditoria { get; set; }
+        public DateTime? FeAuditado { get; set; }
+        public int? CdUsuarioAuditado { get; set; }
 
         // Propiedades navegación/display
         public string? DsEstado { get; set; }

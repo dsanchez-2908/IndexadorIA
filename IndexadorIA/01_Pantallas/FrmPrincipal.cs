@@ -106,6 +106,9 @@ namespace IndexadorIA.Pantallas
             bool esAdmin = string.Equals(SesionActual.UsuarioActual.CdRol, "ADMIN", StringComparison.OrdinalIgnoreCase);
             menuProduccionUsuarios.Visible = esAdmin && !SesionApi.ModoRemoto;
 
+            // "Estado Proyecto Planos" solo debe estar disponible para usuarios con rol ADMIN.
+            menuEstadoProyecto.Visible = esAdmin;
+
             // "Ayuda Control" es un mantenimiento solo para el rol ADMIN (funciona tanto local
             // como remoto, ya que el texto de ayuda se lee/escribe también vía API).
             menuAyudaControl.Visible = esAdmin;
@@ -156,6 +159,16 @@ namespace IndexadorIA.Pantallas
             AbrirFormularioEnPanel(new PlanosGCBA.FrmControlFinalizacion());
         }
 
+        private void menuAsignarAuditoria_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmAsignarAuditoria());
+        }
+
+        private void menuAuditar_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmAuditar());
+        }
+
         private void menuFinalizarLote_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmFinalizarLote());
@@ -174,6 +187,11 @@ namespace IndexadorIA.Pantallas
         private void menuProduccionUsuarios_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmProduccionUsuarios());
+        }
+
+        private void menuEstadoProyecto_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Reportes.FrmEstadoProyecto());
         }
 
         private void menuAyudaControl_Click(object sender, EventArgs e)
