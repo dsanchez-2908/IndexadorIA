@@ -86,13 +86,15 @@ namespace IndexadorIA.Pantallas
                 menuConsultas.Visible = false;
                 menuReportes.Visible = false;
 
-                // En "Planos de GCBA" solo deja visible "Control y Finalización"
+                // En "Planos de GCBA" solo deja visible "Control y Finalización" y "Auditar"
                 menuIngresoArchivos.Visible = false;
                 menuSeparacionImagenes.Visible = false;
                 menuPreparacionLotes.Visible = false;
                 menuPreparacionImagenes.Visible = false;
                 menuProcesamientoIA.Visible = false;
                 menuAsignacionLote.Visible = false;
+                menuAsignarAuditoria.Visible = false;
+                menuAuditar.Visible = true;
                 menuFinalizarLote.Visible = false;
                 menuEnvio.Visible = false;
 
