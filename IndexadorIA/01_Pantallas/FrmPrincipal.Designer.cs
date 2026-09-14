@@ -29,6 +29,7 @@ namespace IndexadorIA.Pantallas
             menuAsignarAuditoria = new ToolStripMenuItem();
             menuAuditar = new ToolStripMenuItem();
             menuFinalizarLote = new ToolStripMenuItem();
+            menuEnvio = new ToolStripMenuItem();
             menuConsultas = new ToolStripMenuItem();
             menuReportes = new ToolStripMenuItem();
             menuConsumosIA = new ToolStripMenuItem();
@@ -84,7 +85,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuPlanosGCBA
             // 
-            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuAsignacionLote, menuControlFinalizacion, menuAsignarAuditoria, menuAuditar, menuFinalizarLote });
+            menuPlanosGCBA.DropDownItems.AddRange(new ToolStripItem[] { menuIngresoArchivos, menuSeparacionImagenes, menuPreparacionLotes, menuPreparacionImagenes, menuProcesamientoIA, menuAsignacionLote, menuControlFinalizacion, menuAsignarAuditoria, menuAuditar, menuFinalizarLote, menuEnvio });
             menuPlanosGCBA.Font = new Font("Segoe UI", 10F);
             menuPlanosGCBA.ForeColor = Color.White;
             menuPlanosGCBA.Name = "menuPlanosGCBA";
@@ -180,6 +181,15 @@ namespace IndexadorIA.Pantallas
             menuFinalizarLote.Size = new Size(244, 24);
             menuFinalizarLote.Text = "Finalizar Lote";
             menuFinalizarLote.Click += menuFinalizarLote_Click;
+            //
+            // menuEnvio
+            //
+            menuEnvio.BackColor = Color.FromArgb(45, 45, 48);
+            menuEnvio.ForeColor = Color.White;
+            menuEnvio.Name = "menuEnvio";
+            menuEnvio.Size = new Size(244, 24);
+            menuEnvio.Text = "Envio";
+            menuEnvio.Click += menuEnvio_Click;
             // 
             // menuConsultas
             // 
@@ -384,6 +394,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuAsignarAuditoria;
         private ToolStripMenuItem menuAuditar;
         private ToolStripMenuItem menuFinalizarLote;
+        private ToolStripMenuItem menuEnvio;
         private ToolStripMenuItem menuLotes;
         private ToolStripMenuItem menuMonitorLotes;
         private ToolStripMenuItem menuConsultas;

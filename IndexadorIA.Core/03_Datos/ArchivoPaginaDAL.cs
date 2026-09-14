@@ -157,6 +157,30 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Actualiza el estado de todas las páginas/archivos asociados a un lote
+        /// (usado, por ejemplo, para marcar las páginas de los lotes enviados con
+        /// cdEstado=8 "Enviado").
+        /// </summary>
+        public int ActualizarEstadoPorLote(int cdLote, int cdEstado)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE ap
+                    SET ap.cdEstado = @cdEstado
+                    FROM TD_ARCHIVOS_PAGINAS ap
+                    INNER JOIN TD_LOTE_ARCHIVOS la ON la.cdArchivoPagina = ap.cdArchivoPagina
+                    WHERE la.cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+                comando.Parameters.AddWithValue("@cdEstado", cdEstado);
+
+                conexion.Open();
+                return comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
         /// Obtiene un archivo/página por su Id (usado por las pantallas de detalle
         /// para acceder a la ruta del PDF/JPG y al estado de rotación).
         /// </summary>

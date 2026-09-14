@@ -94,6 +94,7 @@ namespace IndexadorIA.Pantallas
                 menuProcesamientoIA.Visible = false;
                 menuAsignacionLote.Visible = false;
                 menuFinalizarLote.Visible = false;
+                menuEnvio.Visible = false;
 
                 // En "Configuración" solo deja visible "Cambiar Clave" y "Cerrar Sesión"
                 menuProyectos.Visible = false;
@@ -172,6 +173,11 @@ namespace IndexadorIA.Pantallas
         private void menuFinalizarLote_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmFinalizarLote());
+        }
+
+        private void menuEnvio_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmEnvioLote());
         }
 
         private void menuMonitorLotes_Click(object sender, EventArgs e)

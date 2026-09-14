@@ -19,5 +19,18 @@ namespace IndexadorIA.Entidades
         public string DsEstado { get; set; } = string.Empty;
         public string? NombreArchivo { get; set; }
         public string? RutaBase64 { get; set; }
+
+        /// <summary>
+        /// Nombre final del PDF (ya renombrado/movido durante la finalización del lote),
+        /// persistido en TD_ARCHIVOS_PAGINAS.dsNombreArchivoFinal.
+        /// </summary>
+        public string? DsNombreArchivoFinal { get; set; }
+
+        /// <summary>
+        /// Ruta completa (dsRutaCompleta) del archivo original en TD_ARCHIVOS_ORIGINAL,
+        /// usada para calcular la carpeta donde se ubican los PDFs finales
+        /// ("Planos Procesados"/"Planos ILEGIBLES").
+        /// </summary>
+        public string DsRutaCompletaOriginal { get; set; } = string.Empty;
     }
 }

@@ -241,7 +241,8 @@ namespace IndexadorIA.Datos
                 var comando = new SqlCommand(@"
                     SELECT ap.cdArchivoPagina, ap.dsNombreArchivoPagina, ap.nuPagina, 
                            ap.dsRutaCompleta, a.dsNombreArchivo,
-                           REPLACE(REPLACE(ap.dsRutaCompleta, '.png', '.b64'), '.pdf', '.b64') as RutaBase64
+                           REPLACE(REPLACE(ap.dsRutaCompleta, '.png', '.b64'), '.pdf', '.b64') as RutaBase64,
+                           ap.dsNombreArchivoFinal, a.dsRutaCompleta as RutaCompletaOriginal
                     FROM TD_LOTE_ARCHIVOS la
                     INNER JOIN TD_ARCHIVOS_PAGINAS ap ON la.cdArchivoPagina = ap.cdArchivoPagina
                     INNER JOIN TD_ARCHIVOS_ORIGINAL a ON ap.cdArchivoOriginal = a.cdArchivo
@@ -262,7 +263,9 @@ namespace IndexadorIA.Datos
                             NuPagina = lector.GetInt32(2),
                             DsRutaCompleta = lector.GetString(3),
                             NombreArchivo = lector.GetString(4),
-                            RutaBase64 = lector.GetString(5)
+                            RutaBase64 = lector.GetString(5),
+                            DsNombreArchivoFinal = lector.IsDBNull(6) ? null : lector.GetString(6),
+                            DsRutaCompletaOriginal = lector.GetString(7)
                         });
                     }
                 }
@@ -551,6 +554,32 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Marca un lote como finalizado: lo pasa a cdEstado=10 ("Pendiente de Enviar")
+        /// y registra la fecha y el usuario que finalizo el lote.
+        /// </summary>
+        public void MarcarLoteFinalizado(int cdLote, int cdUsuarioFinalizado)
+        {
+            const int CD_ESTADO_PENDIENTE_ENVIAR = 10;
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_LOTE
+                    SET cdEstadoLote = @cdEstadoLote,
+                        feFinalizado = GETDATE(),
+                        cdUsuarioFinalizado = @cdUsuarioFinalizado
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_PENDIENTE_ENVIAR);
+                comando.Parameters.AddWithValue("@cdUsuarioFinalizado", cdUsuarioFinalizado);
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
         /// Asigna una lista de lotes a un usuario auditor, cambiando su estado a "Auditando" (cdEstado=8)
         /// </summary>
         public void AsignarAuditoria(List<int> cdLotes, int cdUsuarioAuditor)
@@ -596,13 +625,14 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
-        /// Obtiene los lotes en un estado especifico (por defecto 7 - Pendiente de Finalizar)
-        /// junto con estadisticas de estado de control y cantidad de correcciones manuales,
-        /// aplicando filtros opcionales de nombre de lote y rango de fecha de control.
+        /// Obtiene los lotes en un estado especifico (por defecto 9 - Pendiente de Finalizar,
+        /// tras completarse la auditoria) junto con estadisticas de estado de control y cantidad
+        /// de correcciones manuales, aplicando filtros opcionales de nombre de lote y rango de
+        /// fecha de control.
         /// </summary>
         public List<Entidades.LoteFinalizacionGridDto> ObtenerLotesPendientesFinalizarConEstadisticas(
             string? dsNombreLote = null, DateTime? feControlDesde = null, DateTime? feControlHasta = null,
-            int cdEstadoLote = 7)
+            int cdEstadoLote = 9)
         {
             var lotes = new List<Entidades.LoteFinalizacionGridDto>();
 
@@ -800,6 +830,121 @@ namespace IndexadorIA.Datos
             }
 
             return lotes;
+        }
+
+        /// <summary>
+        /// Obtiene los lotes en un estado especifico (por defecto 10 - Pendiente de Enviar,
+        /// tras completarse la finalizacion) junto con estadisticas de estado de control y cantidad
+        /// de correcciones manuales, aplicando filtros opcionales de nombre de lote y rango de
+        /// fecha de control.
+        /// </summary>
+        public List<Entidades.LoteEnvioGridDto> ObtenerLotesPendientesEnviarConEstadisticas(
+            string? dsNombreLote = null, DateTime? feControlDesde = null, DateTime? feControlHasta = null,
+            int cdEstadoLote = 10)
+        {
+            var lotes = new List<Entidades.LoteEnvioGridDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT l.cdLote, l.dsNombreLote, u.dsNombreCompleto,
+                           COUNT(r.cdResultado) AS nuCantidadPlanos,
+                           SUM(CASE WHEN r.cdEstadoControl = 2 THEN 1 ELSE 0 END) AS nuCantidadControlado,
+                           SUM(CASE WHEN r.cdEstadoControl = 1 THEN 1 ELSE 0 END) AS nuCantidadPendiente,
+                           SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
+                           SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           (SELECT COUNT(DISTINCT c.cdResultado)
+                            FROM TD_CORRECIONES c
+                            INNER JOIN TD_001_RESULTADO_IA ri ON ri.cdResultado = c.cdResultado
+                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido
+                    FROM TD_LOTE l
+                    LEFT JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
+                    LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
+                    WHERE l.cdEstadoLote = @cdEstadoLote";
+
+                if (!string.IsNullOrEmpty(dsNombreLote))
+                {
+                    sql += " AND l.dsNombreLote LIKE @dsNombreLote";
+                }
+
+                if (feControlDesde.HasValue)
+                {
+                    sql += " AND EXISTS (SELECT 1 FROM TD_001_RESULTADO_IA rf WHERE rf.cdLote = l.cdLote AND rf.feControl >= @feControlDesde)";
+                }
+
+                if (feControlHasta.HasValue)
+                {
+                    sql += " AND EXISTS (SELECT 1 FROM TD_001_RESULTADO_IA rf WHERE rf.cdLote = l.cdLote AND rf.feControl < @feControlHasta)";
+                }
+
+                sql += @"
+                    GROUP BY l.cdLote, l.dsNombreLote, u.dsNombreCompleto
+                    ORDER BY l.cdLote DESC";
+
+                var comando = new SqlCommand(sql, conexion);
+                comando.Parameters.AddWithValue("@cdEstadoLote", cdEstadoLote);
+
+                if (!string.IsNullOrEmpty(dsNombreLote))
+                    comando.Parameters.AddWithValue("@dsNombreLote", $"%{dsNombreLote}%");
+
+                if (feControlDesde.HasValue)
+                    comando.Parameters.AddWithValue("@feControlDesde", feControlDesde.Value.Date);
+
+                if (feControlHasta.HasValue)
+                    comando.Parameters.AddWithValue("@feControlHasta", feControlHasta.Value.Date.AddDays(1));
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lotes.Add(new Entidades.LoteEnvioGridDto
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            DsUsuarioAsignado = lector.IsDBNull(2) ? null : lector.GetString(2),
+                            NuCantidadPlanos = lector.GetInt32(3),
+                            NuCantidadControlado = lector.GetInt32(4),
+                            NuCantidadPendiente = lector.GetInt32(5),
+                            NuCantidadPaginaIlegible = lector.GetInt32(6),
+                            NuCantidadDatosIlegibles = lector.GetInt32(7),
+                            NuCantidadCorregido = lector.GetInt32(8)
+                        });
+                    }
+                }
+            }
+
+            return lotes;
+        }
+
+        /// <summary>
+        /// Marca un lote como enviado: lo pasa a cdEstado=11 ("Enviado") y registra la
+        /// fecha, el usuario, la carpeta de envio y las observaciones de envio.
+        /// </summary>
+        public void MarcarLoteEnviado(int cdLote, int cdUsuarioEnvio, string dsCarpetaEnvio, string? dsObservacionesEnvio)
+        {
+            const int CD_ESTADO_ENVIADO = 11;
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_LOTE
+                    SET cdEstadoLote = @cdEstadoLote,
+                        feEnvio = GETDATE(),
+                        cdUsuarioEnvio = @cdUsuarioEnvio,
+                        dsCarpetaEnvio = @dsCarpetaEnvio,
+                        dsObservacionesEnvio = @dsObservacionesEnvio
+                    WHERE cdLote = @cdLote", conexion);
+
+                comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_ENVIADO);
+                comando.Parameters.AddWithValue("@cdUsuarioEnvio", cdUsuarioEnvio);
+                comando.Parameters.AddWithValue("@dsCarpetaEnvio", (object?)dsCarpetaEnvio ?? DBNull.Value);
+                comando.Parameters.AddWithValue("@dsObservacionesEnvio", (object?)dsObservacionesEnvio ?? DBNull.Value);
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
         }
 
         /// <summary>

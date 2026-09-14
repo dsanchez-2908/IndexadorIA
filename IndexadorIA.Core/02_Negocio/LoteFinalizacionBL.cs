@@ -14,14 +14,22 @@ namespace IndexadorIA.Negocio
     public class LoteFinalizacionBL
     {
         /// <summary>
-        /// Estado de lote "Finalizado" (dsProceso = 'LOTE' en TD_ESTADOS)
+        /// Estado de lote "Finalizado" / "Pendiente de Enviar" (dsProceso = 'LOTE' en TD_ESTADOS)
         /// </summary>
-        public const int EstadoLoteFinalizado = 3;
+        public const int EstadoLoteFinalizado = 10;
 
         /// <summary>
-        /// Estado de lote "Pendiente de Finalizar" (dsProceso = 'LOTE' en TD_ESTADOS)
+        /// Estado de lote "Pendiente Asignar Auditoria" (dsProceso = 'LOTE' en TD_ESTADOS),
+        /// utilizado al completar el control (MarcarLotePendienteFinalizar) para habilitar la
+        /// asignacion de auditoria del lote.
         /// </summary>
         public const int EstadoLotePendienteFinalizar = 7;
+
+        /// <summary>
+        /// Estado de lote "Pendiente de Finalizar" (dsProceso = 'LOTE' en TD_ESTADOS), consumido
+        /// por la pantalla FrmFinalizarLote una vez completada la auditoria del lote.
+        /// </summary>
+        public const int EstadoLotePendienteFinalizarAuditado = 9;
 
         /// <summary>
         /// Nombre de la subcarpeta donde se generan los archivos originales separados
@@ -152,11 +160,12 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
-        /// Marca el lote con el estado "Finalizado".
+        /// Marca el lote con el estado "Finalizado" / "Pendiente de Enviar", dejando registro
+        /// de la fecha y el usuario que finalizo el lote.
         /// </summary>
         public void MarcarLoteFinalizado(int cdLote, int cdUsuario)
         {
-            _loteDAL.ActualizarEstado(cdLote, EstadoLoteFinalizado, cdUsuario);
+            _loteDAL.MarcarLoteFinalizado(cdLote, cdUsuario);
         }
 
         /// <summary>
@@ -238,22 +247,10 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
-        /// Elimina los archivos temporales de trabajo (.jpg y .b64) generados durante la
-        /// separacion/preparacion de imagenes, correspondientes unicamente al PDF original
-        /// indicado (mismo nombre base, misma carpeta "Planos Originales"). No afecta a los
-        /// archivos temporales de otras paginas que no formen parte del lote finalizado.
+        /// Nota: los archivos temporales de trabajo (.jpg y .b64) generados durante la
+        /// separacion/preparacion de imagenes en la subcarpeta "Planos Originales" ya NO se
+        /// eliminan durante la finalizacion del lote (se conservan por pedido del usuario).
         /// </summary>
-        private static void EliminarArchivosTemporales(string rutaPdfOriginal)
-        {
-            string rutaJpg = Path.ChangeExtension(rutaPdfOriginal, ".jpg");
-            string rutaB64 = Path.ChangeExtension(rutaPdfOriginal, ".b64");
-
-            if (File.Exists(rutaJpg))
-                File.Delete(rutaJpg);
-
-            if (File.Exists(rutaB64))
-                File.Delete(rutaB64);
-        }
 
         public List<RegistroMovimiento> MoverYRenombrarArchivos(List<FilaFinalizacion> filas)
         {
@@ -308,14 +305,12 @@ namespace IndexadorIA.Negocio
                 string rutaDestino = Path.Combine(carpetaDestino, nombreNuevo);
 
                 if (!string.Equals(rutaOrigen, rutaDestino, StringComparison.OrdinalIgnoreCase))
-                    File.Copy(rutaOrigen, rutaDestino, overwrite: true);
+                    File.Copy(rutaOrigen, rutaDestino, overwrite: false);
 
                 _loteDAL.ActualizarNombreArchivoFinal(fila.Archivo.CdArchivoPagina, nombreNuevo);
 
                 if (nombreIncompleto)
                     _loteDAL.AgregarObservacion(fila.Archivo.CdArchivoPagina, ObservacionNombreIncompleto);
-
-                EliminarArchivosTemporales(rutaOrigen);
 
                 movimientos.Add(new RegistroMovimiento
                 {
@@ -442,11 +437,52 @@ namespace IndexadorIA.Negocio
         /// Se asume que la validación de campos obligatorios, de archivos abiertos y la
         /// confirmación del usuario ya fueron realizadas previamente por el llamador.
         /// </summary>
-        public void FinalizarLote(int cdLote, List<FilaFinalizacion> filas, int cdUsuario)
+        /// <summary>
+        /// Valida que la cantidad de archivos PDF presentes en cada carpeta destino
+        /// (Procesados/Ilegibles) coincida con la cantidad de registros de datos (sin contar
+        /// encabezado) del/de los CSV de indice ubicados en esa misma carpeta. Devuelve una
+        /// lista de mensajes describiendo las discrepancias encontradas (vacia si todo coincide).
+        /// </summary>
+        public List<string> ValidarCantidadArchivosVsCsv(IEnumerable<string> carpetasDestino)
         {
-            MoverYRenombrarArchivos(filas);
+            var discrepancias = new List<string>();
+
+            foreach (var carpeta in carpetasDestino.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (!Directory.Exists(carpeta))
+                    continue;
+
+                int cantidadPdf = Directory.GetFiles(carpeta, "*.pdf").Length;
+
+                int cantidadRegistrosCsv = 0;
+                foreach (var rutaCsv in Directory.GetFiles(carpeta, "*.csv"))
+                {
+                    int cantidadLineas = File.ReadAllLines(rutaCsv).Length;
+                    cantidadRegistrosCsv += Math.Max(cantidadLineas - 1, 0);
+                }
+
+                if (cantidadPdf != cantidadRegistrosCsv)
+                {
+                    discrepancias.Add(
+                        $"La carpeta '{carpeta}' tiene {cantidadPdf} archivo(s) PDF pero " +
+                        $"{cantidadRegistrosCsv} registro(s) en el/los CSV de indice.");
+                }
+            }
+
+            return discrepancias;
+        }
+
+        public List<string> FinalizarLote(int cdLote, List<FilaFinalizacion> filas, int cdUsuario)
+        {
+            var movimientos = MoverYRenombrarArchivos(filas);
             GenerarCsvMetadatos(cdLote);
+
+            var carpetasDestino = movimientos.Select(m => m.CarpetaDestino);
+            var discrepancias = ValidarCantidadArchivosVsCsv(carpetasDestino);
+
             MarcarLoteFinalizado(cdLote, cdUsuario);
+
+            return discrepancias;
         }
 
         /// <summary>

@@ -1099,9 +1099,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 resultado.CdTipoPlano = cboTipoPlanoDetalle.SelectedValue is int cdTipoPlano && cdTipoPlano != 0 ? cdTipoPlano : null;
                 resultado.DsNumeroPlano = txtNumeroPlano.Text;
                 resultado.DsExpediente = dsExpedienteArmado;
-                resultado.DsSeccion = txtSeccion.Text;
-                resultado.DsManzana = txtManzana.Text;
-                resultado.DsParcela = txtParcela.Text;
+                resultado.DsSeccion = string.IsNullOrWhiteSpace(txtSeccion.Text) ? txtSeccion.Text : txtSeccion.Text.Replace("-", ".");
+                resultado.DsManzana = string.IsNullOrWhiteSpace(txtManzana.Text) ? txtManzana.Text : txtManzana.Text.Replace("-", ".");
+                resultado.DsParcela = string.IsNullOrWhiteSpace(txtParcela.Text) ? txtParcela.Text : txtParcela.Text.Replace("-", ".");
                 resultado.DsDireccion = txtDireccion.Text;
 
                 _ultimaSeccion = txtSeccion.Text;
@@ -1474,7 +1474,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         /// <summary>
         /// Marca el registro seleccionado con el estado de control indicado (Página Ilegible o Datos Ilegibles),
-        /// registrando fecha y usuario de control.
+        /// registrando fecha y usuario de control, y además actualiza los campos editables por el usuario
+        /// (categoría, tipo de plano, expediente, sección, manzana, parcela, dirección, número de plano y
+        /// observaciones), de forma similar a btnGuardarControlada_Click pero sin sus validaciones.
         /// </summary>
         private void MarcarEstadoControl(int cdEstadoControl, string tituloAccion)
         {
@@ -1487,22 +1489,67 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             try
             {
+                var resultado = _filaSeleccionada.Resultado;
+                int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+
+                string? dsExpedienteArmado = ArmarExpedienteDesdeCampos(out _);
+
+                resultado.CdCategoriaPlano = cboCategoriaPlanoDetalle.SelectedValue is int cdCategoriaPlano && cdCategoriaPlano != 0 ? cdCategoriaPlano : null;
+                resultado.CdTipoPlano = cboTipoPlanoDetalle.SelectedValue is int cdTipoPlano && cdTipoPlano != 0 ? cdTipoPlano : null;
+                resultado.DsNumeroPlano = txtNumeroPlano.Text;
+                resultado.DsExpediente = dsExpedienteArmado;
+                resultado.DsSeccion = txtSeccion.Text;
+                resultado.DsManzana = txtManzana.Text;
+                resultado.DsParcela = txtParcela.Text;
+                resultado.DsDireccion = txtDireccion.Text;
+
+                _ultimaSeccion = txtSeccion.Text;
+                _ultimaManzana = txtManzana.Text;
+                _ultimaParcela = txtParcela.Text;
+                _ultimaDireccion = txtDireccion.Text;
+
                 string? dsObservaciones = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim();
 
                 if (SesionApi.ModoRemoto)
                 {
-                    _apiCliente!.ActualizarEstadoControlResultadoAsync(_filaSeleccionada.Resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
+                    var requestDatos = new ActualizarResultadoApiRequestDto
+                    {
+                        CdCategoriaPlano = resultado.CdCategoriaPlano,
+                        CdTipoPlano = resultado.CdTipoPlano,
+                        DsNumeroPlano = resultado.DsNumeroPlano,
+                        DsExpediente = resultado.DsExpediente,
+                        DsSeccion = resultado.DsSeccion,
+                        DsManzana = resultado.DsManzana,
+                        DsParcela = resultado.DsParcela,
+                        DsDireccion = resultado.DsDireccion
+                    };
+
+                    _apiCliente!.ActualizarDatosResultadoAsync(resultado.CdResultado, requestDatos)
+                        .GetAwaiter().GetResult();
+
+                    _apiCliente!.ActualizarEstadoControlResultadoAsync(resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
                     {
                         CdEstadoControl = cdEstadoControl,
                         SnModificaDatos = "NO",
                         DsObservaciones = dsObservaciones
                     }).GetAwaiter().GetResult();
+
+                    var correccionesApi = ObtenerCorreccionesSiCorresponde(resultado);
+                    if (correccionesApi.Count > 0)
+                    {
+                        _apiCliente!.RegistrarCorreccionesResultadoAsync(resultado.CdResultado, new RegistrarCorreccionesApiRequestDto
+                        {
+                            Correcciones = correccionesApi
+                        }).GetAwaiter().GetResult();
+                    }
                 }
                 else
                 {
-                    int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+                    RegistrarCorreccionesSiCorresponde(resultado, cdUsuario);
+
                     var resultadoIADAL = new ResultadoIADAL();
-                    resultadoIADAL.ActualizarEstadoControl(_filaSeleccionada.Resultado.CdResultado, cdEstadoControl, "NO", cdUsuario, dsObservaciones);
+                    resultadoIADAL.ActualizarDatos(resultado, cdUsuario);
+                    resultadoIADAL.ActualizarEstadoControl(resultado.CdResultado, cdEstadoControl, "NO", cdUsuario, dsObservaciones);
                 }
 
                 MessageBox.Show("Registro actualizado correctamente.", tituloAccion,

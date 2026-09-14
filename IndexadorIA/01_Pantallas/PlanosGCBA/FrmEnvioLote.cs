@@ -5,21 +5,24 @@ using IndexadorIA.Negocio;
 namespace IndexadorIA.Pantallas.PlanosGCBA
 {
     /// <summary>
-    /// Pantalla de Finalización de lotes pendientes de finalizar (cdEstado=9, tras
-    /// completarse la auditoría): permite renombrar/mover los PDF de página, generar
-    /// los CSV de metadatos y marcar el lote como Finalizado / Pendiente de Enviar (cdEstado=10).
+    /// Pantalla de Envío de lotes finalizados (cdEstado=10, "Pendiente de Enviar"):
+    /// permite mover los PDFs finales y los registros de índice CSV correspondientes
+    /// a la carpeta de envío final, y marcar los lotes (y sus páginas) como "Enviado"
+    /// (cdEstado=11 en TD_LOTE / cdEstado=8 en TD_ARCHIVOS_PAGINAS).
     /// </summary>
-    public partial class FrmFinalizarLote : Form
+    public partial class FrmEnvioLote : Form
     {
-        private const int CD_ESTADO_PENDIENTE_FINALIZAR = 9;
-        private List<LoteFinalizacionGridDto> _lotesActuales = new();
+        private const int CD_ESTADO_PENDIENTE_ENVIAR = 10;
+        private const string CLAVE_PARAMETRO_RUTA_FINAL_ENVIO = "RUTA_FINAL_ENVIO";
 
-        public FrmFinalizarLote()
+        private List<LoteEnvioGridDto> _lotesActuales = new();
+
+        public FrmEnvioLote()
         {
             InitializeComponent();
         }
 
-        private void FrmFinalizarLote_Load(object sender, EventArgs e)
+        private void FrmEnvioLote_Load(object sender, EventArgs e)
         {
             try
             {
@@ -35,6 +38,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 progressBar.Value = 0;
 
                 ConfigurarDataGridView();
+                CargarRutaSalida();
                 CargarLotes();
             }
             catch (Exception ex)
@@ -131,6 +135,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             });
         }
 
+        private void CargarRutaSalida()
+        {
+            var parametrosDAL = new ParametrosDAL();
+            txtRutaSalida.Text = parametrosDAL.ObtenerValor(CLAVE_PARAMETRO_RUTA_FINAL_ENVIO) ?? string.Empty;
+        }
+
         private void CargarLotes()
         {
             try
@@ -141,8 +151,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 DateTime? feControlDesde = chkFiltrarFecha.Checked ? dtpFechaDesde.Value : null;
                 DateTime? feControlHasta = chkFiltrarFecha.Checked ? dtpFechaHasta.Value : null;
 
-                _lotesActuales = loteDAL.ObtenerLotesPendientesFinalizarConEstadisticas(
-                    dsNombreLote, feControlDesde, feControlHasta, CD_ESTADO_PENDIENTE_FINALIZAR);
+                _lotesActuales = loteDAL.ObtenerLotesPendientesEnviarConEstadisticas(
+                    dsNombreLote, feControlDesde, feControlHasta, CD_ESTADO_PENDIENTE_ENVIAR);
 
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotesActuales;
@@ -186,27 +196,83 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             Close();
         }
 
-        private async void btnFinalizarLote_Click(object sender, EventArgs e)
+        private void btnSeleccionarTodo_Click(object sender, EventArgs e)
+        {
+            foreach (var lote in _lotesActuales)
+                lote.SnSeleccionado = true;
+
+            dgvLotes.Refresh();
+        }
+
+        private void btnDeseleccionarTodo_Click(object sender, EventArgs e)
+        {
+            foreach (var lote in _lotesActuales)
+                lote.SnSeleccionado = false;
+
+            dgvLotes.Refresh();
+        }
+
+        private void btnSeleccionarSalida_Click(object sender, EventArgs e)
+        {
+            using var dialogo = new FolderBrowserDialog
+            {
+                Description = "Seleccione la ruta final de salida de los archivos a enviar",
+                UseDescriptionForTitle = true
+            };
+
+            if (!string.IsNullOrWhiteSpace(txtRutaSalida.Text) && Directory.Exists(txtRutaSalida.Text))
+                dialogo.SelectedPath = txtRutaSalida.Text;
+
+            if (dialogo.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            txtRutaSalida.Text = dialogo.SelectedPath;
+
+            int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
+            var parametrosDAL = new ParametrosDAL();
+            parametrosDAL.ActualizarValor(CLAVE_PARAMETRO_RUTA_FINAL_ENVIO, dialogo.SelectedPath, cdUsuario);
+        }
+
+        private async void btnMarcarEnviado_Click(object sender, EventArgs e)
         {
             var seleccionados = _lotesActuales.Where(l => l.SnSeleccionado).ToList();
 
             if (seleccionados.Count == 0)
             {
-                MessageBox.Show("Seleccione al menos un lote para finalizar.",
+                MessageBox.Show("Seleccione al menos un lote para enviar.",
                     "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(txtRutaSalida.Text) || !Directory.Exists(txtRutaSalida.Text))
+            {
+                MessageBox.Show("Debe seleccionar una Ruta de Salida válida.",
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombreCarpetaSalida.Text))
+            {
+                MessageBox.Show("Debe ingresar el Nombre de la Carpeta de Salida.",
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string nombreCarpetaSalida = txtNombreCarpetaSalida.Text.Trim();
+            string carpetaEnvioBase = Path.Combine(txtRutaSalida.Text, nombreCarpetaSalida);
+            string? observacionesEnvio = string.IsNullOrWhiteSpace(txtObservacionesEnvio.Text)
+                ? null : txtObservacionesEnvio.Text.Trim();
+
             var confirmacion = MessageBox.Show(
-                $"Se procesarán {seleccionados.Count} lote(s): se renombrarán/moverán los archivos PDF, " +
-                "se generarán los CSV de metadatos y los lotes quedarán marcados como Finalizados.\n\n" +
+                $"Se procesarán {seleccionados.Count} lote(s): se moverán los archivos PDF y los " +
+                $"registros de índice a la carpeta '{carpetaEnvioBase}', y los lotes quedarán marcados como Enviados.\n\n" +
                 "¿Desea continuar?",
-                "Finalizar Lote", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                "Marcar Enviado", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (confirmacion != DialogResult.Yes)
                 return;
 
-            btnFinalizarLote.Enabled = false;
+            btnMarcarEnviado.Enabled = false;
             btnBuscar.Enabled = false;
             progressBar.Visible = true;
             progressBar.Value = 0;
@@ -214,7 +280,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             var loteDAL = new LoteDAL();
             var resultadoIADAL = new ResultadoIADAL();
-            var loteFinalizacionBL = new LoteFinalizacionBL();
+            var loteEnvioBL = new LoteEnvioBL();
             int cdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0;
 
             var lotesConError = new List<string>();
@@ -222,6 +288,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             try
             {
+                if (!Directory.Exists(carpetaEnvioBase))
+                    Directory.CreateDirectory(carpetaEnvioBase);
+
                 foreach (var lote in seleccionados)
                 {
                     try
@@ -234,25 +303,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             continue;
                         }
 
-                        // Control 1: campos obligatorios
-                        var faltantes = loteFinalizacionBL.ValidarCamposObligatorios(filas);
-                        if (faltantes.Count > 0)
-                        {
-                            lotesConError.Add($"Lote {lote.CdLote}: {faltantes.Count} registro(s) sin completar " +
-                                "campos obligatorios (Categoría, Tipo de Plano, Sección, Manzana, Parcela, Dirección).");
-                            continue;
-                        }
+                        var discrepancias = await Task.Run(() => loteEnvioBL.EnviarLote(
+                            lote.CdLote, filas, cdUsuario, carpetaEnvioBase, nombreCarpetaSalida, observacionesEnvio));
 
-                        // Control 2: archivos abiertos/bloqueados
-                        var bloqueados = await Task.Run(() => loteFinalizacionBL.ValidarArchivosNoAbiertos(filas));
-                        if (bloqueados.Count > 0)
-                        {
-                            lotesConError.Add($"Lote {lote.CdLote}: {bloqueados.Count} archivo(s) están abiertos " +
-                                "o bloqueados y deben cerrarse antes de finalizar.");
-                            continue;
-                        }
-
-                        var discrepancias = await Task.Run(() => loteFinalizacionBL.FinalizarLote(lote.CdLote, filas, cdUsuario));
                         if (discrepancias.Count > 0)
                         {
                             lotesConAdvertencia.Add($"Lote {lote.CdLote}: " + string.Join(" ", discrepancias));
@@ -260,7 +313,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     }
                     catch (Exception ex)
                     {
-                        loteFinalizacionBL.RegistrarError("FrmFinalizarLote.btnFinalizarLote_Click", ex, cdUsuario);
+                        loteEnvioBL.RegistrarError("FrmEnvioLote.btnMarcarEnviado_Click", ex, cdUsuario);
                         lotesConError.Add($"Lote {lote.CdLote}: {ex.Message}");
                     }
                     finally
@@ -280,25 +333,27 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     MessageBox.Show(
                         "Se procesaron los lotes con las siguientes advertencias/errores:\n\n" +
                         string.Join("\n", mensajes),
-                        "Finalización con observaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        "Envío con observaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 else
                 {
-                    MessageBox.Show("Los lotes seleccionados fueron finalizados correctamente.",
-                        "Finalizar Lote", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Los lotes seleccionados fueron enviados correctamente.",
+                        "Marcar Enviado", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
+                txtNombreCarpetaSalida.Text = string.Empty;
+                txtObservacionesEnvio.Text = string.Empty;
                 CargarLotes();
             }
             finally
             {
                 progressBar.Visible = false;
-                btnFinalizarLote.Enabled = true;
+                btnMarcarEnviado.Enabled = true;
                 btnBuscar.Enabled = true;
             }
         }
 
-        private static List<LoteFinalizacionBL.FilaFinalizacion> ObtenerFilasDelLote(
+        private static List<LoteEnvioBL.FilaEnvio> ObtenerFilasDelLote(
             LoteDAL loteDAL, ResultadoIADAL resultadoIADAL, int cdLote)
         {
             var resultados = resultadoIADAL.ObtenerPorLote(cdLote, mostrarTodos: true);
@@ -307,7 +362,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             return resultados
                 .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
-                .Select(r => new LoteFinalizacionBL.FilaFinalizacion
+                .Select(r => new LoteEnvioBL.FilaEnvio
                 {
                     Archivo = archivosPorPagina[r.CdArchivoPagina],
                     Resultado = r
