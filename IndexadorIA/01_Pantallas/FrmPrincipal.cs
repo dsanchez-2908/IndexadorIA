@@ -109,6 +109,10 @@ namespace IndexadorIA.Pantallas
             bool esAdmin = string.Equals(SesionActual.UsuarioActual.CdRol, "ADMIN", StringComparison.OrdinalIgnoreCase);
             menuProduccionUsuarios.Visible = esAdmin && !SesionApi.ModoRemoto;
 
+            // "Monitor Auditoria" es una pantalla local (no tiene soporte remoto vía API)
+            // y solo debe estar disponible para usuarios con rol ADMIN.
+            menuMonitorAuditoria.Visible = esAdmin && !SesionApi.ModoRemoto;
+
             // "Estado Proyecto Planos" solo debe estar disponible para usuarios con rol ADMIN.
             menuEstadoProyecto.Visible = esAdmin;
 
@@ -185,6 +189,11 @@ namespace IndexadorIA.Pantallas
         private void menuMonitorLotes_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmMonitorLotes());
+        }
+
+        private void menuMonitorAuditoria_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new PlanosGCBA.FrmMonitorAuditoria());
         }
 
         private void menuConsumosIA_Click(object sender, EventArgs e)

@@ -32,9 +32,6 @@ namespace IndexadorIA.Api.Controllers
             if (!exito || usuario == null)
                 return Unauthorized(new { mensaje });
 
-            if (usuario.CdRol != "DATAENTRY")
-                return Forbid();
-
             if (usuario.SnClaveTemporal || usuario.SnPrimerIngreso)
             {
                 return Ok(new LoginResponseDto

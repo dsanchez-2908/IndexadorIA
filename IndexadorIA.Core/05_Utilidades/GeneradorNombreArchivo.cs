@@ -155,5 +155,41 @@ namespace IndexadorIA.Utilidades
 
             return candidato;
         }
+
+        /// <summary>
+        /// Sanea un nombre de archivo ya armado (posiblemente con campos sin normalizar,
+        /// como Direccion/Seccion/Manzana/Parcela) para que sea un nombre de archivo válido
+        /// en Windows:
+        /// - Reemplaza por "-" cualquier caracter no permitido en nombres de archivo.
+        /// - Colapsa espacios en blanco repetidos.
+        /// - Quita espacios y puntos al final del nombre (sin contar la extensión), ya que
+        ///   Windows no permite que un nombre de archivo termine en espacio o punto.
+        /// </summary>
+        public static string SanearNombreArchivo(string nombreArchivo)
+        {
+            if (string.IsNullOrWhiteSpace(nombreArchivo))
+                return nombreArchivo;
+
+            var invalidos = Path.GetInvalidFileNameChars();
+            var sb = new StringBuilder(nombreArchivo.Length);
+
+            foreach (char c in nombreArchivo)
+            {
+                sb.Append(invalidos.Contains(c) ? '-' : c);
+            }
+
+            string resultado = sb.ToString();
+
+            while (resultado.Contains("  "))
+                resultado = resultado.Replace("  ", " ");
+
+            string extension = Path.GetExtension(resultado);
+            string sinExtension = Path.GetFileNameWithoutExtension(resultado).TrimEnd(' ', '.');
+
+            if (string.IsNullOrEmpty(sinExtension))
+                sinExtension = "SIN-NOMBRE";
+
+            return sinExtension + extension;
+        }
     }
 }

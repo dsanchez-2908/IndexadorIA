@@ -11,8 +11,10 @@ namespace IndexadorIA.Entidades
         public string DsCampo { get; set; } = string.Empty;
         public string? DsValorAnterior { get; set; }
         public string? DsValorNuevo { get; set; }
-        public DateTime FeControl { get; set; }
-        public int CdUsuarioControl { get; set; }
+        public DateTime? FeControl { get; set; }
+        public int? CdUsuarioControl { get; set; }
+        public DateTime? FeAuditoria { get; set; }
+        public int? CdUsuarioAuditoria { get; set; }
 
         /// <summary>
         /// Nombres estandarizados de campo usados en dsCampo.

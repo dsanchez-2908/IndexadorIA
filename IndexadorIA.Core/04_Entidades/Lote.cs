@@ -19,10 +19,17 @@ namespace IndexadorIA.Entidades
         public DateTime? FeAuditado { get; set; }
         public int? CdUsuarioAuditado { get; set; }
 
+        /// <summary>
+        /// Fecha/hora del ultimo cambio de estado relevante del lote (por ejemplo, la
+        /// fecha en que se asigno la auditoria en FrmAsignarAuditoria).
+        /// </summary>
+        public DateTime? FeUltimoCambio { get; set; }
+
         // Propiedades navegación/display
         public string? DsEstado { get; set; }
         public string? DsUsuario { get; set; }
         public string? DsUsuarioAsignado { get; set; }
+        public string? DsUsuarioFinControl { get; set; }
 
         // Conteo de resultados de IA correctos (TD_001_RESULTADO_IA) e incorrectos
         // (TD_001_RESULTADO_IA_ERROR) para el lote, usado en pantallas de asignación/monitoreo.
@@ -33,5 +40,11 @@ namespace IndexadorIA.Entidades
         // (feControl IS NULL) en TD_001_RESULTADO_IA, usado en FrmControlFinalizacion.
         public int NuControlados { get; set; }
         public int NuPendientes { get; set; }
+
+        // Conteo por estado de control (TD_001_RESULTADO_IA.cdEstadoControl), usado en
+        // FrmAuditar: 2=Controlado, 3=Pagina Ilegible, 4=Datos Ilegibles.
+        public int NuEstadoControlado { get; set; }
+        public int NuEstadoPaginaIlegible { get; set; }
+        public int NuEstadoDatosIlegibles { get; set; }
     }
 }

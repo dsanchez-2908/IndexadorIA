@@ -41,7 +41,8 @@ namespace IndexadorIA.Api.Controllers
             int cdUsuario = ObtenerCdUsuarioActual();
 
             List<Lote> lotes = _loteDAL.ObtenerLotesPorEstadoFiltrado(
-                CdEstadoControlando, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuario);
+                CdEstadoControlando, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuario,
+                filtrarFechaPorUltimoCambio: true);
 
             return Ok(lotes.Select(LoteResumenDto.DesdeEntidad));
         }

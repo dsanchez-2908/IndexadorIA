@@ -51,6 +51,7 @@ namespace IndexadorIA.Negocio.Api
         public string? DsEstado { get; set; }
         public DateTime FeAltaLote { get; set; }
         public DateTime? FeProcesamientoIA { get; set; }
+        public DateTime? FeUltimoCambio { get; set; }
         public int NuControlados { get; set; }
         public int NuPendientes { get; set; }
     }
@@ -171,5 +172,62 @@ namespace IndexadorIA.Negocio.Api
         public string? DsDireccion { get; set; }
         public string? DsNumeroPlano { get; set; }
         public string? DsObservaciones { get; set; }
+    }
+
+    /// <summary>
+    /// Resumen de lote para la pantalla de Auditoria (FrmAuditar), espejo remoto
+    /// de LoteAuditoriaDto/Lote.
+    /// </summary>
+    public class LoteAuditoriaApiDto
+    {
+        public int CdLote { get; set; }
+        public string DsNombreLote { get; set; } = string.Empty;
+        public int NuCantidadArchivos { get; set; }
+        public DateTime? FeUltimoCambio { get; set; }
+        public int NuEstadoControlado { get; set; }
+        public int NuEstadoDatosIlegibles { get; set; }
+        public int NuEstadoPaginaIlegible { get; set; }
+        public string? DsUsuarioFinControl { get; set; }
+        public string? DsEstado { get; set; }
+    }
+
+    /// <summary>
+    /// Registro de TD_001_RESULTADO_IA de un lote en auditoria, espejo remoto de
+    /// RegistroAuditoriaDto/RegistroAuditoria.
+    /// </summary>
+    public class RegistroAuditoriaApiDto
+    {
+        public int CdResultado { get; set; }
+        public int CdLote { get; set; }
+        public string DsNombreLote { get; set; } = string.Empty;
+        public int CdEstadoLote { get; set; }
+        public string? DsEstadoLote { get; set; }
+        public DateTime? FeFinControl { get; set; }
+        public int? CdUsuarioFinControl { get; set; }
+        public string? DsUsuarioFinControl { get; set; }
+        public int CdArchivoPagina { get; set; }
+        public int? CdCategoriaPlano { get; set; }
+        public string? DsCategoriaPlano { get; set; }
+        public int? CdTipoPlano { get; set; }
+        public string? DsTipoPlano { get; set; }
+        public string? DsExpediente { get; set; }
+        public string? DsSeccion { get; set; }
+        public string? DsManzana { get; set; }
+        public string? DsParcela { get; set; }
+        public string? DsDireccion { get; set; }
+        public string? DsNumeroPlano { get; set; }
+        public string? DsObservaciones { get; set; }
+        public int CdEstadoControl { get; set; }
+        public string? DsEstadoControl { get; set; }
+        public DateTime? FeControl { get; set; }
+        public int? CdUsuarioControl { get; set; }
+        public string? DsUsuarioControl { get; set; }
+        public string? SnModificaDatos { get; set; }
+    }
+
+    public class EstadoControlApiDto
+    {
+        public int CdEstado { get; set; }
+        public string DsEstado { get; set; } = string.Empty;
     }
 }

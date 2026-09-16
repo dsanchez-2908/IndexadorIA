@@ -307,9 +307,10 @@ namespace IndexadorIA.Datos
             {
                 var comando = new SqlCommand(@"
                     SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, l.cdEstadoLote,
-                           l.feAltaLote, l.cdUsuarioAltaLote, e.dsEstado
+                           l.feAltaLote, l.cdUsuarioAltaLote, e.dsEstado, uc.dsNombreCompleto AS dsUsuarioFinControl
                     FROM TD_LOTE l
                     LEFT JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    LEFT JOIN TD_USUARIOS uc ON uc.cdUsuario = l.cdUsuarioFinControl
                     WHERE l.cdLote = @cdLote", conexion);
 
                 comando.Parameters.AddWithValue("@cdLote", cdLote);
@@ -327,7 +328,8 @@ namespace IndexadorIA.Datos
                             CdEstadoLote = lector.GetInt32(3),
                             FeAltaLote = lector.GetDateTime(4),
                             CdUsuarioAltaLote = lector.IsDBNull(5) ? null : lector.GetInt32(5),
-                            DsEstado = lector.IsDBNull(6) ? null : lector.GetString(6)
+                            DsEstado = lector.IsDBNull(6) ? null : lector.GetString(6),
+                            DsUsuarioFinControl = lector.IsDBNull(7) ? null : lector.GetString(7)
                         };
                     }
                 }
@@ -394,21 +396,29 @@ namespace IndexadorIA.Datos
         /// </summary>
         public List<Lote> ObtenerLotesPorEstadoFiltrado(int cdEstado, string? dsNombreLote = null,
             DateTime? feAltaDesde = null, DateTime? feAltaHasta = null, int? cdUsuarioAsignado = null,
-            int? cdUsuarioAuditor = null)
+            int? cdUsuarioAuditor = null, bool filtrarFechaPorUltimoCambio = false)
         {
             var lotes = new List<Lote>();
 
             using (var conexion = new SqlConnection(_cadenaConexion))
             {
+                string columnaFiltroFecha = filtrarFechaPorUltimoCambio ? "l.feUltimoCambio" : "l.feAltaLote";
+
                 var sql = @"
                     SELECT l.cdLote, l.dsNombreLote, l.nuCantidadArchivos, 
                            l.cdEstadoLote, e.dsEstado, l.feAltaLote, l.cdUsuarioAsignado,
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote), 0) AS nuCorrectos,
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA_ERROR er WHERE er.cdLote = l.cdLote), 0) AS nuIncorrectos,
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.feControl IS NOT NULL), 0) AS nuControlados,
-                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.feControl IS NULL), 0) AS nuPendientes
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.feControl IS NULL), 0) AS nuPendientes,
+                           l.feUltimoCambio,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 2), 0) AS nuEstadoControlado,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 3), 0) AS nuEstadoPaginaIlegible,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 4), 0) AS nuEstadoDatosIlegibles,
+                           uc.dsNombreCompleto AS dsUsuarioFinControl
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    LEFT JOIN TD_USUARIOS uc ON uc.cdUsuario = l.cdUsuarioFinControl
                     WHERE l.cdEstadoLote = @cdEstado";
 
                 if (!string.IsNullOrEmpty(dsNombreLote))
@@ -418,12 +428,12 @@ namespace IndexadorIA.Datos
 
                 if (feAltaDesde.HasValue)
                 {
-                    sql += " AND l.feAltaLote >= @feAltaDesde";
+                    sql += $" AND {columnaFiltroFecha} >= @feAltaDesde";
                 }
 
                 if (feAltaHasta.HasValue)
                 {
-                    sql += " AND l.feAltaLote < @feAltaHasta";
+                    sql += $" AND {columnaFiltroFecha} < @feAltaHasta";
                 }
 
                 if (cdUsuarioAsignado.HasValue)
@@ -473,7 +483,12 @@ namespace IndexadorIA.Datos
                             NuCorrectos = lector.GetInt32(7),
                             NuIncorrectos = lector.GetInt32(8),
                             NuControlados = lector.GetInt32(9),
-                            NuPendientes = lector.GetInt32(10)
+                            NuPendientes = lector.GetInt32(10),
+                            FeUltimoCambio = lector.IsDBNull(11) ? null : lector.GetDateTime(11),
+                            NuEstadoControlado = lector.GetInt32(12),
+                            NuEstadoPaginaIlegible = lector.GetInt32(13),
+                            NuEstadoDatosIlegibles = lector.GetInt32(14),
+                            DsUsuarioFinControl = lector.IsDBNull(15) ? null : lector.GetString(15)
                         });
                     }
                 }
@@ -506,7 +521,8 @@ namespace IndexadorIA.Datos
                             var comando = new SqlCommand(@"
                                 UPDATE TD_LOTE
                                 SET cdEstadoLote = @cdEstadoLote,
-                                    cdUsuarioAsignado = @cdUsuarioAsignado
+                                    cdUsuarioAsignado = @cdUsuarioAsignado,
+                                    feUltimoCambio = GETDATE()
                                 WHERE cdLote = @cdLote", conexion, transaccion);
 
                             comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_CONTROLANDO);
@@ -603,7 +619,8 @@ namespace IndexadorIA.Datos
                             var comando = new SqlCommand(@"
                                 UPDATE TD_LOTE
                                 SET cdEstadoLote = @cdEstadoLote,
-                                    cdUsuarioAuditor = @cdUsuarioAuditor
+                                    cdUsuarioAuditor = @cdUsuarioAuditor,
+                                    feUltimoCambio = GETDATE()
                                 WHERE cdLote = @cdLote", conexion, transaccion);
 
                             comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_AUDITANDO);
@@ -824,6 +841,132 @@ namespace IndexadorIA.Datos
                             NuCantidadPaginaIlegible = lector.GetInt32(7),
                             NuCantidadDatosIlegibles = lector.GetInt32(8),
                             NuCantidadCorregido = lector.GetInt32(9)
+                        });
+                    }
+                }
+            }
+
+            return lotes;
+        }
+
+        /// <summary>
+        /// Obtiene la cantidad de lotes pendientes de asignar auditoria (cdEstadoLote = 7),
+        /// usado en el encabezado de la pantalla Monitor de Auditoria.
+        /// </summary>
+        public int ObtenerCantidadLotesPendientesAsignarAuditoria()
+        {
+            const int CD_ESTADO_PENDIENTE_ASIGNAR_AUDITORIA = 7;
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(
+                    "SELECT COUNT(*) FROM TD_LOTE WHERE cdEstadoLote = @cdEstadoLote", conexion);
+                comando.Parameters.AddWithValue("@cdEstadoLote", CD_ESTADO_PENDIENTE_ASIGNAR_AUDITORIA);
+
+                conexion.Open();
+                return (int)comando.ExecuteScalar();
+            }
+        }
+
+        /// <summary>
+        /// Obtiene, agrupado por usuario auditor, el resumen de lotes y planos
+        /// asignados/auditados/pendientes para la pantalla Monitor de Auditoria.
+        /// Se consideran "asignados" todos los lotes que pasaron por el flujo de auditoria
+        /// (estados 8 Auditando y 9 Pendiente de Finalizar), "auditados" los que ya
+        /// completaron la auditoria (estado 9) y "pendientes" los que todavia estan
+        /// en auditoria (estado 8).
+        /// </summary>
+        public List<Entidades.MonitorAuditoriaUsuarioDto> ObtenerMonitorAuditoriaPorUsuario()
+        {
+            var resultado = new List<Entidades.MonitorAuditoriaUsuarioDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT u.cdUsuario, u.dsNombreCompleto,
+                           COUNT(DISTINCT l.cdLote) AS nuTotalLotesAsignados,
+                           ISNULL(SUM(l.nuCantidadArchivos), 0) AS nuCantidadPlanosAsignados,
+                           COUNT(DISTINCT CASE WHEN l.cdEstadoLote = 9 THEN l.cdLote END) AS nuTotalLotesAuditados,
+                           ISNULL(SUM(CASE WHEN l.cdEstadoLote = 9 THEN l.nuCantidadArchivos ELSE 0 END), 0) AS nuCantidadPlanosAuditados,
+                           COUNT(DISTINCT CASE WHEN l.cdEstadoLote = 8 THEN l.cdLote END) AS nuTotalLotesPendientes,
+                           ISNULL(SUM(CASE WHEN l.cdEstadoLote = 8 THEN l.nuCantidadArchivos ELSE 0 END), 0) AS nuCantidadPlanosPendientes
+                    FROM TD_LOTE l
+                    INNER JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAuditor
+                    WHERE l.cdEstadoLote IN (8, 9)
+                    GROUP BY u.cdUsuario, u.dsNombreCompleto
+                    ORDER BY u.dsNombreCompleto";
+
+                var comando = new SqlCommand(sql, conexion);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        resultado.Add(new Entidades.MonitorAuditoriaUsuarioDto
+                        {
+                            CdUsuario = lector.GetInt32(0),
+                            DsUsuario = lector.GetString(1),
+                            NuTotalLotesAsignados = lector.GetInt32(2),
+                            NuCantidadPlanosAsignados = lector.GetInt32(3),
+                            NuTotalLotesAuditados = lector.GetInt32(4),
+                            NuCantidadPlanosAuditados = lector.GetInt32(5),
+                            NuTotalLotesPendientes = lector.GetInt32(6),
+                            NuCantidadPlanosPendientes = lector.GetInt32(7)
+                        });
+                    }
+                }
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
+        /// Obtiene los lotes en auditoria (estados 8 Auditando y 9 Pendiente de Finalizar)
+        /// asignados a un usuario auditor en particular, con filtro opcional de estado,
+        /// para la pantalla de detalle del Monitor de Auditoria.
+        /// </summary>
+        public List<Entidades.LoteMonitorAuditoriaDetalleDto> ObtenerLotesAuditoriaPorUsuarioConEstadisticas(
+            int cdUsuarioAuditor, int? filtroEstado = null)
+        {
+            var lotes = new List<Entidades.LoteMonitorAuditoriaDetalleDto>();
+
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var sql = @"
+                    SELECT l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado, l.nuCantidadArchivos
+                    FROM TD_LOTE l
+                    LEFT JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    WHERE l.cdUsuarioAuditor = @cdUsuarioAuditor
+                      AND l.cdEstadoLote IN (8, 9)";
+
+                if (filtroEstado.HasValue && filtroEstado.Value == 8)
+                {
+                    sql += " AND l.cdEstadoLote = 8";
+                }
+                else if (filtroEstado.HasValue && filtroEstado.Value == 9)
+                {
+                    sql += " AND l.cdEstadoLote = 9";
+                }
+
+                sql += @"
+                    ORDER BY l.cdLote DESC";
+
+                var comando = new SqlCommand(sql, conexion);
+                comando.Parameters.AddWithValue("@cdUsuarioAuditor", cdUsuarioAuditor);
+
+                conexion.Open();
+                using (var lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lotes.Add(new Entidades.LoteMonitorAuditoriaDetalleDto
+                        {
+                            CdLote = lector.GetInt32(0),
+                            DsNombreLote = lector.GetString(1),
+                            CdEstadoLote = lector.GetInt32(2),
+                            DsEstadoLote = lector.IsDBNull(3) ? string.Empty : lector.GetString(3),
+                            NuCantidadPlanos = lector.GetInt32(4)
                         });
                     }
                 }

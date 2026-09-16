@@ -17,6 +17,7 @@ namespace IndexadorIA.Api.Dtos
         public string? DsEstado { get; set; }
         public DateTime FeAltaLote { get; set; }
         public DateTime? FeProcesamientoIA { get; set; }
+        public DateTime? FeUltimoCambio { get; set; }
         public int NuControlados { get; set; }
         public int NuPendientes { get; set; }
 
@@ -28,6 +29,7 @@ namespace IndexadorIA.Api.Dtos
             CdEstadoLote = lote.CdEstadoLote,
             DsEstado = lote.DsEstado,
             FeAltaLote = lote.FeAltaLote,
+            FeUltimoCambio = lote.FeUltimoCambio,
             NuControlados = lote.NuControlados,
             NuPendientes = lote.NuPendientes
         };

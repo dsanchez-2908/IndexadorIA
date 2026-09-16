@@ -252,11 +252,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             continue;
                         }
 
-                        var discrepancias = await Task.Run(() => loteFinalizacionBL.FinalizarLote(lote.CdLote, filas, cdUsuario));
-                        if (discrepancias.Count > 0)
-                        {
-                            lotesConAdvertencia.Add($"Lote {lote.CdLote}: " + string.Join(" ", discrepancias));
-                        }
+                        await Task.Run(() => loteFinalizacionBL.FinalizarLote(lote.CdLote, filas, cdUsuario));
                     }
                     catch (Exception ex)
                     {

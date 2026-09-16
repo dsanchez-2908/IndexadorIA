@@ -1,6 +1,7 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 
 namespace IndexadorIA.Pantallas.PlanosGCBA
 {
@@ -11,10 +12,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
     {
         private const int CD_ESTADO_AUDITANDO = 8;
         private List<Lote> _lotesActuales = new();
+        private readonly ApiClienteServicio? _apiCliente;
 
         public FrmAuditar()
         {
             InitializeComponent();
+            _apiCliente = SesionApi.ModoRemoto ? new ApiClienteServicio() : null;
         }
 
         private void FrmAuditar_Load(object sender, EventArgs e)
@@ -66,16 +69,38 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuControlados",
-                DataPropertyName = "NuControlados",
+                Name = "feUltimoCambio",
+                DataPropertyName = "FeUltimoCambio",
+                HeaderText = "Fecha de Asignaci\u00f3n",
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuEstadoControlado",
+                DataPropertyName = "NuEstadoControlado",
                 HeaderText = "Controlado"
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuPendientes",
-                DataPropertyName = "NuPendientes",
-                HeaderText = "Pendiente"
+                Name = "nuEstadoDatosIlegibles",
+                DataPropertyName = "NuEstadoDatosIlegibles",
+                HeaderText = "Datos Ilegibles"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuEstadoPaginaIlegible",
+                DataPropertyName = "NuEstadoPaginaIlegible",
+                HeaderText = "Pagina Ilegible"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsUsuarioFinControl",
+                DataPropertyName = "DsUsuarioFinControl",
+                HeaderText = "Usuario Controlador"
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
@@ -83,14 +108,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 Name = "dsEstado",
                 DataPropertyName = "DsEstado",
                 HeaderText = "Estado"
-            });
-
-            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "feAltaLote",
-                DataPropertyName = "FeAltaLote",
-                HeaderText = "Fecha Alta",
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
             });
         }
 
@@ -102,12 +119,33 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 DateTime? feAltaDesde = chkFiltrarFecha.Checked ? dtpFechaDesde.Value : null;
                 DateTime? feAltaHasta = chkFiltrarFecha.Checked ? dtpFechaHasta.Value : null;
 
-                var loteDAL = new LoteDAL();
-                int? cdUsuarioAuditor = SesionActual.UsuarioActual?.CdUsuario;
+                if (SesionApi.ModoRemoto)
+                {
+                    var lotesApi = _apiCliente!.ObtenerLotesAuditoriaAsync(dsNombreLote, feAltaDesde, feAltaHasta)
+                        .GetAwaiter().GetResult();
 
-                _lotesActuales = loteDAL.ObtenerLotesPorEstadoFiltrado(
-                    CD_ESTADO_AUDITANDO, dsNombreLote, feAltaDesde, feAltaHasta,
-                    cdUsuarioAuditor: cdUsuarioAuditor);
+                    _lotesActuales = lotesApi.Select(l => new Lote
+                    {
+                        CdLote = l.CdLote,
+                        DsNombreLote = l.DsNombreLote,
+                        NuCantidadArchivos = l.NuCantidadArchivos,
+                        FeUltimoCambio = l.FeUltimoCambio,
+                        NuEstadoControlado = l.NuEstadoControlado,
+                        NuEstadoDatosIlegibles = l.NuEstadoDatosIlegibles,
+                        NuEstadoPaginaIlegible = l.NuEstadoPaginaIlegible,
+                        DsUsuarioFinControl = l.DsUsuarioFinControl,
+                        DsEstado = l.DsEstado
+                    }).ToList();
+                }
+                else
+                {
+                    var loteDAL = new LoteDAL();
+                    int? cdUsuarioAuditor = SesionActual.UsuarioActual?.CdUsuario;
+
+                    _lotesActuales = loteDAL.ObtenerLotesPorEstadoFiltrado(
+                        CD_ESTADO_AUDITANDO, dsNombreLote, feAltaDesde, feAltaHasta,
+                        cdUsuarioAuditor: cdUsuarioAuditor, filtrarFechaPorUltimoCambio: true);
+                }
 
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotesActuales;

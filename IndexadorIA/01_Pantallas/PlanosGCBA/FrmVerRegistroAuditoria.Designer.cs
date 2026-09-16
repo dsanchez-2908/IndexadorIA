@@ -24,7 +24,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblTipoPlano = new Label();
             cboTipoPlano = new ComboBox();
             lblExpediente = new Label();
-            txtExpediente = new TextBox();
+            txtExpedienteEx = new TextBox();
+            lblExpedienteGuion1 = new Label();
+            txtExpedienteAnio = new TextBox();
+            lblExpedienteGuion2 = new Label();
+            txtExpedienteNumero = new TextBox();
+            lblExpedienteGuion3 = new Label();
+            txtExpedienteGcaba = new TextBox();
+            lblExpedienteGuion4 = new Label();
+            cboExpedienteReparticion = new ComboBox();
             lblSeccion = new Label();
             txtSeccion = new TextBox();
             lblManzana = new Label();
@@ -34,14 +42,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblDireccion = new Label();
             txtDireccion = new TextBox();
             lblNumeroPlano = new Label();
-            txtNumeroPlano = new TextBox();
+            txtNumeroPlanoPrefijo = new TextBox();
+            lblNumeroPlanoGuion1 = new Label();
+            txtNumeroPlanoNumero = new TextBox();
+            lblNumeroPlanoGuion2 = new Label();
+            txtNumeroPlanoAnio = new TextBox();
             lblObservaciones = new Label();
             txtObservaciones = new TextBox();
             lblEstado = new Label();
             cboEstado = new ComboBox();
             panelBotones = new Panel();
-            btnCerrar = new Button();
             btnGuardar = new Button();
+            btnCerrar = new Button();
             panelDerecho = new Panel();
             panelImagenScroll = new Panel();
             pictureBoxImagen = new PictureBox();
@@ -83,7 +95,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDatos.Controls.Add(lblTipoPlano);
             groupBoxDatos.Controls.Add(cboTipoPlano);
             groupBoxDatos.Controls.Add(lblExpediente);
-            groupBoxDatos.Controls.Add(txtExpediente);
+            groupBoxDatos.Controls.Add(txtExpedienteEx);
+            groupBoxDatos.Controls.Add(lblExpedienteGuion1);
+            groupBoxDatos.Controls.Add(txtExpedienteAnio);
+            groupBoxDatos.Controls.Add(lblExpedienteGuion2);
+            groupBoxDatos.Controls.Add(txtExpedienteNumero);
+            groupBoxDatos.Controls.Add(lblExpedienteGuion3);
+            groupBoxDatos.Controls.Add(txtExpedienteGcaba);
+            groupBoxDatos.Controls.Add(lblExpedienteGuion4);
+            groupBoxDatos.Controls.Add(cboExpedienteReparticion);
             groupBoxDatos.Controls.Add(lblSeccion);
             groupBoxDatos.Controls.Add(txtSeccion);
             groupBoxDatos.Controls.Add(lblManzana);
@@ -93,7 +113,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDatos.Controls.Add(lblDireccion);
             groupBoxDatos.Controls.Add(txtDireccion);
             groupBoxDatos.Controls.Add(lblNumeroPlano);
-            groupBoxDatos.Controls.Add(txtNumeroPlano);
+            groupBoxDatos.Controls.Add(txtNumeroPlanoPrefijo);
+            groupBoxDatos.Controls.Add(lblNumeroPlanoGuion1);
+            groupBoxDatos.Controls.Add(txtNumeroPlanoNumero);
+            groupBoxDatos.Controls.Add(lblNumeroPlanoGuion2);
+            groupBoxDatos.Controls.Add(txtNumeroPlanoAnio);
             groupBoxDatos.Controls.Add(lblObservaciones);
             groupBoxDatos.Controls.Add(txtObservaciones);
             groupBoxDatos.Controls.Add(lblEstado);
@@ -115,7 +139,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblCategoriaPlano.ForeColor = Color.White;
             lblCategoriaPlano.Location = new Point(18, 30);
             lblCategoriaPlano.Name = "lblCategoriaPlano";
-            lblCategoriaPlano.Size = new Size(93, 15);
+            lblCategoriaPlano.Size = new Size(107, 15);
             lblCategoriaPlano.TabIndex = 0;
             lblCategoriaPlano.Text = "Categoría de Plano";
             // 
@@ -138,7 +162,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblTipoPlano.ForeColor = Color.White;
             lblTipoPlano.Location = new Point(18, 80);
             lblTipoPlano.Name = "lblTipoPlano";
-            lblTipoPlano.Size = new Size(63, 15);
+            lblTipoPlano.Size = new Size(64, 15);
             lblTipoPlano.TabIndex = 2;
             lblTipoPlano.Text = "Tipo Plano";
             // 
@@ -164,16 +188,109 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblExpediente.TabIndex = 4;
             lblExpediente.Text = "Expediente";
             // 
-            // txtExpediente
+            // txtExpedienteEx
             // 
-            txtExpediente.BackColor = Color.FromArgb(30, 30, 30);
-            txtExpediente.BorderStyle = BorderStyle.FixedSingle;
-            txtExpediente.ForeColor = Color.White;
-            txtExpediente.Location = new Point(18, 148);
-            txtExpediente.Margin = new Padding(3, 2, 3, 2);
-            txtExpediente.Name = "txtExpediente";
-            txtExpediente.Size = new Size(380, 23);
-            txtExpediente.TabIndex = 5;
+            txtExpedienteEx.BackColor = Color.FromArgb(30, 30, 30);
+            txtExpedienteEx.BorderStyle = BorderStyle.FixedSingle;
+            txtExpedienteEx.Enabled = false;
+            txtExpedienteEx.ForeColor = Color.White;
+            txtExpedienteEx.Location = new Point(18, 148);
+            txtExpedienteEx.Margin = new Padding(3, 2, 3, 2);
+            txtExpedienteEx.Name = "txtExpedienteEx";
+            txtExpedienteEx.Size = new Size(35, 23);
+            txtExpedienteEx.TabIndex = 5;
+            txtExpedienteEx.Text = "EX";
+            // 
+            // lblExpedienteGuion1
+            // 
+            lblExpedienteGuion1.AutoSize = true;
+            lblExpedienteGuion1.ForeColor = Color.White;
+            lblExpedienteGuion1.Location = new Point(55, 152);
+            lblExpedienteGuion1.Name = "lblExpedienteGuion1";
+            lblExpedienteGuion1.Size = new Size(12, 15);
+            lblExpedienteGuion1.TabIndex = 20;
+            lblExpedienteGuion1.Text = "-";
+            // 
+            // txtExpedienteAnio
+            // 
+            txtExpedienteAnio.BackColor = Color.FromArgb(30, 30, 30);
+            txtExpedienteAnio.BorderStyle = BorderStyle.FixedSingle;
+            txtExpedienteAnio.ForeColor = Color.White;
+            txtExpedienteAnio.Location = new Point(68, 148);
+            txtExpedienteAnio.Margin = new Padding(3, 2, 3, 2);
+            txtExpedienteAnio.MaxLength = 4;
+            txtExpedienteAnio.Name = "txtExpedienteAnio";
+            txtExpedienteAnio.Size = new Size(48, 23);
+            txtExpedienteAnio.TabIndex = 6;
+            // 
+            // lblExpedienteGuion2
+            // 
+            lblExpedienteGuion2.AutoSize = true;
+            lblExpedienteGuion2.ForeColor = Color.White;
+            lblExpedienteGuion2.Location = new Point(119, 152);
+            lblExpedienteGuion2.Name = "lblExpedienteGuion2";
+            lblExpedienteGuion2.Size = new Size(12, 15);
+            lblExpedienteGuion2.TabIndex = 21;
+            lblExpedienteGuion2.Text = "-";
+            // 
+            // txtExpedienteNumero
+            // 
+            txtExpedienteNumero.BackColor = Color.FromArgb(30, 30, 30);
+            txtExpedienteNumero.BorderStyle = BorderStyle.FixedSingle;
+            txtExpedienteNumero.ForeColor = Color.White;
+            txtExpedienteNumero.Location = new Point(132, 148);
+            txtExpedienteNumero.Margin = new Padding(3, 2, 3, 2);
+            txtExpedienteNumero.MaxLength = 8;
+            txtExpedienteNumero.Name = "txtExpedienteNumero";
+            txtExpedienteNumero.Size = new Size(80, 23);
+            txtExpedienteNumero.TabIndex = 7;
+            // 
+            // lblExpedienteGuion3
+            // 
+            lblExpedienteGuion3.AutoSize = true;
+            lblExpedienteGuion3.ForeColor = Color.White;
+            lblExpedienteGuion3.Location = new Point(215, 152);
+            lblExpedienteGuion3.Name = "lblExpedienteGuion3";
+            lblExpedienteGuion3.Size = new Size(12, 15);
+            lblExpedienteGuion3.TabIndex = 22;
+            lblExpedienteGuion3.Text = "-";
+            // 
+            // txtExpedienteGcaba
+            // 
+            txtExpedienteGcaba.BackColor = Color.FromArgb(30, 30, 30);
+            txtExpedienteGcaba.BorderStyle = BorderStyle.FixedSingle;
+            txtExpedienteGcaba.Enabled = false;
+            txtExpedienteGcaba.ForeColor = Color.White;
+            txtExpedienteGcaba.Location = new Point(228, 148);
+            txtExpedienteGcaba.Margin = new Padding(3, 2, 3, 2);
+            txtExpedienteGcaba.Name = "txtExpedienteGcaba";
+            txtExpedienteGcaba.Size = new Size(55, 23);
+            txtExpedienteGcaba.TabIndex = 8;
+            txtExpedienteGcaba.Text = "GCABA";
+            // 
+            // lblExpedienteGuion4
+            // 
+            lblExpedienteGuion4.AutoSize = true;
+            lblExpedienteGuion4.ForeColor = Color.White;
+            lblExpedienteGuion4.Location = new Point(286, 152);
+            lblExpedienteGuion4.Name = "lblExpedienteGuion4";
+            lblExpedienteGuion4.Size = new Size(12, 15);
+            lblExpedienteGuion4.TabIndex = 23;
+            lblExpedienteGuion4.Text = "-";
+            // 
+            // cboExpedienteReparticion
+            // 
+            cboExpedienteReparticion.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            cboExpedienteReparticion.AutoCompleteSource = AutoCompleteSource.ListItems;
+            cboExpedienteReparticion.BackColor = Color.FromArgb(30, 30, 30);
+            cboExpedienteReparticion.FlatStyle = FlatStyle.Flat;
+            cboExpedienteReparticion.ForeColor = Color.White;
+            cboExpedienteReparticion.FormattingEnabled = true;
+            cboExpedienteReparticion.Location = new Point(298, 148);
+            cboExpedienteReparticion.Margin = new Padding(3, 2, 3, 2);
+            cboExpedienteReparticion.Name = "cboExpedienteReparticion";
+            cboExpedienteReparticion.Size = new Size(100, 23);
+            cboExpedienteReparticion.TabIndex = 9;
             // 
             // lblSeccion
             // 
@@ -223,7 +340,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblParcela.ForeColor = Color.White;
             lblParcela.Location = new Point(283, 180);
             lblParcela.Name = "lblParcela";
-            lblParcela.Size = new Size(46, 15);
+            lblParcela.Size = new Size(45, 15);
             lblParcela.TabIndex = 10;
             lblParcela.Text = "Parcela";
             // 
@@ -244,7 +361,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblDireccion.ForeColor = Color.White;
             lblDireccion.Location = new Point(18, 230);
             lblDireccion.Name = "lblDireccion";
-            lblDireccion.Size = new Size(58, 15);
+            lblDireccion.Size = new Size(57, 15);
             lblDireccion.TabIndex = 12;
             lblDireccion.Text = "Dirección";
             // 
@@ -252,6 +369,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             txtDireccion.BackColor = Color.FromArgb(30, 30, 30);
             txtDireccion.BorderStyle = BorderStyle.FixedSingle;
+            txtDireccion.CharacterCasing = CharacterCasing.Upper;
             txtDireccion.ForeColor = Color.White;
             txtDireccion.Location = new Point(18, 248);
             txtDireccion.Margin = new Padding(3, 2, 3, 2);
@@ -265,20 +383,67 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblNumeroPlano.ForeColor = Color.White;
             lblNumeroPlano.Location = new Point(18, 280);
             lblNumeroPlano.Name = "lblNumeroPlano";
-            lblNumeroPlano.Size = new Size(88, 15);
+            lblNumeroPlano.Size = new Size(100, 15);
             lblNumeroPlano.TabIndex = 14;
             lblNumeroPlano.Text = "Número de Plano";
             // 
-            // txtNumeroPlano
+            // txtNumeroPlanoPrefijo
             // 
-            txtNumeroPlano.BackColor = Color.FromArgb(30, 30, 30);
-            txtNumeroPlano.BorderStyle = BorderStyle.FixedSingle;
-            txtNumeroPlano.ForeColor = Color.White;
-            txtNumeroPlano.Location = new Point(18, 298);
-            txtNumeroPlano.Margin = new Padding(3, 2, 3, 2);
-            txtNumeroPlano.Name = "txtNumeroPlano";
-            txtNumeroPlano.Size = new Size(380, 23);
-            txtNumeroPlano.TabIndex = 15;
+            txtNumeroPlanoPrefijo.BackColor = Color.FromArgb(30, 30, 30);
+            txtNumeroPlanoPrefijo.BorderStyle = BorderStyle.FixedSingle;
+            txtNumeroPlanoPrefijo.CharacterCasing = CharacterCasing.Upper;
+            txtNumeroPlanoPrefijo.ForeColor = Color.White;
+            txtNumeroPlanoPrefijo.Location = new Point(18, 298);
+            txtNumeroPlanoPrefijo.Margin = new Padding(3, 2, 3, 2);
+            txtNumeroPlanoPrefijo.Name = "txtNumeroPlanoPrefijo";
+            txtNumeroPlanoPrefijo.Size = new Size(60, 23);
+            txtNumeroPlanoPrefijo.TabIndex = 15;
+            // 
+            // lblNumeroPlanoGuion1
+            // 
+            lblNumeroPlanoGuion1.AutoSize = true;
+            lblNumeroPlanoGuion1.ForeColor = Color.White;
+            lblNumeroPlanoGuion1.Location = new Point(80, 302);
+            lblNumeroPlanoGuion1.Name = "lblNumeroPlanoGuion1";
+            lblNumeroPlanoGuion1.Size = new Size(12, 15);
+            lblNumeroPlanoGuion1.TabIndex = 24;
+            lblNumeroPlanoGuion1.Text = "-";
+            // 
+            // txtNumeroPlanoNumero
+            // 
+            txtNumeroPlanoNumero.BackColor = Color.FromArgb(30, 30, 30);
+            txtNumeroPlanoNumero.BorderStyle = BorderStyle.FixedSingle;
+            txtNumeroPlanoNumero.CharacterCasing = CharacterCasing.Upper;
+            txtNumeroPlanoNumero.ForeColor = Color.White;
+            txtNumeroPlanoNumero.Location = new Point(93, 298);
+            txtNumeroPlanoNumero.Margin = new Padding(3, 2, 3, 2);
+            txtNumeroPlanoNumero.MaxLength = 4;
+            txtNumeroPlanoNumero.Name = "txtNumeroPlanoNumero";
+            txtNumeroPlanoNumero.Size = new Size(60, 23);
+            txtNumeroPlanoNumero.TabIndex = 16;
+            // 
+            // lblNumeroPlanoGuion2
+            // 
+            lblNumeroPlanoGuion2.AutoSize = true;
+            lblNumeroPlanoGuion2.ForeColor = Color.White;
+            lblNumeroPlanoGuion2.Location = new Point(155, 302);
+            lblNumeroPlanoGuion2.Name = "lblNumeroPlanoGuion2";
+            lblNumeroPlanoGuion2.Size = new Size(12, 15);
+            lblNumeroPlanoGuion2.TabIndex = 25;
+            lblNumeroPlanoGuion2.Text = "-";
+            // 
+            // txtNumeroPlanoAnio
+            // 
+            txtNumeroPlanoAnio.BackColor = Color.FromArgb(30, 30, 30);
+            txtNumeroPlanoAnio.BorderStyle = BorderStyle.FixedSingle;
+            txtNumeroPlanoAnio.CharacterCasing = CharacterCasing.Upper;
+            txtNumeroPlanoAnio.ForeColor = Color.White;
+            txtNumeroPlanoAnio.Location = new Point(168, 298);
+            txtNumeroPlanoAnio.Margin = new Padding(3, 2, 3, 2);
+            txtNumeroPlanoAnio.MaxLength = 4;
+            txtNumeroPlanoAnio.Name = "txtNumeroPlanoAnio";
+            txtNumeroPlanoAnio.Size = new Size(60, 23);
+            txtNumeroPlanoAnio.TabIndex = 17;
             // 
             // lblObservaciones
             // 
@@ -286,7 +451,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblObservaciones.ForeColor = Color.White;
             lblObservaciones.Location = new Point(18, 330);
             lblObservaciones.Name = "lblObservaciones";
-            lblObservaciones.Size = new Size(88, 15);
+            lblObservaciones.Size = new Size(84, 15);
             lblObservaciones.TabIndex = 16;
             lblObservaciones.Text = "Observaciones";
             // 
@@ -294,6 +459,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             txtObservaciones.BackColor = Color.FromArgb(30, 30, 30);
             txtObservaciones.BorderStyle = BorderStyle.FixedSingle;
+            txtObservaciones.CharacterCasing = CharacterCasing.Upper;
             txtObservaciones.ForeColor = Color.White;
             txtObservaciones.Location = new Point(18, 348);
             txtObservaciones.Margin = new Padding(3, 2, 3, 2);
@@ -308,7 +474,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblEstado.ForeColor = Color.White;
             lblEstado.Location = new Point(18, 450);
             lblEstado.Name = "lblEstado";
-            lblEstado.Size = new Size(41, 15);
+            lblEstado.Size = new Size(42, 15);
             lblEstado.TabIndex = 18;
             lblEstado.Text = "Estado";
             // 
@@ -336,20 +502,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelBotones.Size = new Size(430, 46);
             panelBotones.TabIndex = 1;
             // 
-            // btnCerrar
-            // 
-            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
-            btnCerrar.FlatStyle = FlatStyle.Flat;
-            btnCerrar.ForeColor = Color.White;
-            btnCerrar.Location = new Point(290, 8);
-            btnCerrar.Margin = new Padding(3, 2, 3, 2);
-            btnCerrar.Name = "btnCerrar";
-            btnCerrar.Size = new Size(120, 30);
-            btnCerrar.TabIndex = 1;
-            btnCerrar.Text = "Cerrar";
-            btnCerrar.UseVisualStyleBackColor = false;
-            btnCerrar.Click += btnCerrar_Click;
-            // 
             // btnGuardar
             // 
             btnGuardar.BackColor = Color.FromArgb(0, 150, 80);
@@ -363,6 +515,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnGuardar.Text = "Guardar";
             btnGuardar.UseVisualStyleBackColor = false;
             btnGuardar.Click += btnGuardar_Click;
+            // 
+            // btnCerrar
+            // 
+            btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
+            btnCerrar.FlatStyle = FlatStyle.Flat;
+            btnCerrar.ForeColor = Color.White;
+            btnCerrar.Location = new Point(290, 8);
+            btnCerrar.Margin = new Padding(3, 2, 3, 2);
+            btnCerrar.Name = "btnCerrar";
+            btnCerrar.Size = new Size(120, 30);
+            btnCerrar.TabIndex = 1;
+            btnCerrar.Text = "Cerrar";
+            btnCerrar.UseVisualStyleBackColor = false;
+            btnCerrar.Click += btnCerrar_Click;
             // 
             // panelDerecho
             // 
@@ -558,7 +724,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblTipoPlano;
         private ComboBox cboTipoPlano;
         private Label lblExpediente;
-        private TextBox txtExpediente;
+        private TextBox txtExpedienteEx;
+        private Label lblExpedienteGuion1;
+        private TextBox txtExpedienteAnio;
+        private Label lblExpedienteGuion2;
+        private TextBox txtExpedienteNumero;
+        private Label lblExpedienteGuion3;
+        private TextBox txtExpedienteGcaba;
+        private Label lblExpedienteGuion4;
+        private ComboBox cboExpedienteReparticion;
         private Label lblSeccion;
         private TextBox txtSeccion;
         private Label lblManzana;
@@ -568,7 +742,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Label lblDireccion;
         private TextBox txtDireccion;
         private Label lblNumeroPlano;
-        private TextBox txtNumeroPlano;
+        private TextBox txtNumeroPlanoPrefijo;
+        private Label lblNumeroPlanoGuion1;
+        private TextBox txtNumeroPlanoNumero;
+        private Label lblNumeroPlanoGuion2;
+        private TextBox txtNumeroPlanoAnio;
         private Label lblObservaciones;
         private TextBox txtObservaciones;
         private Label lblEstado;

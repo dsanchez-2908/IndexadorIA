@@ -88,9 +88,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "feAltaLote",
-                DataPropertyName = "FeAltaLote",
-                HeaderText = "Fecha Alta",
+                Name = "feUltimoCambio",
+                DataPropertyName = "FeUltimoCambio",
+                HeaderText = "Fecha de Asignación",
                 DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
             });
         }
@@ -118,6 +118,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         CdEstadoLote = l.CdEstadoLote,
                         DsEstado = l.DsEstado,
                         FeAltaLote = l.FeAltaLote,
+                        FeUltimoCambio = l.FeUltimoCambio,
                         NuControlados = l.NuControlados,
                         NuPendientes = l.NuPendientes
                     }).ToList();
@@ -128,7 +129,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     int? cdUsuarioAsignado = SesionActual.UsuarioActual?.CdUsuario;
 
                     _lotesActuales = loteDAL.ObtenerLotesPorEstadoFiltrado(
-                        CD_ESTADO_CONTROLANDO, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuarioAsignado);
+                        CD_ESTADO_CONTROLANDO, dsNombreLote, feAltaDesde, feAltaHasta, cdUsuarioAsignado,
+                        filtrarFechaPorUltimoCambio: true);
                 }
 
                 dgvLotes.DataSource = null;

@@ -1,6 +1,7 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 
 namespace IndexadorIA.Pantallas.PlanosGCBA
 {
@@ -18,12 +19,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private readonly string _dsNombreLote;
         private List<RegistroAuditoria> _registrosActuales = new();
         private readonly HashSet<int> _cdResultadosRevisados = new();
+        private readonly ApiClienteServicio? _apiCliente;
 
         public FrmAuditarLote(int cdLote, string dsNombreLote)
         {
             InitializeComponent();
             _cdLote = cdLote;
             _dsNombreLote = dsNombreLote;
+            _apiCliente = SesionApi.ModoRemoto ? new ApiClienteServicio() : null;
         }
 
         private void FrmAuditarLote_Load(object sender, EventArgs e)
@@ -34,6 +37,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
                 ConfigurarDataGridView();
                 CargarEstadosControl();
+                CargarUsuarioControlador();
                 CargarRegistros();
             }
             catch (Exception ex)
@@ -43,9 +47,27 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
         }
 
-        private void ConfigurarDataGridView()
+        private void CargarUsuarioControlador()
         {
-            dgvRegistros.AutoGenerateColumns = false;
+            string? dsUsuarioFinControl;
+
+            if (SesionApi.ModoRemoto)
+            {
+                var loteApi = _apiCliente!.ObtenerLoteAuditoriaAsync(_cdLote).GetAwaiter().GetResult();
+                dsUsuarioFinControl = loteApi.DsUsuarioFinControl;
+            }
+            else
+            {
+                var loteDAL = new LoteDAL();
+                var lote = loteDAL.ObtenerPorId(_cdLote);
+                dsUsuarioFinControl = lote?.DsUsuarioFinControl;
+            }
+
+            lblUsuarioControlador.Text = $"Usuario Controlador: {dsUsuarioFinControl ?? "-"}";
+        }
+
+        private void ConfigurarDataGridView()
+        {            dgvRegistros.AutoGenerateColumns = false;
             dgvRegistros.Columns.Clear();
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
@@ -142,8 +164,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void CargarEstadosControl()
         {
-            var resultadoDAL = new ResultadoIADAL();
-            var estados = resultadoDAL.ObtenerEstadosControlParaFiltro();
+            List<KeyValuePair<int, string>> estados;
+
+            if (SesionApi.ModoRemoto)
+            {
+                estados = _apiCliente!.ObtenerEstadosControlAuditoriaAsync().GetAwaiter().GetResult()
+                    .Select(e => new KeyValuePair<int, string>(e.CdEstado, e.DsEstado))
+                    .ToList();
+            }
+            else
+            {
+                var resultadoDAL = new ResultadoIADAL();
+                estados = resultadoDAL.ObtenerEstadosControlParaFiltro();
+            }
 
             cboEstadoControl.DisplayMember = "Value";
             cboEstadoControl.ValueMember = "Key";
@@ -155,15 +188,52 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
-                var resultadoDAL = new ResultadoIADAL();
-
                 List<int>? cdEstadosControl = null;
                 if (cboEstadoControl.SelectedValue is int cdEstadoSeleccionado)
                 {
                     cdEstadosControl = new List<int> { cdEstadoSeleccionado };
                 }
 
-                _registrosActuales = resultadoDAL.ObtenerParaAuditoria(_cdLote, cdEstadosControl);
+                if (SesionApi.ModoRemoto)
+                {
+                    var registrosApi = _apiCliente!.ObtenerRegistrosAuditoriaAsync(_cdLote, cdEstadosControl)
+                        .GetAwaiter().GetResult();
+
+                    _registrosActuales = registrosApi.Select(r => new RegistroAuditoria
+                    {
+                        CdResultado = r.CdResultado,
+                        CdLote = r.CdLote,
+                        DsNombreLote = r.DsNombreLote,
+                        CdEstadoLote = r.CdEstadoLote,
+                        DsEstadoLote = r.DsEstadoLote,
+                        FeFinControl = r.FeFinControl,
+                        CdUsuarioFinControl = r.CdUsuarioFinControl,
+                        DsUsuarioFinControl = r.DsUsuarioFinControl,
+                        CdArchivoPagina = r.CdArchivoPagina,
+                        CdCategoriaPlano = r.CdCategoriaPlano,
+                        DsCategoriaPlano = r.DsCategoriaPlano,
+                        CdTipoPlano = r.CdTipoPlano,
+                        DsTipoPlano = r.DsTipoPlano,
+                        DsExpediente = r.DsExpediente,
+                        DsSeccion = r.DsSeccion,
+                        DsManzana = r.DsManzana,
+                        DsParcela = r.DsParcela,
+                        DsDireccion = r.DsDireccion,
+                        DsNumeroPlano = r.DsNumeroPlano,
+                        DsObservaciones = r.DsObservaciones,
+                        CdEstadoControl = r.CdEstadoControl,
+                        DsEstadoControl = r.DsEstadoControl,
+                        FeControl = r.FeControl,
+                        CdUsuarioControl = r.CdUsuarioControl,
+                        DsUsuarioControl = r.DsUsuarioControl,
+                        SnModificaDatos = r.SnModificaDatos
+                    }).ToList();
+                }
+                else
+                {
+                    var resultadoDAL = new ResultadoIADAL();
+                    _registrosActuales = resultadoDAL.ObtenerParaAuditoria(_cdLote, cdEstadosControl);
+                }
 
                 foreach (var registro in _registrosActuales)
                 {
@@ -329,8 +399,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     return;
                 }
 
-                var loteDAL = new LoteDAL();
-                loteDAL.MarcarLoteAuditado(_cdLote, cdUsuarioAuditado.Value);
+                if (SesionApi.ModoRemoto)
+                {
+                    _apiCliente!.MarcarLoteAuditadoAsync(_cdLote).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    var loteDAL = new LoteDAL();
+                    loteDAL.MarcarLoteAuditado(_cdLote, cdUsuarioAuditado.Value);
+                }
 
                 MessageBox.Show("El lote fue marcado como auditado correctamente.",
                     "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);

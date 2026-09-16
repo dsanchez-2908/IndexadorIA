@@ -317,6 +317,139 @@ namespace IndexadorIA.Negocio.Api
                 throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
         }
 
+        /// <summary>
+        /// Llama a GET /api/auditoria/lotes (equivalente remoto de FrmAuditar.CargarLotes()).
+        /// </summary>
+        public async Task<List<LoteAuditoriaApiDto>> ObtenerLotesAuditoriaAsync(
+            string? dsNombreLote, DateTime? feAltaDesde, DateTime? feAltaHasta)
+        {
+            AplicarToken();
+
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(dsNombreLote))
+                query.Add($"dsNombreLote={Uri.EscapeDataString(dsNombreLote)}");
+            if (feAltaDesde.HasValue)
+                query.Add($"feAltaDesde={Uri.EscapeDataString(feAltaDesde.Value.ToString("o"))}");
+            if (feAltaHasta.HasValue)
+                query.Add($"feAltaHasta={Uri.EscapeDataString(feAltaHasta.Value.ToString("o"))}");
+
+            string url = "api/auditoria/lotes" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty);
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<LoteAuditoriaApiDto>>().ConfigureAwait(false);
+            return resultado ?? new List<LoteAuditoriaApiDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/auditoria/lotes/{cdLote} (equivalente remoto de
+        /// FrmAuditarLote.CargarUsuarioControlador()).
+        /// </summary>
+        public async Task<LoteAuditoriaApiDto> ObtenerLoteAuditoriaAsync(int cdLote)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync($"api/auditoria/lotes/{cdLote}").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<LoteAuditoriaApiDto>().ConfigureAwait(false);
+            return resultado ?? throw new ApiException("Respuesta vacía del servidor.");
+        }
+
+        /// <summary>
+        /// Llama a GET /api/auditoria/lotes/{cdLote}/registros (equivalente remoto de
+        /// FrmAuditarLote.CargarRegistros()).
+        /// </summary>
+        public async Task<List<RegistroAuditoriaApiDto>> ObtenerRegistrosAuditoriaAsync(int cdLote, List<int>? cdEstadosControl)
+        {
+            AplicarToken();
+
+            string url = $"api/auditoria/lotes/{cdLote}/registros";
+            if (cdEstadosControl != null && cdEstadosControl.Count > 0)
+                url += $"?cdEstadosControl={Uri.EscapeDataString(string.Join(",", cdEstadosControl))}";
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<RegistroAuditoriaApiDto>>().ConfigureAwait(false);
+            return resultado ?? new List<RegistroAuditoriaApiDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/auditoria/estados-control (equivalente remoto de
+        /// ResultadoIADAL.ObtenerEstadosControlParaFiltro()).
+        /// </summary>
+        public async Task<List<EstadoControlApiDto>> ObtenerEstadosControlAuditoriaAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/auditoria/estados-control").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<EstadoControlApiDto>>().ConfigureAwait(false);
+            return resultado ?? new List<EstadoControlApiDto>();
+        }
+
+        /// <summary>
+        /// Llama a PUT /api/auditoria/lotes/{cdLote}/marcar-auditado (equivalente remoto
+        /// de FrmAuditarLote.btnMarcarLoteAuditado_Click).
+        /// </summary>
+        public async Task MarcarLoteAuditadoAsync(int cdLote)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PutAsync($"api/auditoria/lotes/{cdLote}/marcar-auditado", null).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Llama a PUT /api/auditoria/resultados/{cdResultado}/datos (equivalente remoto
+        /// de la actualización de datos en FrmVerRegistroAuditoria.btnGuardar_Click).
+        /// </summary>
+        public async Task ActualizarDatosResultadoAuditoriaAsync(int cdResultado, ActualizarResultadoApiRequestDto request)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PutAsJsonAsync($"api/auditoria/resultados/{cdResultado}/datos", request).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Llama a PUT /api/auditoria/resultados/{cdResultado}/estado-control (equivalente
+        /// remoto del cambio de estado en FrmVerRegistroAuditoria.btnGuardar_Click).
+        /// </summary>
+        public async Task ActualizarEstadoControlResultadoAuditoriaAsync(int cdResultado, ActualizarEstadoControlApiRequestDto request)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PutAsJsonAsync($"api/auditoria/resultados/{cdResultado}/estado-control", request).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Llama a POST /api/auditoria/resultados/{cdResultado}/correcciones (equivalente
+        /// remoto de FrmVerRegistroAuditoria.RegistrarCorreccionesDeAuditoriaSiCorresponde(...)).
+        /// </summary>
+        public async Task RegistrarCorreccionesAuditoriaAsync(int cdResultado, RegistrarCorreccionesApiRequestDto request)
+        {
+            if (request.Correcciones.Count == 0)
+                return;
+
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PostAsJsonAsync($"api/auditoria/resultados/{cdResultado}/correcciones", request).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
         private static async Task<string> ObtenerMensajeErrorAsync(HttpResponseMessage respuesta)
         {
             try

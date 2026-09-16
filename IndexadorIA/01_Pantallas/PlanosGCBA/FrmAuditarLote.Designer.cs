@@ -17,19 +17,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             groupBoxFiltros = new GroupBox();
             lblEstadoControl = new Label();
             cboEstadoControl = new ComboBox();
+            lblUsuarioControlador = new Label();
             btnBuscar = new Button();
             btnLimpiarFiltros = new Button();
             groupBoxRegistros = new GroupBox();
             dgvRegistros = new DataGridView();
             lblTotalizadorRegistros = new Label();
             panelAcciones = new Panel();
-            btnCerrar = new Button();
-            btnMarcarLoteAuditado = new Button();
-            btnMostrar = new Button();
             btnAnalizar = new Button();
+            btnMostrar = new Button();
+            btnMarcarLoteAuditado = new Button();
+            btnCerrar = new Button();
             groupBoxFiltros.SuspendLayout();
             groupBoxRegistros.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvRegistros).BeginInit();
@@ -41,6 +45,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxFiltros.BackColor = Color.FromArgb(45, 45, 48);
             groupBoxFiltros.Controls.Add(lblEstadoControl);
             groupBoxFiltros.Controls.Add(cboEstadoControl);
+            groupBoxFiltros.Controls.Add(lblUsuarioControlador);
             groupBoxFiltros.Controls.Add(btnBuscar);
             groupBoxFiltros.Controls.Add(btnLimpiarFiltros);
             groupBoxFiltros.Dock = DockStyle.Top;
@@ -61,7 +66,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblEstadoControl.ForeColor = Color.White;
             lblEstadoControl.Location = new Point(18, 28);
             lblEstadoControl.Name = "lblEstadoControl";
-            lblEstadoControl.Size = new Size(97, 15);
+            lblEstadoControl.Size = new Size(104, 15);
             lblEstadoControl.TabIndex = 0;
             lblEstadoControl.Text = "Estado de Control:";
             // 
@@ -76,6 +81,17 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboEstadoControl.Name = "cboEstadoControl";
             cboEstadoControl.Size = new Size(220, 23);
             cboEstadoControl.TabIndex = 1;
+            // 
+            // lblUsuarioControlador
+            // 
+            lblUsuarioControlador.AutoSize = true;
+            lblUsuarioControlador.BackColor = Color.FromArgb(45, 45, 48);
+            lblUsuarioControlador.ForeColor = Color.White;
+            lblUsuarioControlador.Location = new Point(400, 28);
+            lblUsuarioControlador.Name = "lblUsuarioControlador";
+            lblUsuarioControlador.Size = new Size(125, 15);
+            lblUsuarioControlador.TabIndex = 4;
+            lblUsuarioControlador.Text = "Usuario Controlador: -";
             // 
             // btnBuscar
             // 
@@ -125,32 +141,41 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             dgvRegistros.AllowUserToAddRows = false;
             dgvRegistros.AllowUserToDeleteRows = false;
-            dgvRegistros.AllowUserToOrderColumns = false;
-            dgvRegistros.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(40, 40, 40);
+            dgvRegistros.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvRegistros.BackgroundColor = Color.FromArgb(30, 30, 30);
             dgvRegistros.BorderStyle = BorderStyle.None;
-            dgvRegistros.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(60, 60, 60);
-            dgvRegistros.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(60, 60, 60);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dgvRegistros.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvRegistros.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvRegistros.DefaultCellStyle.BackColor = Color.FromArgb(30, 30, 30);
-            dgvRegistros.DefaultCellStyle.ForeColor = Color.White;
-            dgvRegistros.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dgvRegistros.DefaultCellStyle.SelectionForeColor = Color.White;
-            dgvRegistros.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(40, 40, 40);
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(30, 30, 30);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle3.ForeColor = Color.White;
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvRegistros.DefaultCellStyle = dataGridViewCellStyle3;
+            dgvRegistros.Dock = DockStyle.Fill;
             dgvRegistros.EnableHeadersVisualStyles = false;
             dgvRegistros.GridColor = Color.FromArgb(63, 63, 70);
-            dgvRegistros.ReadOnly = true;
-            dgvRegistros.MultiSelect = false;
-            dgvRegistros.Dock = DockStyle.Fill;
-            dgvRegistros.Location = new Point(9, 24);
+            dgvRegistros.Location = new Point(9, 40);
             dgvRegistros.Margin = new Padding(3, 2, 3, 2);
+            dgvRegistros.MultiSelect = false;
             dgvRegistros.Name = "dgvRegistros";
+            dgvRegistros.ReadOnly = true;
             dgvRegistros.RowHeadersWidth = 51;
             dgvRegistros.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvRegistros.Size = new Size(1082, 366);
+            dgvRegistros.Size = new Size(1082, 357);
             dgvRegistros.TabIndex = 0;
-            dgvRegistros.CellFormatting += dgvRegistros_CellFormatting;
             dgvRegistros.CellDoubleClick += dgvRegistros_CellDoubleClick;
+            dgvRegistros.CellFormatting += dgvRegistros_CellFormatting;
             // 
             // lblTotalizadorRegistros
             // 
@@ -158,7 +183,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lblTotalizadorRegistros.BackColor = Color.FromArgb(45, 45, 48);
             lblTotalizadorRegistros.Dock = DockStyle.Bottom;
             lblTotalizadorRegistros.ForeColor = Color.White;
-            lblTotalizadorRegistros.Location = new Point(9, 390);
+            lblTotalizadorRegistros.Location = new Point(9, 397);
             lblTotalizadorRegistros.Name = "lblTotalizadorRegistros";
             lblTotalizadorRegistros.Padding = new Padding(0, 4, 0, 4);
             lblTotalizadorRegistros.Size = new Size(45, 23);
@@ -224,10 +249,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // 
             // btnCerrar
             // 
+            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
             btnCerrar.FlatStyle = FlatStyle.Flat;
             btnCerrar.ForeColor = Color.White;
-            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCerrar.Location = new Point(962, 8);
             btnCerrar.Margin = new Padding(3, 2, 3, 2);
             btnCerrar.Name = "btnCerrar";
@@ -267,6 +292,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private GroupBox groupBoxFiltros;
         private Label lblEstadoControl;
         private ComboBox cboEstadoControl;
+        private Label lblUsuarioControlador;
         private Button btnBuscar;
         private Button btnLimpiarFiltros;
         private GroupBox groupBoxRegistros;
