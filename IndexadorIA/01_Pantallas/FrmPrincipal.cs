@@ -116,6 +116,9 @@ namespace IndexadorIA.Pantallas
             // "Estado Proyecto Planos" solo debe estar disponible para usuarios con rol ADMIN.
             menuEstadoProyecto.Visible = esAdmin;
 
+            // "Planos para enviar" solo debe estar disponible para usuarios con rol ADMIN.
+            menuPlanosParaEnviar.Visible = esAdmin;
+
             // "Ayuda Control" es un mantenimiento solo para el rol ADMIN (funciona tanto local
             // como remoto, ya que el texto de ayuda se lee/escribe también vía API).
             menuAyudaControl.Visible = esAdmin;
@@ -209,6 +212,11 @@ namespace IndexadorIA.Pantallas
         private void menuEstadoProyecto_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmEstadoProyecto());
+        }
+
+        private void menuPlanosParaEnviar_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Reportes.FrmPlanosParaEnviar());
         }
 
         private void menuAyudaControl_Click(object sender, EventArgs e)

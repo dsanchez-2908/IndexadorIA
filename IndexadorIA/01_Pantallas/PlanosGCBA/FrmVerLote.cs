@@ -668,9 +668,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             if (partes.Length < 6)
                 return;
 
+            string ex = partes[0].Trim();
             string anio = partes[1].Trim();
             string numero = partes[2].Trim();
             string reparticion = partes[5].Trim();
+
+            if (string.IsNullOrWhiteSpace(ex))
+                return;
 
             if (!int.TryParse(anio, out int anioValor) || anioValor < 1900 || anioValor > 2050)
                 return;
@@ -681,6 +685,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             if (string.IsNullOrWhiteSpace(reparticion))
                 return;
 
+            txtExpedienteEx.Text = ex;
             txtExpedienteAnio.Text = anio;
             txtExpedienteNumero.Text = numero;
             txtExpedienteReparticion.Text = reparticion;
@@ -729,7 +734,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             reparticionValida = true;
 
-            const string ex = "EX";
+            string ex = string.IsNullOrWhiteSpace(txtExpedienteEx.Text) ? "EX" : txtExpedienteEx.Text.Trim();
             string anio = txtExpedienteAnio.Text.Trim();
             string numero = txtExpedienteNumero.Text.Trim();
             const string gcaba = "GCABA";
@@ -1041,6 +1046,36 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnGuardarControlada_Click(object sender, EventArgs e)
         {
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length > 3)
+            {
+                MessageBox.Show(
+                    "Si la parcela tiene letra o mas de una parcela, se debe guardar como casos especiales",
+                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            GuardarControl(ResultadoIA.EstadosControl.Controlado, "guardar y marcar como controlada");
+        }
+
+        private void btnGuardarCasosEspeciales_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length <= 3)
+            {
+                MessageBox.Show(
+                    "Si la parcela tiene 3 caracteres o menos, se debe guardar como normal (Guardar y Marcar Controlada).",
+                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            GuardarControl(ResultadoIA.EstadosControl.CasosEspeciales, "guardar como casos especiales");
+        }
+
+        /// <summary>
+        /// Realiza las validaciones y el guardado comunes a btnGuardarControlada_Click y
+        /// btnGuardarCasosEspeciales_Click, difiriendo únicamente en el cdEstadoControl persistido.
+        /// </summary>
+        private void GuardarControl(int cdEstadoControl, string descripcionAccion)
+        {
             if (_filaSeleccionada?.Resultado == null)
             {
                 MessageBox.Show("Seleccione una página de la grilla.", "Aviso",
@@ -1090,6 +1125,52 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(txtSeccion.Text) && txtSeccion.Text.Trim().Length < 3)
+            {
+                MessageBox.Show(
+                    "El campo Sección debe tener 3 o más caracteres.",
+                    "Sección inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtManzana.Text) && txtManzana.Text.Trim().Length < 3)
+            {
+                MessageBox.Show(
+                    "El campo Manzana debe tener 3 o más caracteres.",
+                    "Manzana inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length < 3)
+            {
+                MessageBox.Show(
+                    "El campo Parcela debe tener 3 o más caracteres.",
+                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtExpedienteAnio.Text)
+                && string.IsNullOrWhiteSpace(txtExpedienteNumero.Text)
+                && string.IsNullOrWhiteSpace(txtExpedienteReparticion.Text))
+            {
+                var confirmacionExpediente = MessageBox.Show(
+                    "El campo expediente esta vacio, desea continuar?",
+                    "Expediente vacío", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionExpediente != DialogResult.Yes)
+                    return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && ContieneNumeroDeMasDeCuatroDigitos(txtDireccion.Text))
+            {
+                var confirmacionDireccion = MessageBox.Show(
+                    "Revise el campo Dirección. Esta seguro de continuar?",
+                    "Verifique la Dirección", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionDireccion != DialogResult.Yes)
+                    return;
+            }
+
             try
             {
                 var resultado = _filaSeleccionada.Resultado;
@@ -1131,7 +1212,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
                     _apiCliente!.ActualizarEstadoControlResultadoAsync(resultado.CdResultado, new ActualizarEstadoControlApiRequestDto
                     {
-                        CdEstadoControl = ResultadoIA.EstadosControl.Controlado,
+                        CdEstadoControl = cdEstadoControl,
                         SnModificaDatos = modificoDatos ? "SI" : "NO",
                         DsObservaciones = dsObservaciones
                     }).GetAwaiter().GetResult();
@@ -1153,7 +1234,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     resultadoIADAL.ActualizarDatos(resultado, cdUsuario);
                     resultadoIADAL.ActualizarEstadoControl(
                         resultado.CdResultado,
-                        ResultadoIA.EstadosControl.Controlado,
+                        cdEstadoControl,
                         modificoDatos ? "SI" : "NO",
                         cdUsuario,
                         dsObservaciones);
@@ -1164,7 +1245,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"No se pudo guardar y marcar como controlada: {ex.Message}", "Error",
+                MessageBox.Show($"No se pudo {descripcionAccion}: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -1186,6 +1267,32 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
 
             caracterInvalido = '\0';
+            return false;
+        }
+
+        /// <summary>
+        /// Recorre el texto buscando secuencias de dígitos consecutivos (números) y determina
+        /// si alguna de ellas tiene más de 4 dígitos. Se usa para advertir sobre posibles
+        /// direcciones mal escaneadas/tipeadas (por ejemplo "12345" en vez de "123.45").
+        /// </summary>
+        private static bool ContieneNumeroDeMasDeCuatroDigitos(string valor)
+        {
+            int longitudActual = 0;
+
+            foreach (char c in valor)
+            {
+                if (char.IsDigit(c))
+                {
+                    longitudActual++;
+                    if (longitudActual > 4)
+                        return true;
+                }
+                else
+                {
+                    longitudActual = 0;
+                }
+            }
+
             return false;
         }
 
@@ -1457,11 +1564,33 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             if (confirmacion != DialogResult.Yes)
                 return;
 
+            cboCategoriaPlanoDetalle.SelectedValue = 0;
+            cboTipoPlanoDetalle.SelectedValue = 0;
+            txtExpedienteAnio.Text = string.Empty;
+            txtExpedienteNumero.Text = string.Empty;
+            txtExpedienteReparticion.Text = string.Empty;
+            txtSeccion.Text = string.Empty;
+            txtManzana.Text = string.Empty;
+            txtParcela.Text = string.Empty;
+            txtDireccion.Text = string.Empty;
+            txtNumeroPlano.Text = string.Empty;
+
             MarcarEstadoControl(ResultadoIA.EstadosControl.PaginaIlegible, "Marcar Página como ILEGIBLE");
         }
 
         private void btnMarcarDatosIlegible_Click(object sender, EventArgs e)
         {
+            if (!string.IsNullOrWhiteSpace(txtSeccion.Text)
+                && !string.IsNullOrWhiteSpace(txtManzana.Text)
+                && !string.IsNullOrWhiteSpace(txtParcela.Text)
+                && !string.IsNullOrWhiteSpace(txtDireccion.Text))
+            {
+                MessageBox.Show(
+                    "No se puede marcar Datos ILEGIBLE: los campos Sección, Manzana, Parcela y Dirección ya están completos.",
+                    "Marcar Datos ILEGIBLE", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             var confirmacion = MessageBox.Show(
                 "¿Confirma que desea marcar los datos como ILEGIBLES?",
                 "Marcar Datos ILEGIBLE", MessageBoxButtons.YesNo, MessageBoxIcon.Question);

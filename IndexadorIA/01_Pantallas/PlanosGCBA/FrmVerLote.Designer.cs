@@ -132,6 +132,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnMarcarLoteCompletado = new Button();
             btnCerrar = new Button();
             btnGuardarControlada = new Button();
+            btnGuardarCasosEspeciales = new Button();
             panelEncabezado.SuspendLayout();
             panelProduccion.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerPrincipal).BeginInit();
@@ -1471,6 +1472,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelBotones.Controls.Add(btnMarcarLoteCompletado);
             panelBotones.Controls.Add(btnCerrar);
             panelBotones.Controls.Add(btnGuardarControlada);
+            panelBotones.Controls.Add(btnGuardarCasosEspeciales);
             panelBotones.Dock = DockStyle.Bottom;
             panelBotones.Location = new Point(0, 750);
             panelBotones.Name = "panelBotones";
@@ -1551,6 +1553,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnGuardarControlada.Text = "Guardar y Marcar Controlada";
             btnGuardarControlada.UseVisualStyleBackColor = false;
             btnGuardarControlada.Click += btnGuardarControlada_Click;
+            // 
+            // btnGuardarCasosEspeciales
+            // 
+            btnGuardarCasosEspeciales.BackColor = Color.FromArgb(0, 122, 204);
+            btnGuardarCasosEspeciales.FlatStyle = FlatStyle.Flat;
+            btnGuardarCasosEspeciales.ForeColor = Color.White;
+            btnGuardarCasosEspeciales.Location = new Point(213, 13);
+            btnGuardarCasosEspeciales.Margin = new Padding(3, 3, 8, 3);
+            btnGuardarCasosEspeciales.Name = "btnGuardarCasosEspeciales";
+            btnGuardarCasosEspeciales.Size = new Size(220, 34);
+            btnGuardarCasosEspeciales.TabIndex = 31;
+            btnGuardarCasosEspeciales.Text = "Guardar como Casos Especiales";
+            btnGuardarCasosEspeciales.UseVisualStyleBackColor = false;
+            btnGuardarCasosEspeciales.Click += btnGuardarCasosEspeciales_Click;
             // 
             // FrmVerLote
             // 
@@ -1696,6 +1712,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Panel panelBotones;
         private Button btnVerImagenPDF;
         private Button btnGuardarControlada;
+        private Button btnGuardarCasosEspeciales;
         private Button btnGirarIzquierda;
         private Button btnGirarDerecha;
         private Button btnMarcarPaginaIlegible;

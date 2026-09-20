@@ -19,6 +19,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             panelIzquierdo = new Panel();
             groupBoxDatos = new GroupBox();
+            lblNombreArchivoOriginal = new Label();
             lblCategoriaPlano = new Label();
             cboCategoriaPlano = new ComboBox();
             lblTipoPlano = new Label();
@@ -33,6 +34,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtExpedienteGcaba = new TextBox();
             lblExpedienteGuion4 = new Label();
             cboExpedienteReparticion = new ComboBox();
+            btnParsearExpedienteDeArchivo = new Button();
             lblSeccion = new Label();
             txtSeccion = new TextBox();
             lblManzana = new Label();
@@ -90,6 +92,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // groupBoxDatos
             // 
             groupBoxDatos.BackColor = Color.FromArgb(45, 45, 48);
+            groupBoxDatos.Controls.Add(lblNombreArchivoOriginal);
             groupBoxDatos.Controls.Add(lblCategoriaPlano);
             groupBoxDatos.Controls.Add(cboCategoriaPlano);
             groupBoxDatos.Controls.Add(lblTipoPlano);
@@ -104,6 +107,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDatos.Controls.Add(txtExpedienteGcaba);
             groupBoxDatos.Controls.Add(lblExpedienteGuion4);
             groupBoxDatos.Controls.Add(cboExpedienteReparticion);
+            groupBoxDatos.Controls.Add(btnParsearExpedienteDeArchivo);
             groupBoxDatos.Controls.Add(lblSeccion);
             groupBoxDatos.Controls.Add(txtSeccion);
             groupBoxDatos.Controls.Add(lblManzana);
@@ -132,6 +136,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDatos.TabIndex = 0;
             groupBoxDatos.TabStop = false;
             groupBoxDatos.Text = "Datos del Registro";
+            // 
+            // lblNombreArchivoOriginal
+            // 
+            lblNombreArchivoOriginal.AutoSize = true;
+            lblNombreArchivoOriginal.ForeColor = Color.Gainsboro;
+            lblNombreArchivoOriginal.Location = new Point(18, 15);
+            lblNombreArchivoOriginal.Name = "lblNombreArchivoOriginal";
+            lblNombreArchivoOriginal.Size = new Size(102, 15);
+            lblNombreArchivoOriginal.TabIndex = 0;
+            lblNombreArchivoOriginal.Text = "Archivo original: -";
             // 
             // lblCategoriaPlano
             // 
@@ -291,6 +305,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboExpedienteReparticion.Name = "cboExpedienteReparticion";
             cboExpedienteReparticion.Size = new Size(100, 23);
             cboExpedienteReparticion.TabIndex = 9;
+            // 
+            // btnParsearExpedienteDeArchivo
+            // 
+            btnParsearExpedienteDeArchivo.BackColor = Color.FromArgb(60, 60, 60);
+            btnParsearExpedienteDeArchivo.FlatStyle = FlatStyle.Flat;
+            btnParsearExpedienteDeArchivo.ForeColor = Color.White;
+            btnParsearExpedienteDeArchivo.Location = new Point(403, 147);
+            btnParsearExpedienteDeArchivo.Name = "btnParsearExpedienteDeArchivo";
+            btnParsearExpedienteDeArchivo.Size = new Size(25, 25);
+            btnParsearExpedienteDeArchivo.TabIndex = 10;
+            btnParsearExpedienteDeArchivo.Text = "E";
+            btnParsearExpedienteDeArchivo.UseVisualStyleBackColor = false;
+            btnParsearExpedienteDeArchivo.Click += btnParsearExpedienteDeArchivo_Click;
             // 
             // lblSeccion
             // 
@@ -733,6 +760,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private TextBox txtExpedienteGcaba;
         private Label lblExpedienteGuion4;
         private ComboBox cboExpedienteReparticion;
+        private Button btnParsearExpedienteDeArchivo;
+        private Label lblNombreArchivoOriginal;
         private Label lblSeccion;
         private TextBox txtSeccion;
         private Label lblManzana;

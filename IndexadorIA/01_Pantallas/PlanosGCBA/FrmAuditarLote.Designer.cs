@@ -76,7 +76,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboEstadoControl.DropDownStyle = ComboBoxStyle.DropDownList;
             cboEstadoControl.FlatStyle = FlatStyle.Flat;
             cboEstadoControl.ForeColor = Color.White;
-            cboEstadoControl.Location = new Point(121, 25);
+            cboEstadoControl.Location = new Point(125, 25);
             cboEstadoControl.Margin = new Padding(3, 2, 3, 2);
             cboEstadoControl.Name = "cboEstadoControl";
             cboEstadoControl.Size = new Size(220, 23);

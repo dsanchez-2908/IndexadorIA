@@ -60,6 +60,7 @@ namespace IndexadorIA.Entidades
             public const int Controlado = 2;
             public const int PaginaIlegible = 3;
             public const int DatosIlegibles = 4;
+            public const int CasosEspeciales = 5;
         }
     }
 }

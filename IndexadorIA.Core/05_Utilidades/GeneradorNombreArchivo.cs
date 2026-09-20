@@ -62,6 +62,13 @@ namespace IndexadorIA.Utilidades
         public const string CategoriaCatastro = "CATASTRO";
 
         /// <summary>
+        /// Longitud maxima permitida para el campo direccion cuando se usa como parte
+        /// del nombre de archivo (no afecta el valor almacenado en base de datos ni el
+        /// volcado en el CSV de metadatos).
+        /// </summary>
+        private const int MaxLongitudDireccionEnNombreArchivo = 100;
+
+        /// <summary>
         /// Determina si una categoria de plano corresponde a Catastro (case-insensitive).
         /// </summary>
         public static bool EsCategoriaCatastro(string? dsCategoriaPlano)
@@ -85,7 +92,14 @@ namespace IndexadorIA.Utilidades
             // La direccion, seccion, manzana y parcela se usan tal cual vienen de la base
             // de datos, sin normalizar (sin mayusculas forzadas, sin reemplazo de espacios
             // o caracteres especiales).
+            // La direccion se recorta a un maximo de 100 caracteres unicamente para la
+            // construccion del nombre de archivo, para evitar errores por el largo total
+            // del nombre/ruta. Esto no afecta el valor de dsDireccion almacenado en base
+            // de datos ni el que se vuelca en la columna Direccion del CSV de metadatos.
             string dir = direccion ?? string.Empty;
+            if (dir.Length > MaxLongitudDireccionEnNombreArchivo)
+                dir = dir.Substring(0, MaxLongitudDireccionEnNombreArchivo);
+
             string sec = seccion ?? string.Empty;
             string mza = manzana ?? string.Empty;
             string parc = parcela ?? string.Empty;

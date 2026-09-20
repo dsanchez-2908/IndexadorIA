@@ -269,6 +269,48 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Actualiza la dirección de todos los demás resultados del mismo lote que compartan el mismo
+        /// expediente (dsExpediente), propagando el cambio de dirección hecho en un registro auditado
+        /// a todos los registros relacionados. Excluye el propio registro que originó el cambio.
+        /// </summary>
+        public void ActualizarDireccionPorExpedienteEnLote(int cdLote, string dsExpediente, int cdResultadoExcluir, string? dsDireccion, int cdUsuarioModificacion)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_cadenaConexion);
+                using var cmd = new SqlCommand(@"
+                    UPDATE TD_001_RESULTADO_IA
+                    SET dsDireccion = @dsDireccion,
+                        feUltimaModificacion = GETDATE(),
+                        cdUsuarioModificacion = @cdUsuarioModificacion
+                    WHERE cdLote = @cdLote
+                      AND dsExpediente = @dsExpediente
+                      AND cdResultado <> @cdResultadoExcluir", conn);
+
+                cmd.Parameters.AddWithValue("@dsDireccion", (object?)dsDireccion ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@cdUsuarioModificacion", cdUsuarioModificacion);
+                cmd.Parameters.AddWithValue("@cdLote", cdLote);
+                cmd.Parameters.AddWithValue("@dsExpediente", dsExpediente);
+                cmd.Parameters.AddWithValue("@cdResultadoExcluir", cdResultadoExcluir);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                var logDAL = new LogDAL();
+                logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.ERROR,
+                    DsModulo = "ResultadoIADAL.ActualizarDireccionPorExpedienteEnLote",
+                    DsMensaje = $"Error al propagar dirección en lote {cdLote}, expediente '{dsExpediente}': {ex.Message}",
+                    DsExcepcion = ex.ToString()
+                });
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Actualiza el estado de control de un resultado (Guardar y Marcar Controlada,
         /// Marcar Página Ilegible, Marcar Datos Ilegible), registrando fecha y usuario de control.
         /// </summary>
@@ -378,6 +420,7 @@ namespace IndexadorIA.Datos
             b.cdUsuarioFinControl	AS cdUsuarioFinControl,
             d.dsNombreCompleto		AS dsUsuarioFinControl,	
             a.cdArchivoPagina		AS cdArchivoPagina,
+            i.dsNombreArchivo		AS dsNombreArchivoOriginal,
             a.cdCategoriaPlano		AS cdCategoriaPlano,
             e.dsCategoriaPlano		AS dsCategoriaPlano,	
             a.cdTipoPlano			AS cdTipoPlano,
@@ -403,6 +446,8 @@ LEFT JOIN	TD_CATEGORIA_PLANO	e ON a.cdCategoriaPlano=e.cdCategoriaPlano
 LEFT JOIN	TD_TIPOS_PLANO		f ON a.cdTipoPlano=f.cdTipoPlano
 LEFT JOIN	TD_ESTADOS			g ON g.dsProceso='CONTROL' AND a.cdEstadoControl=g.cdEstado
 LEFT JOIN	TD_USUARIOS			h ON a.cdUsuarioControl=h.cdUsuario
+LEFT JOIN	TD_ARCHIVOS_PAGINAS	p ON a.cdArchivoPagina=p.cdArchivoPagina
+LEFT JOIN	TD_ARCHIVOS_ORIGINAL i ON p.cdArchivoOriginal=i.cdArchivo
 WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
             if (cdEstadosControl != null && cdEstadosControl.Count > 0)
@@ -444,23 +489,24 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
                     CdUsuarioFinControl = reader.IsDBNull(6) ? null : reader.GetInt32(6),
                     DsUsuarioFinControl = reader.IsDBNull(7) ? null : reader.GetString(7),
                     CdArchivoPagina = reader.GetInt32(8),
-                    CdCategoriaPlano = reader.IsDBNull(9) ? null : reader.GetInt32(9),
-                    DsCategoriaPlano = reader.IsDBNull(10) ? null : reader.GetString(10),
-                    CdTipoPlano = reader.IsDBNull(11) ? null : reader.GetInt32(11),
-                    DsTipoPlano = reader.IsDBNull(12) ? null : reader.GetString(12),
-                    DsExpediente = reader.IsDBNull(13) ? null : reader.GetString(13),
-                    DsSeccion = reader.IsDBNull(14) ? null : reader.GetString(14),
-                    DsManzana = reader.IsDBNull(15) ? null : reader.GetString(15),
-                    DsParcela = reader.IsDBNull(16) ? null : reader.GetString(16),
-                    DsDireccion = reader.IsDBNull(17) ? null : reader.GetString(17),
-                    DsNumeroPlano = reader.IsDBNull(18) ? null : reader.GetString(18),
-                    DsObservaciones = reader.IsDBNull(19) ? null : reader.GetString(19),
-                    CdEstadoControl = reader.GetInt32(20),
-                    DsEstadoControl = reader.IsDBNull(21) ? null : reader.GetString(21),
-                    FeControl = reader.IsDBNull(22) ? null : reader.GetDateTime(22),
-                    CdUsuarioControl = reader.IsDBNull(23) ? null : reader.GetInt32(23),
-                    DsUsuarioControl = reader.IsDBNull(24) ? null : reader.GetString(24),
-                    SnModificaDatos = reader.IsDBNull(25) ? null : reader.GetString(25)
+                    DsNombreArchivoOriginal = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    CdCategoriaPlano = reader.IsDBNull(10) ? null : reader.GetInt32(10),
+                    DsCategoriaPlano = reader.IsDBNull(11) ? null : reader.GetString(11),
+                    CdTipoPlano = reader.IsDBNull(12) ? null : reader.GetInt32(12),
+                    DsTipoPlano = reader.IsDBNull(13) ? null : reader.GetString(13),
+                    DsExpediente = reader.IsDBNull(14) ? null : reader.GetString(14),
+                    DsSeccion = reader.IsDBNull(15) ? null : reader.GetString(15),
+                    DsManzana = reader.IsDBNull(16) ? null : reader.GetString(16),
+                    DsParcela = reader.IsDBNull(17) ? null : reader.GetString(17),
+                    DsDireccion = reader.IsDBNull(18) ? null : reader.GetString(18),
+                    DsNumeroPlano = reader.IsDBNull(19) ? null : reader.GetString(19),
+                    DsObservaciones = reader.IsDBNull(20) ? null : reader.GetString(20),
+                    CdEstadoControl = reader.GetInt32(21),
+                    DsEstadoControl = reader.IsDBNull(22) ? null : reader.GetString(22),
+                    FeControl = reader.IsDBNull(23) ? null : reader.GetDateTime(23),
+                    CdUsuarioControl = reader.IsDBNull(24) ? null : reader.GetInt32(24),
+                    DsUsuarioControl = reader.IsDBNull(25) ? null : reader.GetString(25),
+                    SnModificaDatos = reader.IsDBNull(26) ? null : reader.GetString(26)
                 });
             }
 
@@ -469,7 +515,7 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
         /// <summary>
         /// Obtiene los estados de control (dsProceso='CONTROL') utilizados como filtro
-        /// en la pantalla de auditoría (FrmAuditarLote): Controlado, Página Ilegible, Datos Ilegibles.
+        /// en la pantalla de auditoría (FrmAuditarLote): Controlado, Página Ilegible, Datos Ilegibles, Casos Especiales.
         /// </summary>
         public List<KeyValuePair<int, string>> ObtenerEstadosControlParaFiltro()
         {
@@ -477,7 +523,7 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
             using var conn = new SqlConnection(_cadenaConexion);
             using var cmd = new SqlCommand(
-                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (2,3,4) ORDER BY 1", conn);
+                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (2,3,4,5) ORDER BY 1", conn);
 
             conn.Open();
             using var reader = cmd.ExecuteReader();

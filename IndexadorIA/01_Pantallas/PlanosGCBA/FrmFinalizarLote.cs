@@ -301,7 +301,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             var archivosPorPagina = loteDAL.ObtenerArchivosPaginasPorLote(cdLote)
                 .ToDictionary(a => a.CdArchivoPagina, a => a);
 
+            // Los registros marcados como Casos Especiales (cdEstadoControl = 5) se ignoran
+            // en la finalización del lote; se tratarán mas adelante en una pantalla de
+            // "Reubicar" a un nuevo lote para su tratamiento especial.
             return resultados
+                .Where(r => r.CdEstadoControl != ResultadoIA.EstadosControl.CasosEspeciales)
                 .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
                 .Select(r => new LoteFinalizacionBL.FilaFinalizacion
                 {

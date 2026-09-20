@@ -152,6 +152,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             CargarNumeroPlanoEnCampos(_registro.DsNumeroPlano);
             txtObservaciones.Text = _registro.DsObservaciones ?? string.Empty;
             cboEstado.SelectedValue = _registro.CdEstadoControl;
+
+            lblNombreArchivoOriginal.Text = $"Archivo original: {_registro.DsNombreArchivoOriginal ?? "-"}";
         }
 
         /// <summary>
@@ -211,6 +213,45 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
 
             return $"{ex}-{anio}-{numero}-{gcaba}-{reparticion}";
+        }
+
+        /// <summary>
+        /// Parsea el expediente desde el nombre del archivo original (mismo formato y
+        /// lógica que FrmVerLote.btnParsearExpedienteDeArchivo_Click): EX-ANIO-NUMERO-...-REPARTICION.
+        /// </summary>
+        private void btnParsearExpedienteDeArchivo_Click(object sender, EventArgs e)
+        {
+            string? nombreArchivoOriginal = _registro.DsNombreArchivoOriginal;
+            if (string.IsNullOrWhiteSpace(nombreArchivoOriginal))
+                return;
+
+            string nombreSinExtension = Path.GetFileNameWithoutExtension(nombreArchivoOriginal);
+            string[] partes = nombreSinExtension.Split('-', StringSplitOptions.None);
+
+            if (partes.Length < 6)
+                return;
+
+            string ex = partes[0].Trim();
+            string anio = partes[1].Trim();
+            string numero = partes[2].Trim();
+            string reparticion = partes[5].Trim();
+
+            if (string.IsNullOrWhiteSpace(ex))
+                return;
+
+            if (!int.TryParse(anio, out int anioValor) || anioValor < 1900 || anioValor > 2050)
+                return;
+
+            if (numero.Length != 8 || !numero.All(char.IsDigit))
+                return;
+
+            if (string.IsNullOrWhiteSpace(reparticion))
+                return;
+
+            txtExpedienteEx.Text = ex;
+            txtExpedienteAnio.Text = anio;
+            txtExpedienteNumero.Text = numero;
+            cboExpedienteReparticion.Text = reparticion;
         }
 
         /// <summary>
@@ -508,6 +549,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnVerImagenPDF_Click(object sender, EventArgs e)
         {
+            if (SesionApi.ModoRemoto)
+            {
+                AbrirPdfRemoto(_registro.CdLote, _registro.CdArchivoPagina);
+                return;
+            }
+
             if (_archivoPagina == null)
             {
                 MessageBox.Show("No se pudo determinar el archivo/página del registro.", "Aviso",
@@ -516,6 +563,34 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             }
 
             AbrirPdfConAplicacionPredeterminada(_archivoPagina.DsRutaCompleta);
+        }
+
+        /// <summary>
+        /// Descarga el PDF de la página del registro desde la API y lo abre con la
+        /// aplicación predeterminada de Windows, ya que el cliente no tiene acceso
+        /// directo al storage del servidor en modo remoto.
+        /// </summary>
+        private void AbrirPdfRemoto(int cdLote, int cdArchivoPagina)
+        {
+            try
+            {
+                byte[] bytes = _apiCliente!.ObtenerPdfAsync(cdLote, cdArchivoPagina)
+                    .GetAwaiter().GetResult();
+
+                string rutaTemporal = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.pdf");
+                File.WriteAllBytes(rutaTemporal, bytes);
+
+                var psi = new System.Diagnostics.ProcessStartInfo(rutaTemporal)
+                {
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo obtener el PDF desde la API: {ex.Message}", "Aviso",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         private static void AbrirPdfConAplicacionPredeterminada(string rutaPdf)
@@ -546,6 +621,92 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnGuardar_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(txtExpedienteAnio.Text)
+                && string.IsNullOrWhiteSpace(txtExpedienteNumero.Text)
+                && string.IsNullOrWhiteSpace(cboExpedienteReparticion.Text))
+            {
+                var confirmacionExpediente = MessageBox.Show(
+                    "El numero de expediente no esta completo, desea continuar?",
+                    "Expediente incompleto", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionExpediente != DialogResult.Yes)
+                    return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtSeccion.Text) && txtSeccion.Text.Trim().Length < 3)
+            {
+                MessageBox.Show(
+                    "El campo Sección debe tener 3 o más caracteres.",
+                    "Sección inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtManzana.Text) && txtManzana.Text.Trim().Length < 3)
+            {
+                MessageBox.Show(
+                    "El campo Manzana debe tener 3 o más caracteres.",
+                    "Manzana inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length < 3)
+            {
+                MessageBox.Show(
+                    "El campo Parcela debe tener 3 o más caracteres.",
+                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtNumeroPlanoNumero.Text) && txtNumeroPlanoNumero.Text.Trim().Length != 4)
+            {
+                MessageBox.Show(
+                    "El campo Número de Plano (número) debe tener 4 caracteres.",
+                    "Número de Plano inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtNumeroPlanoAnio.Text))
+            {
+                string anioPlano = txtNumeroPlanoAnio.Text.Trim();
+                if (anioPlano.Length != 4 || !int.TryParse(anioPlano, out int anioPlanoValor) || anioPlanoValor < 1900 || anioPlanoValor > 2030)
+                {
+                    MessageBox.Show(
+                        "El campo Número de Plano (año) debe tener 4 dígitos y ser un año entre 1900 y 2030.",
+                        "Número de Plano inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+
+            int? cdEstadoControlSeleccionado = cboEstado.SelectedValue is int cdEstadoControlVal ? cdEstadoControlVal : null;
+
+            if (cdEstadoControlSeleccionado == ResultadoIA.EstadosControl.CasosEspeciales
+                && !string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length <= 3)
+            {
+                MessageBox.Show(
+                    "Si la parcela tiene 3 caracteres o menos, se debe guardar como normal (Controlado).",
+                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (cdEstadoControlSeleccionado == ResultadoIA.EstadosControl.Controlado
+                && !string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length != 3)
+            {
+                MessageBox.Show(
+                    "Si la parcela tiene letra o mas de una parcela, se debe guardar como casos especiales.",
+                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && ContieneNumeroDeMasDeCuatroDigitos(txtDireccion.Text))
+            {
+                var confirmacionDireccion = MessageBox.Show(
+                    "Revise el campo Dirección. Esta seguro de continuar?",
+                    "Verifique la Dirección", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionDireccion != DialogResult.Yes)
+                    return;
+            }
+
             try
             {
                 var resultado = new ResultadoIA
@@ -567,6 +728,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 int cdEstadoControlFinal = cboEstado.SelectedValue is int cdEstadoControlSel2 ? cdEstadoControlSel2 : _registro.CdEstadoControl;
                 string? dsObservaciones = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim();
                 bool cambioObservaciones = !string.Equals(txtObservaciones.Text.Trim(), _registro.DsObservaciones ?? string.Empty, StringComparison.Ordinal);
+                bool cambioDireccion = !string.Equals(resultado.DsDireccion ?? string.Empty, _valoresOriginalesResultado?.DsDireccion ?? string.Empty, StringComparison.Ordinal);
 
                 if (SesionApi.ModoRemoto)
                 {
@@ -603,6 +765,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             Correcciones = correccionesApi
                         }).GetAwaiter().GetResult();
                     }
+
+                    if (cambioDireccion && !string.IsNullOrWhiteSpace(resultado.DsExpediente))
+                    {
+                        _apiCliente!.PropagarDireccionAuditoriaAsync(resultado.CdResultado, new PropagarDireccionApiRequestDto
+                        {
+                            CdLote = _registro.CdLote,
+                            DsExpediente = resultado.DsExpediente,
+                            DsDireccion = resultado.DsDireccion
+                        }).GetAwaiter().GetResult();
+                    }
                 }
                 else
                 {
@@ -614,6 +786,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     if (cambioEstado || cambioObservaciones)
                     {
                         resultadoDAL.ActualizarEstadoControl(_registro.CdResultado, cdEstadoControlFinal, null, cdUsuario, dsObservaciones);
+                    }
+
+                    if (cambioDireccion && !string.IsNullOrWhiteSpace(resultado.DsExpediente))
+                    {
+                        resultadoDAL.ActualizarDireccionPorExpedienteEnLote(
+                            _registro.CdLote, resultado.DsExpediente, resultado.CdResultado, resultado.DsDireccion, cdUsuario);
                     }
                 }
 
@@ -720,6 +898,32 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private void btnCerrar_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        /// <summary>
+        /// Recorre el texto buscando secuencias de dígitos consecutivos (números) y determina
+        /// si alguna de ellas tiene más de 4 dígitos. Se usa para advertir sobre posibles
+        /// direcciones mal escaneadas/tipeadas (por ejemplo "12345" en vez de "123.45").
+        /// </summary>
+        private static bool ContieneNumeroDeMasDeCuatroDigitos(string valor)
+        {
+            int longitudActual = 0;
+
+            foreach (char c in valor)
+            {
+                if (char.IsDigit(c))
+                {
+                    longitudActual++;
+                    if (longitudActual > 4)
+                        return true;
+                }
+                else
+                {
+                    longitudActual = 0;
+                }
+            }
+
+            return false;
         }
     }
 }

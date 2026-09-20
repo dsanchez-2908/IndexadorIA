@@ -450,6 +450,19 @@ namespace IndexadorIA.Negocio.Api
                 throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
         }
 
+        /// <summary>
+        /// Llama a PUT /api/auditoria/resultados/{cdResultado}/propagar-direccion (equivalente
+        /// remoto de ResultadoIADAL.ActualizarDireccionPorExpedienteEnLote(...)).
+        /// </summary>
+        public async Task PropagarDireccionAuditoriaAsync(int cdResultado, PropagarDireccionApiRequestDto request)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PutAsJsonAsync($"api/auditoria/resultados/{cdResultado}/propagar-direccion", request).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
         private static async Task<string> ObtenerMensajeErrorAsync(HttpResponseMessage respuesta)
         {
             try

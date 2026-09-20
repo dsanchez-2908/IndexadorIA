@@ -134,6 +134,13 @@ namespace IndexadorIA.Negocio.Api
         public List<CorreccionApiRequestDto> Correcciones { get; set; } = new();
     }
 
+    public class PropagarDireccionApiRequestDto
+    {
+        public int CdLote { get; set; }
+        public string DsExpediente { get; set; } = string.Empty;
+        public string? DsDireccion { get; set; }
+    }
+
     public class CategoriaPlanoApiDto
     {
         public int CdCategoriaPlano { get; set; }
@@ -206,6 +213,7 @@ namespace IndexadorIA.Negocio.Api
         public int? CdUsuarioFinControl { get; set; }
         public string? DsUsuarioFinControl { get; set; }
         public int CdArchivoPagina { get; set; }
+        public string? DsNombreArchivoOriginal { get; set; }
         public int? CdCategoriaPlano { get; set; }
         public string? DsCategoriaPlano { get; set; }
         public int? CdTipoPlano { get; set; }

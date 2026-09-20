@@ -176,5 +176,22 @@ namespace IndexadorIA.Api.Controllers
 
             return Ok(new { mensaje = "Correcciones registradas correctamente" });
         }
+
+        /// <summary>
+        /// Propaga el cambio de dirección hecho al auditar un registro a todos los demás
+        /// resultados del mismo lote que compartan el mismo expediente. Equivalente remoto
+        /// de ResultadoIADAL.ActualizarDireccionPorExpedienteEnLote(...).
+        /// </summary>
+        [HttpPut("resultados/{cdResultado:int}/propagar-direccion")]
+        public IActionResult PropagarDireccionPorExpediente(int cdResultado, [FromBody] PropagarDireccionAuditoriaRequestDto request)
+        {
+            if (string.IsNullOrWhiteSpace(request.DsExpediente))
+                return Ok(new { mensaje = "Sin expediente, no se propaga la dirección" });
+
+            _resultadoIADAL.ActualizarDireccionPorExpedienteEnLote(
+                request.CdLote, request.DsExpediente, cdResultado, request.DsDireccion, ObtenerCdUsuarioActual());
+
+            return Ok(new { mensaje = "Dirección propagada correctamente" });
+        }
     }
 }

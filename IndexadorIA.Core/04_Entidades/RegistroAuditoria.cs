@@ -20,6 +20,7 @@ namespace IndexadorIA.Entidades
 
         // Datos del registro (MOSTRAR)
         public int CdArchivoPagina { get; set; }
+        public string? DsNombreArchivoOriginal { get; set; }
         public int? CdCategoriaPlano { get; set; }
         public string? DsCategoriaPlano { get; set; }
         public int? CdTipoPlano { get; set; }

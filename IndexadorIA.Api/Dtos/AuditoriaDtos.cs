@@ -47,6 +47,7 @@ namespace IndexadorIA.Api.Dtos
         public int? CdUsuarioFinControl { get; set; }
         public string? DsUsuarioFinControl { get; set; }
         public int CdArchivoPagina { get; set; }
+        public string? DsNombreArchivoOriginal { get; set; }
         public int? CdCategoriaPlano { get; set; }
         public string? DsCategoriaPlano { get; set; }
         public int? CdTipoPlano { get; set; }
@@ -76,6 +77,7 @@ namespace IndexadorIA.Api.Dtos
             CdUsuarioFinControl = r.CdUsuarioFinControl,
             DsUsuarioFinControl = r.DsUsuarioFinControl,
             CdArchivoPagina = r.CdArchivoPagina,
+            DsNombreArchivoOriginal = r.DsNombreArchivoOriginal,
             CdCategoriaPlano = r.CdCategoriaPlano,
             DsCategoriaPlano = r.DsCategoriaPlano,
             CdTipoPlano = r.CdTipoPlano,
@@ -116,6 +118,17 @@ namespace IndexadorIA.Api.Dtos
         public string? DsSeccion { get; set; }
         public string? DsManzana { get; set; }
         public string? DsParcela { get; set; }
+        public string? DsDireccion { get; set; }
+    }
+
+    /// <summary>
+    /// Body para propagar el cambio de dirección de un registro a todos los demás
+    /// resultados del mismo lote con el mismo expediente.
+    /// </summary>
+    public class PropagarDireccionAuditoriaRequestDto
+    {
+        public int CdLote { get; set; }
+        public string DsExpediente { get; set; } = string.Empty;
         public string? DsDireccion { get; set; }
     }
 

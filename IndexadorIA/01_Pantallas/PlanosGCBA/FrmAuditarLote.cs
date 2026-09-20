@@ -210,6 +210,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         CdUsuarioFinControl = r.CdUsuarioFinControl,
                         DsUsuarioFinControl = r.DsUsuarioFinControl,
                         CdArchivoPagina = r.CdArchivoPagina,
+                        DsNombreArchivoOriginal = r.DsNombreArchivoOriginal,
                         CdCategoriaPlano = r.CdCategoriaPlano,
                         DsCategoriaPlano = r.DsCategoriaPlano,
                         CdTipoPlano = r.CdTipoPlano,
@@ -342,7 +343,80 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 }
             }
 
+            // Validación 1: Sección/Manzana/Parcela según el estado de control.
+            if (!string.IsNullOrWhiteSpace(registro.DsSeccion)
+                || !string.IsNullOrWhiteSpace(registro.DsManzana)
+                || !string.IsNullOrWhiteSpace(registro.DsParcela))
+            {
+                if (registro.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
+                    && !string.IsNullOrWhiteSpace(registro.DsParcela)
+                    && registro.DsParcela.Trim().Length != 3)
+                {
+                    return false;
+                }
+
+                if (registro.CdEstadoControl == ResultadoIA.EstadosControl.CasosEspeciales
+                    && !string.IsNullOrWhiteSpace(registro.DsParcela)
+                    && registro.DsParcela.Trim().Length <= 3)
+                {
+                    return false;
+                }
+            }
+
+            // Validación 2: Dirección con números de más de 4 dígitos.
+            if (!string.IsNullOrWhiteSpace(registro.DsDireccion)
+                && ContieneNumeroDeMasDeCuatroDigitos(registro.DsDireccion))
+            {
+                return false;
+            }
+
+            // Validación 3: Número de Plano debe tener 12 caracteres.
+            if (!string.IsNullOrWhiteSpace(registro.DsNumeroPlano)
+                && registro.DsNumeroPlano.Trim().Length != 12)
+            {
+                return false;
+            }
+
+            // Validación 4: Expediente debe tener 28 caracteres.
+            if (!string.IsNullOrWhiteSpace(registro.DsExpediente)
+                && registro.DsExpediente.Trim().Length != 28)
+            {
+                return false;
+            }
+
+            // Validación 5: Observaciones con datos se marca en rojo.
+            if (!string.IsNullOrWhiteSpace(registro.DsObservaciones))
+            {
+                return false;
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// Recorre el texto buscando secuencias de dígitos consecutivos (números) y determina
+        /// si alguna de ellas tiene más de 4 dígitos. Se usa para advertir sobre posibles
+        /// direcciones mal escaneadas/tipeadas (por ejemplo "12345" en vez de "123.45").
+        /// </summary>
+        private static bool ContieneNumeroDeMasDeCuatroDigitos(string valor)
+        {
+            int longitudActual = 0;
+
+            foreach (char c in valor)
+            {
+                if (char.IsDigit(c))
+                {
+                    longitudActual++;
+                    if (longitudActual > 4)
+                        return true;
+                }
+                else
+                {
+                    longitudActual = 0;
+                }
+            }
+
+            return false;
         }
 
         private void btnMostrar_Click(object sender, EventArgs e)
