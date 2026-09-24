@@ -515,7 +515,7 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
         /// <summary>
         /// Obtiene los estados de control (dsProceso='CONTROL') utilizados como filtro
-        /// en la pantalla de auditoría (FrmAuditarLote): Controlado, Página Ilegible, Datos Ilegibles, Casos Especiales.
+        /// en la pantalla de auditoría (FrmAuditarLote): Controlado, Página Ilegible, Datos Ilegibles, Casos Especiales, Parcelas Múltiples.
         /// </summary>
         public List<KeyValuePair<int, string>> ObtenerEstadosControlParaFiltro()
         {
@@ -523,7 +523,7 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
             using var conn = new SqlConnection(_cadenaConexion);
             using var cmd = new SqlCommand(
-                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (2,3,4,5) ORDER BY 1", conn);
+                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (2,3,4,5,6) ORDER BY 1", conn);
 
             conn.Open();
             using var reader = cmd.ExecuteReader();

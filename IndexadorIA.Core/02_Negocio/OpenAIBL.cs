@@ -37,7 +37,8 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
-        /// Limpia un texto extraido por la IA, dejando null si queda vacio tras el recorte.
+        /// Limpia un texto extraido por la IA, dejando null si queda vacio tras el recorte
+        /// o si la IA devolvio literalmente la palabra "NULL" (en cualquier combinacion de mayusculas/minusculas).
         /// </summary>
         private static string? LimpiarTexto(string? texto)
         {
@@ -47,7 +48,13 @@ namespace IndexadorIA.Negocio
             }
 
             string limpio = texto.Trim();
-            return limpio.Length == 0 ? null : limpio;
+
+            if (limpio.Length == 0 || string.Equals(limpio, "NULL", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return limpio;
         }
 
         /// <summary>

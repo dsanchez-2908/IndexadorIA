@@ -389,7 +389,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20260918)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20260923)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
