@@ -62,17 +62,38 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuCantidadArchivos",
-                DataPropertyName = "NuCantidadArchivos",
-                HeaderText = "Cant. Archivos"
+                Name = "feUltimoCambio",
+                DataPropertyName = "FeUltimoCambio",
+                HeaderText = "Fecha de Asignación",
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "feUltimoCambio",
-                DataPropertyName = "FeUltimoCambio",
-                HeaderText = "Fecha de Asignaci\u00f3n",
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
+                Name = "dsDescripcion",
+                DataPropertyName = "DsDescripcion",
+                HeaderText = "Descripción"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsEntrega",
+                DataPropertyName = "DsEntrega",
+                HeaderText = "Entrega"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsCarpeta",
+                DataPropertyName = "DsCarpeta",
+                HeaderText = "Carpeta"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadArchivos",
+                DataPropertyName = "NuCantidadArchivos",
+                HeaderText = "Cant. Archivos"
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
@@ -94,6 +115,20 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 Name = "nuEstadoPaginaIlegible",
                 DataPropertyName = "NuEstadoPaginaIlegible",
                 HeaderText = "Pagina Ilegible"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuEstadoCasosEspeciales",
+                DataPropertyName = "NuEstadoCasosEspeciales",
+                HeaderText = "Casos Especiales"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuEstadoParcelasMultiples",
+                DataPropertyName = "NuEstadoParcelasMultiples",
+                HeaderText = "Parcelas Multiples"
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
@@ -130,9 +165,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         DsNombreLote = l.DsNombreLote,
                         NuCantidadArchivos = l.NuCantidadArchivos,
                         FeUltimoCambio = l.FeUltimoCambio,
+                        DsDescripcion = l.DsDescripcion,
+                        DsEntrega = l.DsEntrega,
+                        DsCarpeta = l.DsCarpeta,
                         NuEstadoControlado = l.NuEstadoControlado,
                         NuEstadoDatosIlegibles = l.NuEstadoDatosIlegibles,
                         NuEstadoPaginaIlegible = l.NuEstadoPaginaIlegible,
+                        NuEstadoCasosEspeciales = l.NuEstadoCasosEspeciales,
+                        NuEstadoParcelasMultiples = l.NuEstadoParcelasMultiples,
                         DsUsuarioFinControl = l.DsUsuarioFinControl,
                         DsEstado = l.DsEstado
                     }).ToList();

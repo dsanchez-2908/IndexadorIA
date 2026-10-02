@@ -25,6 +25,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             public int CdLote => Lote.CdLote;
             public string DsNombreLote => Lote.DsNombreLote;
+            public string? DsDescripcion => Lote.DsDescripcion;
+            public string? DsEntrega => Lote.DsEntrega;
+            public string? DsCarpeta => Lote.DsCarpeta;
             public int NuCantidadArchivos => Lote.NuCantidadArchivos;
             public string? DsEstado => Lote.DsEstado;
             public DateTime FeAltaLote => Lote.FeAltaLote;
@@ -88,9 +91,30 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
+                Name = "dsDescripcion",
+                DataPropertyName = "DsDescripcion",
+                HeaderText = "Descripción"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsEntrega",
+                DataPropertyName = "DsEntrega",
+                HeaderText = "Entrega"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsCarpeta",
+                DataPropertyName = "DsCarpeta",
+                HeaderText = "Carpeta"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
                 Name = "nuCantidadArchivos",
                 DataPropertyName = "NuCantidadArchivos",
-                HeaderText = "Cant. Archivos"
+                HeaderText = "Cantidad de Archivos"
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn

@@ -7,6 +7,7 @@ namespace IndexadorIA.Entidades
     {
         public int CdLote { get; set; }
         public string DsNombreLote { get; set; } = string.Empty;
+        public string? DsDescripcion { get; set; }
         public int NuCantidadArchivos { get; set; }
         public int CdEstadoLote { get; set; }
         public DateTime FeAltaLote { get; set; }
@@ -36,15 +37,24 @@ namespace IndexadorIA.Entidades
         public int NuCorrectos { get; set; }
         public int NuIncorrectos { get; set; }
 
+        /// <summary>
+        /// Numero de entrega (TD_ARCHIVOS_PAGINAS.dsEntrega) y carpeta (TD_ARCHIVOS_PAGINAS.dsCarpeta)
+        /// de los archivos del lote, usados para mostrar en la grilla dgvLotes de FrmAsignacionLote.
+        /// </summary>
+        public string? DsEntrega { get; set; }
+        public string? DsCarpeta { get; set; }
+
         // Conteo de registros controlados (feControl IS NOT NULL) y pendientes
         // (feControl IS NULL) en TD_001_RESULTADO_IA, usado en FrmControlFinalizacion.
         public int NuControlados { get; set; }
         public int NuPendientes { get; set; }
 
         // Conteo por estado de control (TD_001_RESULTADO_IA.cdEstadoControl), usado en
-        // FrmAuditar: 2=Controlado, 3=Pagina Ilegible, 4=Datos Ilegibles.
+        // FrmAuditar: 2=Controlado, 3=Pagina Ilegible, 4=Datos Ilegibles, 5=Casos Especiales, 6=Parcelas Multiples.
         public int NuEstadoControlado { get; set; }
         public int NuEstadoPaginaIlegible { get; set; }
         public int NuEstadoDatosIlegibles { get; set; }
+        public int NuEstadoCasosEspeciales { get; set; }
+        public int NuEstadoParcelasMultiples { get; set; }
     }
 }

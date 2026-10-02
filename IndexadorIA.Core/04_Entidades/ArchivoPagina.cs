@@ -27,10 +27,27 @@ namespace IndexadorIA.Entidades
         public string? DsNombreArchivoFinal { get; set; }
 
         /// <summary>
+        /// Nombre de PDF efectivamente entregado en la carpeta de Entrega (proceso de
+        /// Envio), solo informado cuando difiere de DsNombreArchivoFinal porque debio
+        /// renombrarse al detectar una colision de nombres con otro archivo ya existente
+        /// en destino (sufijo "(1)", "(2)", etc.). Null si se envio con el mismo nombre
+        /// que DsNombreArchivoFinal. Persistido en
+        /// TD_ARCHIVOS_PAGINAS.dsNombreArchivoFinalEnviado.
+        /// </summary>
+        public string? DsNombreArchivoFinalEnviado { get; set; }
+
+        /// <summary>
         /// Ruta completa (dsRutaCompleta) del archivo original en TD_ARCHIVOS_ORIGINAL,
         /// usada para calcular la carpeta donde se ubican los PDFs finales
         /// ("Planos Procesados"/"Planos ILEGIBLES").
         /// </summary>
         public string DsRutaCompletaOriginal { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Numero de entrega asociado al lote (TD_ARCHIVOS_PAGINAS.dsEntrega), por ejemplo
+        /// "Entrega 1". Todos los registros de un mismo lote comparten el mismo valor, y se
+        /// usa para agrupar los archivos dentro de la carpeta de envio final.
+        /// </summary>
+        public string DsEntrega { get; set; } = string.Empty;
     }
 }

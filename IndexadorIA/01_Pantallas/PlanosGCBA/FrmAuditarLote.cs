@@ -12,13 +12,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
     /// </summary>
     public partial class FrmAuditarLote : Form
     {
-        private const int ANIO_EXPEDIENTE_MINIMO = 1850;
-        private const int ANIO_EXPEDIENTE_MAXIMO = 2030;
-
         private readonly int _cdLote;
         private readonly string _dsNombreLote;
         private List<RegistroAuditoria> _registrosActuales = new();
         private readonly HashSet<int> _cdResultadosRevisados = new();
+        private Dictionary<int, List<string>> _posiblesErroresPorResultado = new();
         private readonly ApiClienteServicio? _apiCliente;
 
         public FrmAuditarLote(int cdLote, string dsNombreLote)
@@ -82,84 +80,107 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             {
                 Name = "dsNombreLote",
                 DataPropertyName = "DsNombreLote",
-                HeaderText = "Nombre Lote"
+                HeaderText = "Nombre Lote",
+                Width = 120
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsCategoriaPlano",
                 DataPropertyName = "DsCategoriaPlano",
-                HeaderText = "Categoría"
+                HeaderText = "Categoría",
+                Width = 110
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsTipoPlano",
                 DataPropertyName = "DsTipoPlano",
-                HeaderText = "Tipo Plano"
+                HeaderText = "Tipo Plano",
+                Width = 110
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsExpediente",
                 DataPropertyName = "DsExpediente",
-                HeaderText = "Expediente"
+                HeaderText = "Expediente",
+                Width = 160
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsSeccion",
                 DataPropertyName = "DsSeccion",
-                HeaderText = "Sección"
+                HeaderText = "Sección",
+                Width = 80
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsManzana",
                 DataPropertyName = "DsManzana",
-                HeaderText = "Manzana"
+                HeaderText = "Manzana",
+                Width = 80
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsParcela",
                 DataPropertyName = "DsParcela",
-                HeaderText = "Parcela"
+                HeaderText = "Parcela",
+                Width = 80
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsDireccion",
                 DataPropertyName = "DsDireccion",
-                HeaderText = "Dirección"
+                HeaderText = "Dirección",
+                Width = 150
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsNumeroPlano",
                 DataPropertyName = "DsNumeroPlano",
-                HeaderText = "Número Plano"
+                HeaderText = "Número Plano",
+                Width = 120
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsObservaciones",
                 DataPropertyName = "DsObservaciones",
-                HeaderText = "Observaciones"
+                HeaderText = "Observaciones",
+                Width = 150
             });
 
             dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "dsEstadoControl",
                 DataPropertyName = "DsEstadoControl",
-                HeaderText = "Estado de Control"
+                HeaderText = "Estado de Control",
+                Width = 130
+            });
+
+            dgvRegistros.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsPosibleError",
+                DataPropertyName = "DsPosiblesErroresTexto",
+                HeaderText = "Posible Error",
+                Width = 200
             });
 
             foreach (DataGridViewColumn columna in dgvRegistros.Columns)
             {
                 columna.SortMode = DataGridViewColumnSortMode.Automatic;
-                columna.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                columna.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                columna.Resizable = DataGridViewTriState.True;
             }
+
+            dgvRegistros.AllowUserToResizeColumns = true;
+            dgvRegistros.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         }
 
         private void CargarEstadosControl()
@@ -241,6 +262,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     registro.EsRevisado = _cdResultadosRevisados.Contains(registro.CdResultado);
                 }
 
+                AplicarPosiblesErrores();
+
                 dgvRegistros.DataSource = null;
                 dgvRegistros.DataSource = _registrosActuales;
 
@@ -293,16 +316,18 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
-                int cantidadInvalidos = 0;
-
-                foreach (var registro in _registrosActuales)
+                if (SesionApi.ModoRemoto)
                 {
-                    registro.EsInvalido = !ValidarRegistro(registro);
-                    if (registro.EsInvalido)
-                    {
-                        cantidadInvalidos++;
-                    }
+                    _posiblesErroresPorResultado = _apiCliente!.ObtenerPosiblesErroresAuditoriaAsync(_cdLote)
+                        .GetAwaiter().GetResult();
                 }
+                else
+                {
+                    var resultadoDAL = new ResultadoIADAL();
+                    _posiblesErroresPorResultado = resultadoDAL.ObtenerPosiblesErrores(_cdLote);
+                }
+
+                int cantidadInvalidos = AplicarPosiblesErrores();
 
                 dgvRegistros.Refresh();
 
@@ -320,103 +345,29 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         }
 
         /// <summary>
-        /// Valida un registro según las reglas de auditoría. Devuelve true si el registro es válido.
+        /// Aplica el cache de posibles errores (obtenido del SP_CONTROL_PLANOS_cdLote) a los
+        /// registros actuales, marcando EsInvalido y PosiblesErrores. Devuelve la cantidad
+        /// de registros marcados como inválidos.
         /// </summary>
-        private bool ValidarRegistro(RegistroAuditoria registro)
+        private int AplicarPosiblesErrores()
         {
-            if (registro.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
-                && string.IsNullOrWhiteSpace(registro.DsExpediente))
-            {
-                return false;
-            }
+            int cantidadInvalidos = 0;
 
-            if ((registro.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
-                    || registro.CdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible
-                    || registro.CdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles)
-                && !string.IsNullOrWhiteSpace(registro.DsExpediente))
+            foreach (var registro in _registrosActuales)
             {
-                var partes = registro.DsExpediente.Split('-');
-                if (partes.Length < 2 || !int.TryParse(partes[1], out int anio)
-                    || anio < ANIO_EXPEDIENTE_MINIMO || anio > ANIO_EXPEDIENTE_MAXIMO)
+                registro.PosiblesErrores = _posiblesErroresPorResultado.TryGetValue(registro.CdResultado, out var errores)
+                    ? errores
+                    : new List<string>();
+
+                registro.EsInvalido = registro.PosiblesErrores.Count > 0;
+
+                if (registro.EsInvalido)
                 {
-                    return false;
+                    cantidadInvalidos++;
                 }
             }
 
-            // Validación 1: Sección/Manzana/Parcela según el estado de control.
-            if (!string.IsNullOrWhiteSpace(registro.DsSeccion)
-                || !string.IsNullOrWhiteSpace(registro.DsManzana)
-                || !string.IsNullOrWhiteSpace(registro.DsParcela))
-            {
-                if (registro.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
-                    && !string.IsNullOrWhiteSpace(registro.DsParcela)
-                    && registro.DsParcela.Trim().Length != 3)
-                {
-                    return false;
-                }
-
-                if (registro.CdEstadoControl == ResultadoIA.EstadosControl.CasosEspeciales
-                    && !string.IsNullOrWhiteSpace(registro.DsParcela)
-                    && registro.DsParcela.Trim().Length <= 3)
-                {
-                    return false;
-                }
-            }
-
-            // Validación 2: Dirección con números de más de 4 dígitos.
-            if (!string.IsNullOrWhiteSpace(registro.DsDireccion)
-                && ContieneNumeroDeMasDeCuatroDigitos(registro.DsDireccion))
-            {
-                return false;
-            }
-
-            // Validación 3: Número de Plano debe tener 12 caracteres.
-            if (!string.IsNullOrWhiteSpace(registro.DsNumeroPlano)
-                && registro.DsNumeroPlano.Trim().Length != 12)
-            {
-                return false;
-            }
-
-            // Validación 4: Expediente debe tener 28 caracteres.
-            if (!string.IsNullOrWhiteSpace(registro.DsExpediente)
-                && registro.DsExpediente.Trim().Length != 28)
-            {
-                return false;
-            }
-
-            // Validación 5: Observaciones con datos se marca en rojo.
-            if (!string.IsNullOrWhiteSpace(registro.DsObservaciones))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Recorre el texto buscando secuencias de dígitos consecutivos (números) y determina
-        /// si alguna de ellas tiene más de 4 dígitos. Se usa para advertir sobre posibles
-        /// direcciones mal escaneadas/tipeadas (por ejemplo "12345" en vez de "123.45").
-        /// </summary>
-        private static bool ContieneNumeroDeMasDeCuatroDigitos(string valor)
-        {
-            int longitudActual = 0;
-
-            foreach (char c in valor)
-            {
-                if (char.IsDigit(c))
-                {
-                    longitudActual++;
-                    if (longitudActual > 4)
-                        return true;
-                }
-                else
-                {
-                    longitudActual = 0;
-                }
-            }
-
-            return false;
+            return cantidadInvalidos;
         }
 
         private void btnMostrar_Click(object sender, EventArgs e)

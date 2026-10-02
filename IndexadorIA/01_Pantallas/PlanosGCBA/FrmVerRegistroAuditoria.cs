@@ -154,6 +154,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboEstado.SelectedValue = _registro.CdEstadoControl;
 
             lblNombreArchivoOriginal.Text = $"Archivo original: {_registro.DsNombreArchivoOriginal ?? "-"}";
+
+            lstPosiblesErrores.Items.Clear();
+            if (_registro.PosiblesErrores.Count > 0)
+            {
+                lstPosiblesErrores.Items.AddRange(_registro.PosiblesErrores.Cast<object>().ToArray());
+            }
+            else
+            {
+                lstPosiblesErrores.Items.Add("Sin posibles errores detectados");
+            }
         }
 
         /// <summary>
@@ -649,14 +659,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length < 3)
-            {
-                MessageBox.Show(
-                    "El campo Parcela debe tener 3 o más caracteres.",
-                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             if (!string.IsNullOrWhiteSpace(txtNumeroPlanoNumero.Text) && txtNumeroPlanoNumero.Text.Trim().Length != 4)
             {
                 MessageBox.Show(
@@ -675,26 +677,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         "Número de Plano inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-            }
-
-            int? cdEstadoControlSeleccionado = cboEstado.SelectedValue is int cdEstadoControlVal ? cdEstadoControlVal : null;
-
-            if (cdEstadoControlSeleccionado == ResultadoIA.EstadosControl.CasosEspeciales
-                && !string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length <= 3)
-            {
-                MessageBox.Show(
-                    "Si la parcela tiene 3 caracteres o menos, se debe guardar como normal (Controlado).",
-                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (cdEstadoControlSeleccionado == ResultadoIA.EstadosControl.Controlado
-                && !string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length != 3)
-            {
-                MessageBox.Show(
-                    "Si la parcela tiene letra o mas de una parcela, se debe guardar como casos especiales.",
-                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
             }
 
             if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && ContieneNumeroDeMasDeCuatroDigitos(txtDireccion.Text))

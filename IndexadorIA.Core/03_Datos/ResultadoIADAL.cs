@@ -534,5 +534,52 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
             return estados;
         }
+
+        /// <summary>
+        /// Ejecuta el stored procedure SP_CONTROL_PLANOS_cdLote para un lote, devolviendo
+        /// los posibles errores detectados por cdResultado. Puede haber m�s de un posible
+        /// error para un mismo cdResultado, por lo que se agrupan en una lista.
+        /// </summary>
+        public Dictionary<int, List<string>> ObtenerPosiblesErrores(int cdLote)
+        {
+            var posiblesErrores = new Dictionary<int, List<string>>();
+
+            using var conn = new SqlConnection(_cadenaConexion);
+            using var cmd = new SqlCommand("SP_CONTROL_PLANOS_cdLote", conn)
+            {
+                CommandType = System.Data.CommandType.StoredProcedure
+            };
+            cmd.Parameters.AddWithValue("@p_cdLote", cdLote);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            int indicePosibleError = reader.GetOrdinal("Posible Error");
+            int indiceCdResultado = reader.GetOrdinal("cdResultado");
+
+            while (reader.Read())
+            {
+                if (reader.IsDBNull(indiceCdResultado) || reader.IsDBNull(indicePosibleError))
+                {
+                    continue;
+                }
+
+                int cdResultado = reader.GetInt32(indiceCdResultado);
+                string posibleError = reader.GetString(indicePosibleError);
+
+                if (!posiblesErrores.TryGetValue(cdResultado, out var lista))
+                {
+                    lista = new List<string>();
+                    posiblesErrores[cdResultado] = lista;
+                }
+
+                if (!lista.Contains(posibleError))
+                {
+                    lista.Add(posibleError);
+                }
+            }
+
+            return posiblesErrores;
+        }
     }
 }

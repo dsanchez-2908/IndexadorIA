@@ -101,6 +101,24 @@ namespace IndexadorIA.Api.Controllers
         }
 
         /// <summary>
+        /// Posibles errores detectados por el stored procedure SP_CONTROL_PLANOS_cdLote
+        /// para un lote. Equivalente remoto de FrmAuditarLote.btnAnalizar_Click.
+        /// </summary>
+        [HttpGet("lotes/{cdLote:int}/posibles-errores")]
+        public IActionResult ObtenerPosiblesErrores(int cdLote)
+        {
+            var posiblesErrores = _resultadoIADAL.ObtenerPosiblesErrores(cdLote);
+
+            var resultado = posiblesErrores.Select(kvp => new PosibleErrorAuditoriaDto
+            {
+                CdResultado = kvp.Key,
+                PosiblesErrores = kvp.Value
+            });
+
+            return Ok(resultado);
+        }
+
+        /// <summary>
         /// Marca el lote como auditado. Equivalente remoto de
         /// FrmAuditarLote.btnMarcarLoteAuditado_Click.
         /// </summary>

@@ -53,6 +53,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             txtObservaciones = new TextBox();
             lblEstado = new Label();
             cboEstado = new ComboBox();
+            lblPosiblesErrores = new Label();
+            lstPosiblesErrores = new ListBox();
             panelBotones = new Panel();
             btnGuardar = new Button();
             btnCerrar = new Button();
@@ -126,6 +128,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             groupBoxDatos.Controls.Add(txtObservaciones);
             groupBoxDatos.Controls.Add(lblEstado);
             groupBoxDatos.Controls.Add(cboEstado);
+            groupBoxDatos.Controls.Add(lblPosiblesErrores);
+            groupBoxDatos.Controls.Add(lstPosiblesErrores);
             groupBoxDatos.Dock = DockStyle.Fill;
             groupBoxDatos.ForeColor = Color.White;
             groupBoxDatos.Location = new Point(0, 0);
@@ -517,6 +521,29 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboEstado.Size = new Size(380, 23);
             cboEstado.TabIndex = 19;
             // 
+            // lblPosiblesErrores
+            // 
+            lblPosiblesErrores.AutoSize = true;
+            lblPosiblesErrores.ForeColor = Color.OrangeRed;
+            lblPosiblesErrores.Location = new Point(18, 500);
+            lblPosiblesErrores.Name = "lblPosiblesErrores";
+            lblPosiblesErrores.Size = new Size(89, 15);
+            lblPosiblesErrores.TabIndex = 20;
+            lblPosiblesErrores.Text = "Posibles Errores";
+            // 
+            // lstPosiblesErrores
+            // 
+            lstPosiblesErrores.BackColor = Color.FromArgb(30, 30, 30);
+            lstPosiblesErrores.BorderStyle = BorderStyle.FixedSingle;
+            lstPosiblesErrores.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lstPosiblesErrores.ForeColor = Color.OrangeRed;
+            lstPosiblesErrores.FormattingEnabled = true;
+            lstPosiblesErrores.Location = new Point(18, 518);
+            lstPosiblesErrores.Margin = new Padding(3, 2, 3, 2);
+            lstPosiblesErrores.Name = "lstPosiblesErrores";
+            lstPosiblesErrores.Size = new Size(380, 107);
+            lstPosiblesErrores.TabIndex = 21;
+            // 
             // panelBotones
             // 
             panelBotones.BackColor = Color.FromArgb(45, 45, 48);
@@ -780,6 +807,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private TextBox txtObservaciones;
         private Label lblEstado;
         private ComboBox cboEstado;
+        private Label lblPosiblesErrores;
+        private ListBox lstPosiblesErrores;
         private Panel panelBotones;
         private Button btnCerrar;
         private Button btnGuardar;

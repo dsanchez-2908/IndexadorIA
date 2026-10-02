@@ -519,7 +519,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 && fila.Resultado != null
                 && (fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
                     || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible
-                    || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles))
+                    || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles
+                    || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.CasosEspeciales
+                    || fila.Resultado.CdEstadoControl == ResultadoIA.EstadosControl.ParcelasMultiples))
             {
                 dgvArchivos.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.FromArgb(30, 90, 30);
                 dgvArchivos.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.White;
@@ -1046,7 +1048,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnGuardarControlada_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length > 3)
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text)
+                && txtParcela.Text.Trim().Length != 3 && txtParcela.Text.Trim().Length != 4)
             {
                 MessageBox.Show(
                     "Si la parcela tiene letra o mas de una parcela, se debe guardar como casos especiales",
@@ -1059,10 +1062,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnGuardarCasosEspeciales_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length <= 3)
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length <= 4)
             {
                 MessageBox.Show(
-                    "Si la parcela tiene 3 caracteres o menos, se debe guardar como normal (Guardar y Marcar Controlada).",
+                    "Si la parcela tiene 4 caracteres o menos, se debe guardar como normal (Guardar y Marcar Controlada).",
                     "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }

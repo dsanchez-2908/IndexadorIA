@@ -396,6 +396,25 @@ namespace IndexadorIA.Negocio.Api
         }
 
         /// <summary>
+        /// Llama a GET /api/auditoria/lotes/{cdLote}/posibles-errores (equivalente remoto de
+        /// ResultadoIADAL.ObtenerPosiblesErrores(cdLote), usado por
+        /// FrmAuditarLote.btnAnalizar_Click). Devuelve un diccionario cdResultado -> lista
+        /// de posibles errores.
+        /// </summary>
+        public async Task<Dictionary<int, List<string>>> ObtenerPosiblesErroresAuditoriaAsync(int cdLote)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync($"api/auditoria/lotes/{cdLote}/posibles-errores").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<PosibleErrorAuditoriaApiDto>>().ConfigureAwait(false);
+            return (resultado ?? new List<PosibleErrorAuditoriaApiDto>())
+                .ToDictionary(x => x.CdResultado, x => x.PosiblesErrores);
+        }
+
+        /// <summary>
         /// Llama a PUT /api/auditoria/lotes/{cdLote}/marcar-auditado (equivalente remoto
         /// de FrmAuditarLote.btnMarcarLoteAuditado_Click).
         /// </summary>

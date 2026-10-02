@@ -34,6 +34,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             progressBar = new ProgressBar();
             btnCerrar = new Button();
             btnFinalizarLote = new Button();
+            btnSeleccionarTodo = new Button();
+            btnSeleccionar50 = new Button();
+            btnDeseleccionarTodo = new Button();
             groupBoxFiltros.SuspendLayout();
             groupBoxLotes.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvLotes).BeginInit();
@@ -233,6 +236,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelAcciones.Controls.Add(progressBar);
             panelAcciones.Controls.Add(btnFinalizarLote);
             panelAcciones.Controls.Add(btnCerrar);
+            panelAcciones.Controls.Add(btnSeleccionarTodo);
+            panelAcciones.Controls.Add(btnSeleccionar50);
+            panelAcciones.Controls.Add(btnDeseleccionarTodo);
             panelAcciones.BackColor = Color.FromArgb(45, 45, 48);
             panelAcciones.Dock = DockStyle.Bottom;
             panelAcciones.Location = new Point(0, 428);
@@ -243,10 +249,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             //
             // progressBar
             //
-            progressBar.Location = new Point(190, 8);
+            progressBar.Location = new Point(620, 8);
             progressBar.Margin = new Padding(3, 2, 3, 2);
             progressBar.Name = "progressBar";
-            progressBar.Size = new Size(600, 30);
+            progressBar.Size = new Size(210, 30);
             progressBar.TabIndex = 2;
             //
             // btnFinalizarLote
@@ -276,6 +282,48 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnCerrar.Text = "Cerrar";
             btnCerrar.UseVisualStyleBackColor = false;
             btnCerrar.Click += btnCerrar_Click;
+            //
+            // btnSeleccionarTodo
+            //
+            btnSeleccionarTodo.BackColor = Color.FromArgb(62, 62, 66);
+            btnSeleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnSeleccionarTodo.ForeColor = Color.White;
+            btnSeleccionarTodo.Location = new Point(190, 8);
+            btnSeleccionarTodo.Margin = new Padding(3, 2, 3, 2);
+            btnSeleccionarTodo.Name = "btnSeleccionarTodo";
+            btnSeleccionarTodo.Size = new Size(120, 30);
+            btnSeleccionarTodo.TabIndex = 3;
+            btnSeleccionarTodo.Text = "Seleccionar Todo";
+            btnSeleccionarTodo.UseVisualStyleBackColor = false;
+            btnSeleccionarTodo.Click += btnSeleccionarTodo_Click;
+            //
+            // btnSeleccionar50
+            //
+            btnSeleccionar50.BackColor = Color.FromArgb(62, 62, 66);
+            btnSeleccionar50.FlatStyle = FlatStyle.Flat;
+            btnSeleccionar50.ForeColor = Color.White;
+            btnSeleccionar50.Location = new Point(316, 8);
+            btnSeleccionar50.Margin = new Padding(3, 2, 3, 2);
+            btnSeleccionar50.Name = "btnSeleccionar50";
+            btnSeleccionar50.Size = new Size(120, 30);
+            btnSeleccionar50.TabIndex = 4;
+            btnSeleccionar50.Text = "Seleccionar 50";
+            btnSeleccionar50.UseVisualStyleBackColor = false;
+            btnSeleccionar50.Click += btnSeleccionar50_Click;
+            //
+            // btnDeseleccionarTodo
+            //
+            btnDeseleccionarTodo.BackColor = Color.FromArgb(62, 62, 66);
+            btnDeseleccionarTodo.FlatStyle = FlatStyle.Flat;
+            btnDeseleccionarTodo.ForeColor = Color.White;
+            btnDeseleccionarTodo.Location = new Point(442, 8);
+            btnDeseleccionarTodo.Margin = new Padding(3, 2, 3, 2);
+            btnDeseleccionarTodo.Name = "btnDeseleccionarTodo";
+            btnDeseleccionarTodo.Size = new Size(140, 30);
+            btnDeseleccionarTodo.TabIndex = 5;
+            btnDeseleccionarTodo.Text = "Deseleccionar Todo";
+            btnDeseleccionarTodo.UseVisualStyleBackColor = false;
+            btnDeseleccionarTodo.Click += btnDeseleccionarTodo_Click;
             //
             // FrmFinalizarLote
             //
@@ -320,5 +368,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private ProgressBar progressBar;
         private Button btnCerrar;
         private Button btnFinalizarLote;
+        private Button btnSeleccionarTodo;
+        private Button btnSeleccionar50;
+        private Button btnDeseleccionarTodo;
     }
 }

@@ -12,6 +12,9 @@ namespace IndexadorIA.Api.Dtos
     {
         public int CdLote { get; set; }
         public string DsNombreLote { get; set; } = string.Empty;
+        public string? DsDescripcion { get; set; }
+        public string? DsEntrega { get; set; }
+        public string? DsCarpeta { get; set; }
         public int NuCantidadArchivos { get; set; }
         public int CdEstadoLote { get; set; }
         public string? DsEstado { get; set; }
@@ -25,6 +28,9 @@ namespace IndexadorIA.Api.Dtos
         {
             CdLote = lote.CdLote,
             DsNombreLote = lote.DsNombreLote,
+            DsDescripcion = lote.DsDescripcion,
+            DsEntrega = lote.DsEntrega,
+            DsCarpeta = lote.DsCarpeta,
             NuCantidadArchivos = lote.NuCantidadArchivos,
             CdEstadoLote = lote.CdEstadoLote,
             DsEstado = lote.DsEstado,

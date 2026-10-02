@@ -60,9 +60,38 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
+                Name = "feUltimoCambio",
+                DataPropertyName = "FeUltimoCambio",
+                HeaderText = "Fecha de Asignación",
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsDescripcion",
+                DataPropertyName = "DsDescripcion",
+                HeaderText = "Descripción"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsEntrega",
+                DataPropertyName = "DsEntrega",
+                HeaderText = "Entrega"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsCarpeta",
+                DataPropertyName = "DsCarpeta",
+                HeaderText = "Carpeta"
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
                 Name = "nuCantidadArchivos",
                 DataPropertyName = "NuCantidadArchivos",
-                HeaderText = "Cant. Archivos"
+                HeaderText = "Cantidad de Archivos"
             });
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
@@ -85,14 +114,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 DataPropertyName = "DsEstado",
                 HeaderText = "Estado"
             });
-
-            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "feUltimoCambio",
-                DataPropertyName = "FeUltimoCambio",
-                HeaderText = "Fecha de Asignación",
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
-            });
         }
 
         private void CargarLotes()
@@ -114,6 +135,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     {
                         CdLote = l.CdLote,
                         DsNombreLote = l.DsNombreLote,
+                        DsDescripcion = l.DsDescripcion,
+                        DsEntrega = l.DsEntrega,
+                        DsCarpeta = l.DsCarpeta,
                         NuCantidadArchivos = l.NuCantidadArchivos,
                         CdEstadoLote = l.CdEstadoLote,
                         DsEstado = l.DsEstado,

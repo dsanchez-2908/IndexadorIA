@@ -84,9 +84,73 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
+                Name = "dsDescripcion",
+                DataPropertyName = "DsDescripcion",
+                HeaderText = "Descripci\u00f3n",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsEntrega",
+                DataPropertyName = "DsEntrega",
+                HeaderText = "Entrega",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsCarpeta",
+                DataPropertyName = "DsCarpeta",
+                HeaderText = "Carpeta",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
                 Name = "nuCantidadPlanos",
                 DataPropertyName = "NuCantidadPlanos",
                 HeaderText = "Cant. Planos",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadControlado",
+                DataPropertyName = "NuCantidadControlado",
+                HeaderText = "Controlado",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadDatosIlegibles",
+                DataPropertyName = "NuCantidadDatosIlegibles",
+                HeaderText = "Datos Ilegibles",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadPaginaIlegible",
+                DataPropertyName = "NuCantidadPaginaIlegible",
+                HeaderText = "Pagina Ilegible",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadCasosEspeciales",
+                DataPropertyName = "NuCantidadCasosEspeciales",
+                HeaderText = "Casos Especiales",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadParcelasMultiples",
+                DataPropertyName = "NuCantidadParcelasMultiples",
+                HeaderText = "Parcelas Multiples",
                 ReadOnly = true
             });
         }

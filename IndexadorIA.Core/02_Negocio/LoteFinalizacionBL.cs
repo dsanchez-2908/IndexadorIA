@@ -48,6 +48,12 @@ namespace IndexadorIA.Negocio
         public const string CarpetaIlegibles = "Planos ILEGIBLES";
 
         /// <summary>
+        /// Nombre de la carpeta raiz, dentro de la carpeta base de la entrega, donde se
+        /// aisla el resultado de la finalizacion de cada lote (Terminado\{cdLote}\...).
+        /// </summary>
+        public const string CarpetaTerminado = "Terminado";
+
+        /// <summary>
         /// Longitud maxima permitida para el nombre de archivo PDF final (sin ruta).
         /// </summary>
         public const int MaxLongitudNombreArchivo = 260;
@@ -84,8 +90,7 @@ namespace IndexadorIA.Negocio
 
         private static bool EsControlable(ResultadoIA resultado)
         {
-            return resultado.CdEstadoControl == ResultadoIA.EstadosControl.PendienteControl
-                || resultado.CdEstadoControl == ResultadoIA.EstadosControl.Controlado;
+            return resultado.CdEstadoControl == ResultadoIA.EstadosControl.Controlado;
         }
 
         private static bool EsIlegible(ResultadoIA resultado)
@@ -95,9 +100,11 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
-        /// Control 1: valida que los registros en estado Pendiente de Control o Controlado
-        /// tengan completos los campos obligatorios: Categoría, Tipo de Plano, Sección,
-        /// Manzana, Parcela y Dirección. Devuelve la lista de filas con algún campo faltante.
+        /// Control 1: valida que los registros en estado Controlado tengan completos los
+        /// campos obligatorios: Categoría, Tipo de Plano, Sección, Manzana, Parcela y
+        /// Dirección. Los registros en estado Pendiente de Control (aun no auditados) NO
+        /// se validan aqui (ver ContarPendientesControl para esa advertencia por separado).
+        /// Devuelve la lista de filas con algún campo faltante.
         /// </summary>
         public List<FilaFinalizacion> ValidarCamposObligatorios(List<FilaFinalizacion> filas)
         {
@@ -260,16 +267,13 @@ namespace IndexadorIA.Negocio
         public const int MaxLongitudRutaCompleta = 259;
 
         /// <summary>
-        /// Prefijo de la subcarpeta temporal de trabajo usada durante la finalizacion de un
-        /// lote, para aislar sus PDFs y su CSV de los de otros lotes hasta que se valide que
-        /// coinciden entre si. Se combina con el numero de lote, por ejemplo "cdLote123".
+        /// Devuelve la carpeta raiz donde se aisla el resultado de la finalizacion del
+        /// lote indicado: carpetaBase\Terminado\{cdLote}.
         /// </summary>
-        public const string PrefijoCarpetaTemporalLote = "cdLote";
-
-        /// <summary>
-        /// Devuelve el nombre de la subcarpeta temporal de trabajo para el lote indicado.
-        /// </summary>
-        public static string ObtenerNombreCarpetaTemporalLote(int cdLote) => PrefijoCarpetaTemporalLote + cdLote;
+        public static string ObtenerCarpetaLote(string carpetaBase, int cdLote)
+        {
+            return Path.Combine(carpetaBase, CarpetaTerminado, cdLote.ToString());
+        }
 
         public List<RegistroMovimiento> MoverYRenombrarArchivos(List<FilaFinalizacion> filas, int cdLote)
         {
@@ -295,8 +299,8 @@ namespace IndexadorIA.Negocio
                     string carpetaBase = ObtenerCarpetaBase(carpetaOrigen);
                     bool esIlegible = EsIlegible(fila.Resultado);
 
-                    string carpetaDestino = Path.Combine(carpetaBase, esIlegible ? CarpetaIlegibles : CarpetaProcesados,
-                        ObtenerNombreCarpetaTemporalLote(cdLote));
+                    string carpetaDestino = Path.Combine(ObtenerCarpetaLote(carpetaBase, cdLote),
+                        esIlegible ? CarpetaIlegibles : CarpetaProcesados);
 
                     if (!Directory.Exists(carpetaDestino))
                         Directory.CreateDirectory(carpetaDestino);
@@ -455,8 +459,8 @@ namespace IndexadorIA.Negocio
                 string carpetaBase = grupo.Key;
                 string nombreCarpetaBase = new DirectoryInfo(carpetaBase).Name;
 
-                string carpetaCsv = Path.Combine(carpetaBase, esIlegible ? CarpetaIlegibles : CarpetaProcesados,
-                    ObtenerNombreCarpetaTemporalLote(cdLote));
+                string carpetaCsv = Path.Combine(ObtenerCarpetaLote(carpetaBase, cdLote),
+                    esIlegible ? CarpetaIlegibles : CarpetaProcesados);
 
                 if (!Directory.Exists(carpetaCsv))
                     Directory.CreateDirectory(carpetaCsv);
@@ -720,7 +724,7 @@ namespace IndexadorIA.Negocio
         /// </summary>
         private void EscribirReporteDiscrepancia(string carpetaBase, int cdLote, List<DiscrepanciaDetalle> discrepancias)
         {
-            string carpetaProcesados = Path.Combine(carpetaBase, CarpetaProcesados);
+            string carpetaProcesados = Path.Combine(ObtenerCarpetaLote(carpetaBase, cdLote), CarpetaProcesados);
 
             if (!Directory.Exists(carpetaProcesados))
                 Directory.CreateDirectory(carpetaProcesados);
@@ -816,234 +820,62 @@ namespace IndexadorIA.Negocio
 
         public List<string> FinalizarLote(int cdLote, List<FilaFinalizacion> filas, int cdUsuario)
         {
-            // Paso 1: copia y renombra los PDFs a una subcarpeta temporal aislada del lote
-            // (Planos Procesados\cdLoteN / Planos ILEGIBLES\cdLoteN) para no mezclarlos con
-            // los de otros lotes mientras se valida que todo este correcto.
+            // Paso 1: copia y renombra los PDFs directamente en la carpeta final aislada del
+            // lote (carpetaBase\Terminado\{cdLote}\Planos Procesados o \Planos ILEGIBLES).
             var movimientos = MoverYRenombrarArchivos(filas, cdLote);
 
-            // Paso 2: genera el/los CSV de indice dentro de esa misma carpeta temporal.
+            // Paso 2: genera el/los CSV de indice dentro de esa misma carpeta del lote.
             GenerarCsvMetadatos(cdLote);
 
-            // Paso 3: valida, dentro de cada carpeta temporal, que la cantidad y los nombres
+            // Paso 3: valida, dentro de cada carpeta del lote, que la cantidad y los nombres
             // de PDF coincidan exactamente con los registros del CSV. Si hay una diferencia
             // esto es un ERROR (no una advertencia): se informa el detalle exacto (que
-            // archivos/registros sobran o faltan), se deja un archivo de texto en
-            // "Planos Procesados" con el detalle, y se descarta todo lo generado para este
-            // lote, sin tocar la carpeta compartida ni marcar el lote como finalizado.
+            // archivos/registros sobran o faltan), se deja un archivo de texto con el detalle,
+            // y se hace ROLLBACK de todo lo generado para este lote (se borra
+            // Terminado\{cdLote} completo), sin marcar el lote como finalizado, para poder
+            // continuar procesando el resto de los lotes seleccionados.
             var carpetasBaseInvolucradas = movimientos
                 .Select(m => m.CarpetaBase)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var carpetasTemporales = movimientos
+            var carpetasLote = movimientos
                 .Select(m => m.CarpetaDestino)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var discrepanciasTemp = carpetasTemporales
+            var discrepancias = carpetasLote
                 .Select(AnalizarDiscrepancia)
                 .Where(d => d != null)
                 .Select(d => d!)
                 .ToList();
 
-            if (discrepanciasTemp.Count > 0)
+            if (discrepancias.Count > 0)
             {
                 string carpetaBaseReporte = carpetasBaseInvolucradas.First();
-                EscribirReporteDiscrepancia(carpetaBaseReporte, cdLote, discrepanciasTemp);
-                string rutaReporte = Path.Combine(carpetaBaseReporte, CarpetaProcesados, NombreArchivoReporteDiscrepancia(cdLote));
+                EscribirReporteDiscrepancia(carpetaBaseReporte, cdLote, discrepancias);
+                string rutaReporte = Path.Combine(
+                    ObtenerCarpetaLote(carpetaBaseReporte, cdLote), CarpetaProcesados, NombreArchivoReporteDiscrepancia(cdLote));
+                string mensaje =
+                    "Se detecto una discrepancia entre los PDF generados y el CSV de indice " +
+                    "para este lote; se realizo un rollback del lote (no se dejaron archivos " +
+                    "en la carpeta final). Detalle:" +
+                    Environment.NewLine + ConstruirMensajeDiscrepancia(discrepancias, rutaReporte);
 
-                foreach (var carpetaTemp in carpetasTemporales)
+                // Rollback: se descarta todo lo generado para este lote.
+                foreach (var carpetaBase in carpetasBaseInvolucradas)
                 {
-                    if (Directory.Exists(carpetaTemp))
-                        Directory.Delete(carpetaTemp, recursive: true);
+                    string carpetaLoteRaiz = ObtenerCarpetaLote(carpetaBase, cdLote);
+                    if (Directory.Exists(carpetaLoteRaiz))
+                        Directory.Delete(carpetaLoteRaiz, recursive: true);
                 }
 
-                throw new InvalidOperationException(
-                    "Se detecto una discrepancia entre los PDF generados y el CSV de indice " +
-                    "para este lote; no se realizaron cambios en la carpeta final. Detalle:" +
-                    Environment.NewLine + ConstruirMensajeDiscrepancia(discrepanciasTemp, rutaReporte));
-            }
-
-            // Paso 4: la carpeta temporal es consistente; se mueve todo a la carpeta final
-            // compartida (sin pisar archivos existentes) y se unifican los CSV.
-            var gruposDestino = movimientos
-                .GroupBy(m => (m.CarpetaBase, m.EsIlegible));
-
-            var carpetasFinales = new List<string>();
-
-            foreach (var grupo in gruposDestino)
-            {
-                string carpetaFinal = ConsolidarCarpetaTemporal(
-                    grupo.ToList(), grupo.Key.CarpetaBase, grupo.Key.EsIlegible, cdLote);
-
-                carpetasFinales.Add(carpetaFinal);
-            }
-
-            // Paso 5 ya ocurre dentro de ConsolidarCarpetaTemporal (borra la carpeta temporal
-            // una vez movidos los archivos y unificado el CSV).
-
-            // Paso 6: vuelve a comparar la carpeta final consolidada; si aun asi hay una
-            // diferencia, se informa en detalle al usuario como error, dejando tambien el
-            // archivo de texto con el detalle en "Planos Procesados".
-            var discrepanciasFinal = carpetasFinales
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Select(AnalizarDiscrepancia)
-                .Where(d => d != null)
-                .Select(d => d!)
-                .ToList();
-
-            if (discrepanciasFinal.Count > 0)
-            {
-                string carpetaBaseReporte = carpetasBaseInvolucradas.First();
-                EscribirReporteDiscrepancia(carpetaBaseReporte, cdLote, discrepanciasFinal);
-                string rutaReporte = Path.Combine(carpetaBaseReporte, CarpetaProcesados, NombreArchivoReporteDiscrepancia(cdLote));
-
-                throw new InvalidOperationException(
-                    "Los archivos de este lote se movieron correctamente, pero se detecto una " +
-                    "discrepancia en la carpeta final (posiblemente originada por otro lote). " +
-                    "El lote NO fue marcado como finalizado. Detalle:" +
-                    Environment.NewLine + ConstruirMensajeDiscrepancia(discrepanciasFinal, rutaReporte));
+                throw new InvalidOperationException(mensaje);
             }
 
             MarcarLoteFinalizado(cdLote, cdUsuario);
 
             return new List<string>();
-        }
-
-        /// <summary>
-        /// Mueve todos los PDFs de la carpeta temporal de un lote (para una carpetaBase y
-        /// categoria -normal/ilegible- dadas) a la carpeta final compartida, sin pisar
-        /// archivos existentes (resolviendo colisiones de nombre), unifica el CSV de indice
-        /// temporal con el CSV final consolidado, y borra la carpeta temporal al terminar.
-        /// Si ocurre un error a mitad de camino, revierte (borra) los archivos que esta
-        /// llamada ya habia movido a la carpeta final, dejando la carpeta temporal intacta
-        /// para diagnostico, y relanza la excepcion.
-        /// </summary>
-        private string ConsolidarCarpetaTemporal(
-            List<RegistroMovimiento> movimientosCarpeta, string carpetaBase, bool esIlegible, int cdLote)
-        {
-            string nombreSubcarpeta = esIlegible ? CarpetaIlegibles : CarpetaProcesados;
-            string carpetaFinal = Path.Combine(carpetaBase, nombreSubcarpeta);
-            string carpetaTemporal = Path.Combine(carpetaFinal, ObtenerNombreCarpetaTemporalLote(cdLote));
-
-            if (!Directory.Exists(carpetaTemporal))
-                return carpetaFinal;
-
-            var archivosMovidos = new List<string>();
-            var renombrados = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            try
-            {
-                foreach (var movimiento in movimientosCarpeta)
-                {
-                    string origenTemp = Path.Combine(carpetaTemporal, movimiento.NombreArchivoNuevo);
-
-                    if (!File.Exists(origenTemp))
-                        continue;
-
-                    string nombreFinal = movimiento.NombreArchivoNuevo;
-                    string destino = Path.Combine(carpetaFinal, nombreFinal);
-
-                    if (File.Exists(destino))
-                    {
-                        nombreFinal = GeneradorNombreArchivo.ResolverColision(carpetaFinal, nombreFinal);
-                        destino = Path.Combine(carpetaFinal, nombreFinal);
-                    }
-
-                    File.Move(origenTemp, destino);
-                    archivosMovidos.Add(destino);
-
-                    if (!string.Equals(nombreFinal, movimiento.NombreArchivoNuevo, StringComparison.OrdinalIgnoreCase))
-                    {
-                        renombrados[movimiento.NombreArchivoNuevo] = nombreFinal;
-                        _loteDAL.ActualizarNombreArchivoFinal(movimiento.CdArchivoPagina, nombreFinal);
-                        movimiento.NombreArchivoNuevo = nombreFinal;
-                    }
-                }
-
-                string nombreCarpetaBase = new DirectoryInfo(carpetaBase).Name;
-                string nombreCsv = esIlegible ? $"{nombreCarpetaBase}_ILEGIBLE.csv" : $"{nombreCarpetaBase}.csv";
-
-                UnificarCsv(carpetaTemporal, carpetaFinal, nombreCsv, renombrados);
-
-                Directory.Delete(carpetaTemporal, recursive: true);
-
-                return carpetaFinal;
-            }
-            catch
-            {
-                foreach (var rutaMovida in archivosMovidos)
-                {
-                    try
-                    {
-                        if (File.Exists(rutaMovida))
-                            File.Delete(rutaMovida);
-                    }
-                    catch
-                    {
-                        // Se ignora: el error original ya sera informado al usuario/log.
-                    }
-                }
-
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Anexa las filas de datos del CSV temporal (sin encabezado) al CSV final
-        /// consolidado (creando el encabezado si el CSV final aun no existe), aplicando el
-        /// mapeo de renombrados a la columna "Nombre Nuevo" cuando corresponda por
-        /// colisiones resueltas al mover el archivo a la carpeta final.
-        /// </summary>
-        private static void UnificarCsv(
-            string carpetaTemporal, string carpetaFinal, string nombreCsv, Dictionary<string, string> renombrados)
-        {
-            string rutaCsvTemp = Path.Combine(carpetaTemporal, nombreCsv);
-
-            if (!File.Exists(rutaCsvTemp))
-                return;
-
-            var lineas = File.ReadAllLines(rutaCsvTemp);
-            if (lineas.Length == 0)
-                return;
-
-            string encabezado = lineas[0];
-            var encabezados = ParsearLineaCsv(encabezado);
-            int indiceNombreNuevo = renombrados.Count > 0
-                ? Array.FindIndex(encabezados, h => string.Equals(h.Trim(), "Nombre Nuevo", StringComparison.OrdinalIgnoreCase))
-                : -1;
-
-            string rutaCsvFinal = Path.Combine(carpetaFinal, nombreCsv);
-            bool existeCsvFinal = File.Exists(rutaCsvFinal);
-
-            using var writer = new StreamWriter(rutaCsvFinal, append: true, System.Text.Encoding.UTF8);
-
-            if (!existeCsvFinal)
-                writer.WriteLine(encabezado);
-
-            for (int i = 1; i < lineas.Length; i++)
-            {
-                if (string.IsNullOrWhiteSpace(lineas[i]))
-                    continue;
-
-                string linea = lineas[i];
-
-                if (indiceNombreNuevo >= 0)
-                {
-                    var campos = ParsearLineaCsv(linea);
-                    if (indiceNombreNuevo < campos.Length)
-                    {
-                        string nombreActual = campos[indiceNombreNuevo].Trim();
-                        if (renombrados.TryGetValue(nombreActual, out var nombreNuevo))
-                        {
-                            campos[indiceNombreNuevo] = nombreNuevo;
-                            linea = string.Join(";", campos.Select(EscaparCampoCsv));
-                        }
-                    }
-                }
-
-                writer.WriteLine(linea);
-            }
         }
 
         /// <summary>

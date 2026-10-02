@@ -46,6 +46,9 @@ namespace IndexadorIA.Negocio.Api
     {
         public int CdLote { get; set; }
         public string DsNombreLote { get; set; } = string.Empty;
+        public string? DsDescripcion { get; set; }
+        public string? DsEntrega { get; set; }
+        public string? DsCarpeta { get; set; }
         public int NuCantidadArchivos { get; set; }
         public int CdEstadoLote { get; set; }
         public string? DsEstado { get; set; }
@@ -189,11 +192,16 @@ namespace IndexadorIA.Negocio.Api
     {
         public int CdLote { get; set; }
         public string DsNombreLote { get; set; } = string.Empty;
-        public int NuCantidadArchivos { get; set; }
         public DateTime? FeUltimoCambio { get; set; }
+        public string? DsDescripcion { get; set; }
+        public string? DsEntrega { get; set; }
+        public string? DsCarpeta { get; set; }
+        public int NuCantidadArchivos { get; set; }
         public int NuEstadoControlado { get; set; }
         public int NuEstadoDatosIlegibles { get; set; }
         public int NuEstadoPaginaIlegible { get; set; }
+        public int NuEstadoCasosEspeciales { get; set; }
+        public int NuEstadoParcelasMultiples { get; set; }
         public string? DsUsuarioFinControl { get; set; }
         public string? DsEstado { get; set; }
     }
@@ -237,5 +245,15 @@ namespace IndexadorIA.Negocio.Api
     {
         public int CdEstado { get; set; }
         public string DsEstado { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Posibles errores detectados por SP_CONTROL_PLANOS_cdLote para un registro
+    /// (cdResultado), espejo remoto de PosibleErrorAuditoriaDto.
+    /// </summary>
+    public class PosibleErrorAuditoriaApiDto
+    {
+        public int CdResultado { get; set; }
+        public List<string> PosiblesErrores { get; set; } = new();
     }
 }

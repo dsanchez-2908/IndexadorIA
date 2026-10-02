@@ -95,7 +95,216 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
-        /// Obtiene archivos página filtrados para preparación de lotes
+        /// Obtiene el estado actual de un lote (cdEstadoLote). Devuelve null si no existe.
+        /// </summary>
+        public int? ObtenerEstadoLote(int cdLote)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(
+                    "SELECT cdEstadoLote FROM TD_LOTE WHERE cdLote = @cdLote", conexion);
+                comando.Parameters.AddWithValue("@cdLote", cdLote);
+
+                conexion.Open();
+                var resultado = comando.ExecuteScalar();
+                return resultado == null || resultado == DBNull.Value ? null : Convert.ToInt32(resultado);
+            }
+        }
+
+        /// <summary>
+        /// Reubica un conjunto de archivos página de un lote de origen hacia un nuevo lote
+        /// (creado con cdEstadoLote=7, "Pendiente Asignar Auditoria"), actualizando
+        /// TD_LOTE (cantidades), TD_LOTE_ARCHIVOS y TD_001_RESULTADO_IA. Devuelve el cdLote
+        /// del nuevo lote creado.
+        /// </summary>
+        public int ReubicarArchivosEnNuevoLote(int cdLoteOrigen, List<int> cdArchivosPagina, int cdUsuarioAltaLote)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                conexion.Open();
+                using (var transaccion = conexion.BeginTransaction())
+                {
+                    try
+                    {
+                        int secuencia = ObtenerSiguienteSecuenciaEnTransaccion(conexion, transaccion);
+                        string nombreLote = $"LOTE_{secuencia:D8}";
+
+                        // 1. Crear nuevo lote (cdEstadoLote=7: Pendiente Asignar Auditoria)
+                        var cmdLoteNuevo = new SqlCommand(
+                            @"INSERT INTO TD_LOTE (dsNombreLote, nuCantidadArchivos, cdEstadoLote,
+                                                   feAltaLote, cdUsuarioAltaLote)
+                              OUTPUT INSERTED.cdLote
+                              VALUES (@dsNombreLote, @nuCantidadArchivos, 7,
+                                     GETDATE(), @cdUsuarioAltaLote)", conexion, transaccion);
+
+                        cmdLoteNuevo.Parameters.AddWithValue("@dsNombreLote", nombreLote);
+                        cmdLoteNuevo.Parameters.AddWithValue("@nuCantidadArchivos", cdArchivosPagina.Count);
+                        cmdLoteNuevo.Parameters.AddWithValue("@cdUsuarioAltaLote", cdUsuarioAltaLote);
+
+                        int cdLoteNuevo = Convert.ToInt32(cmdLoteNuevo.ExecuteScalar());
+
+                        // 2. Descontar la cantidad reubicada del lote de origen
+                        var cmdActualizarOrigen = new SqlCommand(
+                            @"UPDATE TD_LOTE
+                              SET nuCantidadArchivos = nuCantidadArchivos - @cantidad
+                              WHERE cdLote = @cdLoteOrigen", conexion, transaccion);
+
+                        cmdActualizarOrigen.Parameters.AddWithValue("@cantidad", cdArchivosPagina.Count);
+                        cmdActualizarOrigen.Parameters.AddWithValue("@cdLoteOrigen", cdLoteOrigen);
+                        cmdActualizarOrigen.ExecuteNonQuery();
+
+                        // 3. Reubicar TD_LOTE_ARCHIVOS y TD_001_RESULTADO_IA
+                        var nombresParametros = new List<string>();
+                        var cmdParametros = new List<SqlParameter>();
+                        for (int i = 0; i < cdArchivosPagina.Count; i++)
+                        {
+                            string nombreParametro = $"@cdArchivoPagina{i}";
+                            nombresParametros.Add(nombreParametro);
+                            cmdParametros.Add(new SqlParameter(nombreParametro, cdArchivosPagina[i]));
+                        }
+
+                        string clausulaIn = string.Join(",", nombresParametros);
+
+                        var cmdLoteArchivos = new SqlCommand(
+                            $@"UPDATE TD_LOTE_ARCHIVOS
+                               SET cdLote = @cdLoteNuevo
+                               WHERE cdLote = @cdLoteOrigen AND cdArchivoPagina IN ({clausulaIn})", conexion, transaccion);
+                        cmdLoteArchivos.Parameters.AddWithValue("@cdLoteNuevo", cdLoteNuevo);
+                        cmdLoteArchivos.Parameters.AddWithValue("@cdLoteOrigen", cdLoteOrigen);
+                        cmdLoteArchivos.Parameters.AddRange(cmdParametros.Select(p => new SqlParameter(p.ParameterName, p.Value)).ToArray());
+                        cmdLoteArchivos.ExecuteNonQuery();
+
+                        var cmdResultadoIA = new SqlCommand(
+                            $@"UPDATE TD_001_RESULTADO_IA
+                               SET cdLote = @cdLoteNuevo
+                               WHERE cdLote = @cdLoteOrigen AND cdArchivoPagina IN ({clausulaIn})", conexion, transaccion);
+                        cmdResultadoIA.Parameters.AddWithValue("@cdLoteNuevo", cdLoteNuevo);
+                        cmdResultadoIA.Parameters.AddWithValue("@cdLoteOrigen", cdLoteOrigen);
+                        cmdResultadoIA.Parameters.AddRange(cmdParametros.Select(p => new SqlParameter(p.ParameterName, p.Value)).ToArray());
+                        cmdResultadoIA.ExecuteNonQuery();
+
+                        transaccion.Commit();
+                        return cdLoteNuevo;
+                    }
+                    catch
+                    {
+                        transaccion.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        private static int ObtenerSiguienteSecuenciaEnTransaccion(SqlConnection conexion, SqlTransaction transaccion)
+        {
+            var comando = new SqlCommand("SELECT NEXT VALUE FOR SEQ_LOTE", conexion, transaccion);
+            return Convert.ToInt32(comando.ExecuteScalar());
+        }
+
+        /// <summary>
+        /// Reubica planos agrupados por su lote de origen hacia nuevos lotes (uno por cada
+        /// lote de origen presente en <paramref name="archivosPorLoteOrigen"/>), asignando a
+        /// cada lote nuevo (cdEstadoLote=7, "Pendiente Asignar Auditoria") la descripci\u00f3n
+        /// indicada. Actualiza TD_LOTE_ARCHIVOS, TD_001_RESULTADO_IA y descuenta la cantidad
+        /// reubicada del lote de origen. Devuelve la cantidad de lotes nuevos creados.
+        /// </summary>
+        public int ReubicarArchivosEnNuevosLotesMultiples(
+            Dictionary<int, List<int>> archivosPorLoteOrigen, string dsDescripcionLote, int cdUsuarioAltaLote)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                conexion.Open();
+                using (var transaccion = conexion.BeginTransaction())
+                {
+                    try
+                    {
+                        int cantidadLotesCreados = 0;
+
+                        foreach (var par in archivosPorLoteOrigen)
+                        {
+                            int cdLoteOrigen = par.Key;
+                            List<int> cdArchivosPagina = par.Value;
+
+                            if (cdArchivosPagina.Count == 0)
+                            {
+                                continue;
+                            }
+
+                            int secuencia = ObtenerSiguienteSecuenciaEnTransaccion(conexion, transaccion);
+                            string nombreLote = $"LOTE_{secuencia:D8}";
+
+                            // 1. Crear nuevo lote (cdEstadoLote=7: Pendiente Asignar Auditoria)
+                            var cmdLoteNuevo = new SqlCommand(
+                                @"INSERT INTO TD_LOTE (dsNombreLote, nuCantidadArchivos, cdEstadoLote,
+                                                       feAltaLote, cdUsuarioAltaLote, dsDescripcion)
+                                  OUTPUT INSERTED.cdLote
+                                  VALUES (@dsNombreLote, @nuCantidadArchivos, 7,
+                                         GETDATE(), @cdUsuarioAltaLote, @dsDescripcion)", conexion, transaccion);
+
+                            cmdLoteNuevo.Parameters.AddWithValue("@dsNombreLote", nombreLote);
+                            cmdLoteNuevo.Parameters.AddWithValue("@nuCantidadArchivos", cdArchivosPagina.Count);
+                            cmdLoteNuevo.Parameters.AddWithValue("@cdUsuarioAltaLote", cdUsuarioAltaLote);
+                            cmdLoteNuevo.Parameters.AddWithValue("@dsDescripcion", (object?)dsDescripcionLote ?? DBNull.Value);
+
+                            int cdLoteNuevo = Convert.ToInt32(cmdLoteNuevo.ExecuteScalar());
+
+                            // 2. Descontar la cantidad reubicada del lote de origen
+                            var cmdActualizarOrigen = new SqlCommand(
+                                @"UPDATE TD_LOTE
+                                  SET nuCantidadArchivos = nuCantidadArchivos - @cantidad
+                                  WHERE cdLote = @cdLoteOrigen", conexion, transaccion);
+
+                            cmdActualizarOrigen.Parameters.AddWithValue("@cantidad", cdArchivosPagina.Count);
+                            cmdActualizarOrigen.Parameters.AddWithValue("@cdLoteOrigen", cdLoteOrigen);
+                            cmdActualizarOrigen.ExecuteNonQuery();
+
+                            // 3. Reubicar TD_LOTE_ARCHIVOS y TD_001_RESULTADO_IA
+                            var nombresParametros = new List<string>();
+                            var cmdParametros = new List<SqlParameter>();
+                            for (int i = 0; i < cdArchivosPagina.Count; i++)
+                            {
+                                string nombreParametro = $"@cdArchivoPagina{i}";
+                                nombresParametros.Add(nombreParametro);
+                                cmdParametros.Add(new SqlParameter(nombreParametro, cdArchivosPagina[i]));
+                            }
+
+                            string clausulaIn = string.Join(",", nombresParametros);
+
+                            var cmdLoteArchivos = new SqlCommand(
+                                $@"UPDATE TD_LOTE_ARCHIVOS
+                                   SET cdLote = @cdLoteNuevo
+                                   WHERE cdLote = @cdLoteOrigen AND cdArchivoPagina IN ({clausulaIn})", conexion, transaccion);
+                            cmdLoteArchivos.Parameters.AddWithValue("@cdLoteNuevo", cdLoteNuevo);
+                            cmdLoteArchivos.Parameters.AddWithValue("@cdLoteOrigen", cdLoteOrigen);
+                            cmdLoteArchivos.Parameters.AddRange(cmdParametros.Select(p => new SqlParameter(p.ParameterName, p.Value)).ToArray());
+                            cmdLoteArchivos.ExecuteNonQuery();
+
+                            var cmdResultadoIA = new SqlCommand(
+                                $@"UPDATE TD_001_RESULTADO_IA
+                                   SET cdLote = @cdLoteNuevo
+                                   WHERE cdLote = @cdLoteOrigen AND cdArchivoPagina IN ({clausulaIn})", conexion, transaccion);
+                            cmdResultadoIA.Parameters.AddWithValue("@cdLoteNuevo", cdLoteNuevo);
+                            cmdResultadoIA.Parameters.AddWithValue("@cdLoteOrigen", cdLoteOrigen);
+                            cmdResultadoIA.Parameters.AddRange(cmdParametros.Select(p => new SqlParameter(p.ParameterName, p.Value)).ToArray());
+                            cmdResultadoIA.ExecuteNonQuery();
+
+                            cantidadLotesCreados++;
+                        }
+
+                        transaccion.Commit();
+                        return cantidadLotesCreados;
+                    }
+                    catch
+                    {
+                        transaccion.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Obtiene archivos p\u00E1gina filtrados para preparaci\u00F3n de lotes
         /// </summary>
         public List<ArchivoPaginaGridDto> ObtenerArchivosPaginaParaLote(int cdProyecto, int cdEstado,
             string? dsNombreArchivo = null, DateTime? feAltaDesde = null, DateTime? feAltaHasta = null,
@@ -242,7 +451,8 @@ namespace IndexadorIA.Datos
                     SELECT ap.cdArchivoPagina, ap.dsNombreArchivoPagina, ap.nuPagina, 
                            ap.dsRutaCompleta, a.dsNombreArchivo,
                            REPLACE(REPLACE(ap.dsRutaCompleta, '.png', '.b64'), '.pdf', '.b64') as RutaBase64,
-                           ap.dsNombreArchivoFinal, a.dsRutaCompleta as RutaCompletaOriginal
+                           ap.dsNombreArchivoFinal, a.dsRutaCompleta as RutaCompletaOriginal,
+                           ap.dsEntrega
                     FROM TD_LOTE_ARCHIVOS la
                     INNER JOIN TD_ARCHIVOS_PAGINAS ap ON la.cdArchivoPagina = ap.cdArchivoPagina
                     INNER JOIN TD_ARCHIVOS_ORIGINAL a ON ap.cdArchivoOriginal = a.cdArchivo
@@ -265,7 +475,8 @@ namespace IndexadorIA.Datos
                             NombreArchivo = lector.GetString(4),
                             RutaBase64 = lector.GetString(5),
                             DsNombreArchivoFinal = lector.IsDBNull(6) ? null : lector.GetString(6),
-                            DsRutaCompletaOriginal = lector.GetString(7)
+                            DsRutaCompletaOriginal = lector.GetString(7),
+                            DsEntrega = lector.IsDBNull(8) ? string.Empty : lector.GetString(8)
                         });
                     }
                 }
@@ -415,7 +626,18 @@ namespace IndexadorIA.Datos
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 2), 0) AS nuEstadoControlado,
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 3), 0) AS nuEstadoPaginaIlegible,
                            ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 4), 0) AS nuEstadoDatosIlegibles,
-                           uc.dsNombreCompleto AS dsUsuarioFinControl
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 5), 0) AS nuEstadoCasosEspeciales,
+                           ISNULL((SELECT COUNT(*) FROM TD_001_RESULTADO_IA r WHERE r.cdLote = l.cdLote AND r.cdEstadoControl = 6), 0) AS nuEstadoParcelasMultiples,
+                           uc.dsNombreCompleto AS dsUsuarioFinControl,
+                           l.dsDescripcion,
+                           (SELECT TOP 1 ap.dsEntrega
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsEntrega,
+                           (SELECT TOP 1 ap.dsCarpeta
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsCarpeta
                     FROM TD_LOTE l
                     INNER JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
                     LEFT JOIN TD_USUARIOS uc ON uc.cdUsuario = l.cdUsuarioFinControl
@@ -469,6 +691,13 @@ namespace IndexadorIA.Datos
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
                 {
+                    int ordDsDescripcion = lector.GetOrdinal("dsDescripcion");
+                    int ordDsEntrega = lector.GetOrdinal("dsEntrega");
+                    int ordDsCarpeta = lector.GetOrdinal("dsCarpeta");
+                    int ordNuEstadoCasosEspeciales = lector.GetOrdinal("nuEstadoCasosEspeciales");
+                    int ordNuEstadoParcelasMultiples = lector.GetOrdinal("nuEstadoParcelasMultiples");
+                    int ordDsUsuarioFinControl = lector.GetOrdinal("dsUsuarioFinControl");
+
                     while (lector.Read())
                     {
                         lotes.Add(new Lote
@@ -488,7 +717,12 @@ namespace IndexadorIA.Datos
                             NuEstadoControlado = lector.GetInt32(12),
                             NuEstadoPaginaIlegible = lector.GetInt32(13),
                             NuEstadoDatosIlegibles = lector.GetInt32(14),
-                            DsUsuarioFinControl = lector.IsDBNull(15) ? null : lector.GetString(15)
+                            DsUsuarioFinControl = lector.IsDBNull(ordDsUsuarioFinControl) ? null : lector.GetString(ordDsUsuarioFinControl),
+                            DsDescripcion = lector.IsDBNull(ordDsDescripcion) ? null : lector.GetString(ordDsDescripcion),
+                            DsEntrega = lector.IsDBNull(ordDsEntrega) ? null : lector.GetString(ordDsEntrega),
+                            DsCarpeta = lector.IsDBNull(ordDsCarpeta) ? null : lector.GetString(ordDsCarpeta),
+                            NuEstadoCasosEspeciales = lector.GetInt32(ordNuEstadoCasosEspeciales),
+                            NuEstadoParcelasMultiples = lector.GetInt32(ordNuEstadoParcelasMultiples)
                         });
                     }
                 }
@@ -662,12 +896,25 @@ namespace IndexadorIA.Datos
                            SUM(CASE WHEN r.cdEstadoControl = 1 THEN 1 ELSE 0 END) AS nuCantidadPendiente,
                            SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
                            SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           SUM(CASE WHEN r.cdEstadoControl = 5 THEN 1 ELSE 0 END) AS nuCantidadCasosEspeciales,
+                           SUM(CASE WHEN r.cdEstadoControl = 6 THEN 1 ELSE 0 END) AS nuCantidadParcelasMultiples,
                            (SELECT COUNT(DISTINCT c.cdResultado)
                             FROM TD_CORRECIONES c
                             INNER JOIN TD_001_RESULTADO_IA ri ON ri.cdResultado = c.cdResultado
-                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido
+                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido,
+                           l.dsDescripcion,
+                           ua.dsNombreCompleto AS dsUsuarioAuditor,
+                           (SELECT TOP 1 ap.dsEntrega
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsEntrega,
+                           (SELECT TOP 1 ap.dsCarpeta
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsCarpeta
                     FROM TD_LOTE l
                     LEFT JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
+                    LEFT JOIN TD_USUARIOS ua ON ua.cdUsuario = l.cdUsuarioAuditor
                     LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
                     WHERE l.cdEstadoLote = @cdEstadoLote";
 
@@ -687,7 +934,7 @@ namespace IndexadorIA.Datos
                 }
 
                 sql += @"
-                    GROUP BY l.cdLote, l.dsNombreLote, u.dsNombreCompleto
+                    GROUP BY l.cdLote, l.dsNombreLote, u.dsNombreCompleto, l.dsDescripcion, ua.dsNombreCompleto
                     ORDER BY l.cdLote DESC";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -705,6 +952,13 @@ namespace IndexadorIA.Datos
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
                 {
+                    int ordDsDescripcion = lector.GetOrdinal("dsDescripcion");
+                    int ordDsEntrega = lector.GetOrdinal("dsEntrega");
+                    int ordDsCarpeta = lector.GetOrdinal("dsCarpeta");
+                    int ordDsUsuarioAuditor = lector.GetOrdinal("dsUsuarioAuditor");
+                    int ordNuCantidadCasosEspeciales = lector.GetOrdinal("nuCantidadCasosEspeciales");
+                    int ordNuCantidadParcelasMultiples = lector.GetOrdinal("nuCantidadParcelasMultiples");
+
                     while (lector.Read())
                     {
                         lotes.Add(new Entidades.LoteFinalizacionGridDto
@@ -717,7 +971,13 @@ namespace IndexadorIA.Datos
                             NuCantidadPendiente = lector.GetInt32(5),
                             NuCantidadPaginaIlegible = lector.GetInt32(6),
                             NuCantidadDatosIlegibles = lector.GetInt32(7),
-                            NuCantidadCorregido = lector.GetInt32(8)
+                            NuCantidadCasosEspeciales = lector.GetInt32(ordNuCantidadCasosEspeciales),
+                            NuCantidadParcelasMultiples = lector.GetInt32(ordNuCantidadParcelasMultiples),
+                            NuCantidadCorregido = lector.GetInt32(8),
+                            DsDescripcion = lector.IsDBNull(ordDsDescripcion) ? null : lector.GetString(ordDsDescripcion),
+                            DsEntrega = lector.IsDBNull(ordDsEntrega) ? null : lector.GetString(ordDsEntrega),
+                            DsCarpeta = lector.IsDBNull(ordDsCarpeta) ? null : lector.GetString(ordDsCarpeta),
+                            DsUsuarioAuditor = lector.IsDBNull(ordDsUsuarioAuditor) ? null : lector.GetString(ordDsUsuarioAuditor)
                         });
                     }
                 }
@@ -798,10 +1058,21 @@ namespace IndexadorIA.Datos
                            SUM(CASE WHEN r.cdEstadoControl = 1 THEN 1 ELSE 0 END) AS nuCantidadPendiente,
                            SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
                            SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           SUM(CASE WHEN r.cdEstadoControl = 5 THEN 1 ELSE 0 END) AS nuCantidadCasosEspeciales,
+                           SUM(CASE WHEN r.cdEstadoControl = 6 THEN 1 ELSE 0 END) AS nuCantidadParcelasMultiples,
                            (SELECT COUNT(DISTINCT c.cdResultado)
                             FROM TD_CORRECIONES c
                             INNER JOIN TD_001_RESULTADO_IA ri ON ri.cdResultado = c.cdResultado
-                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido
+                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido,
+                           l.dsDescripcion,
+                           (SELECT TOP 1 ap.dsEntrega
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsEntrega,
+                           (SELECT TOP 1 ap.dsCarpeta
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsCarpeta
                     FROM TD_LOTE l
                     LEFT JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
                     LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
@@ -818,7 +1089,7 @@ namespace IndexadorIA.Datos
                 }
 
                 sql += @"
-                    GROUP BY l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado
+                    GROUP BY l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado, l.dsDescripcion
                     ORDER BY l.cdLote DESC";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -827,6 +1098,12 @@ namespace IndexadorIA.Datos
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
                 {
+                    int ordDsDescripcion = lector.GetOrdinal("dsDescripcion");
+                    int ordDsEntrega = lector.GetOrdinal("dsEntrega");
+                    int ordDsCarpeta = lector.GetOrdinal("dsCarpeta");
+                    int ordNuCantidadCasosEspeciales = lector.GetOrdinal("nuCantidadCasosEspeciales");
+                    int ordNuCantidadParcelasMultiples = lector.GetOrdinal("nuCantidadParcelasMultiples");
+
                     while (lector.Read())
                     {
                         lotes.Add(new Entidades.LoteMonitorDetalleDto
@@ -840,7 +1117,12 @@ namespace IndexadorIA.Datos
                             NuCantidadPendiente = lector.GetInt32(6),
                             NuCantidadPaginaIlegible = lector.GetInt32(7),
                             NuCantidadDatosIlegibles = lector.GetInt32(8),
-                            NuCantidadCorregido = lector.GetInt32(9)
+                            NuCantidadCasosEspeciales = lector.GetInt32(ordNuCantidadCasosEspeciales),
+                            NuCantidadParcelasMultiples = lector.GetInt32(ordNuCantidadParcelasMultiples),
+                            NuCantidadCorregido = lector.GetInt32(9),
+                            DsDescripcion = lector.IsDBNull(ordDsDescripcion) ? null : lector.GetString(ordDsDescripcion),
+                            DsEntrega = lector.IsDBNull(ordDsEntrega) ? null : lector.GetString(ordDsEntrega),
+                            DsCarpeta = lector.IsDBNull(ordDsCarpeta) ? null : lector.GetString(ordDsCarpeta)
                         });
                     }
                 }
@@ -934,9 +1216,24 @@ namespace IndexadorIA.Datos
             using (var conexion = new SqlConnection(_cadenaConexion))
             {
                 var sql = @"
-                    SELECT l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado, l.nuCantidadArchivos
+                    SELECT l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado, l.nuCantidadArchivos,
+                           SUM(CASE WHEN r.cdEstadoControl = 2 THEN 1 ELSE 0 END) AS nuCantidadControlado,
+                           SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
+                           SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           SUM(CASE WHEN r.cdEstadoControl = 5 THEN 1 ELSE 0 END) AS nuCantidadCasosEspeciales,
+                           SUM(CASE WHEN r.cdEstadoControl = 6 THEN 1 ELSE 0 END) AS nuCantidadParcelasMultiples,
+                           l.dsDescripcion,
+                           (SELECT TOP 1 ap.dsEntrega
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsEntrega,
+                           (SELECT TOP 1 ap.dsCarpeta
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsCarpeta
                     FROM TD_LOTE l
                     LEFT JOIN TD_ESTADOS e ON e.dsProceso = 'LOTE' AND e.cdEstado = l.cdEstadoLote
+                    LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
                     WHERE l.cdUsuarioAuditor = @cdUsuarioAuditor
                       AND l.cdEstadoLote IN (8, 9)";
 
@@ -950,6 +1247,7 @@ namespace IndexadorIA.Datos
                 }
 
                 sql += @"
+                    GROUP BY l.cdLote, l.dsNombreLote, l.cdEstadoLote, e.dsEstado, l.nuCantidadArchivos, l.dsDescripcion
                     ORDER BY l.cdLote DESC";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -958,6 +1256,15 @@ namespace IndexadorIA.Datos
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
                 {
+                    int ordDsDescripcion = lector.GetOrdinal("dsDescripcion");
+                    int ordDsEntrega = lector.GetOrdinal("dsEntrega");
+                    int ordDsCarpeta = lector.GetOrdinal("dsCarpeta");
+                    int ordNuCantidadControlado = lector.GetOrdinal("nuCantidadControlado");
+                    int ordNuCantidadPaginaIlegible = lector.GetOrdinal("nuCantidadPaginaIlegible");
+                    int ordNuCantidadDatosIlegibles = lector.GetOrdinal("nuCantidadDatosIlegibles");
+                    int ordNuCantidadCasosEspeciales = lector.GetOrdinal("nuCantidadCasosEspeciales");
+                    int ordNuCantidadParcelasMultiples = lector.GetOrdinal("nuCantidadParcelasMultiples");
+
                     while (lector.Read())
                     {
                         lotes.Add(new Entidades.LoteMonitorAuditoriaDetalleDto
@@ -966,7 +1273,15 @@ namespace IndexadorIA.Datos
                             DsNombreLote = lector.GetString(1),
                             CdEstadoLote = lector.GetInt32(2),
                             DsEstadoLote = lector.IsDBNull(3) ? string.Empty : lector.GetString(3),
-                            NuCantidadPlanos = lector.GetInt32(4)
+                            NuCantidadPlanos = lector.GetInt32(4),
+                            NuCantidadControlado = lector.GetInt32(ordNuCantidadControlado),
+                            NuCantidadPaginaIlegible = lector.GetInt32(ordNuCantidadPaginaIlegible),
+                            NuCantidadDatosIlegibles = lector.GetInt32(ordNuCantidadDatosIlegibles),
+                            NuCantidadCasosEspeciales = lector.GetInt32(ordNuCantidadCasosEspeciales),
+                            NuCantidadParcelasMultiples = lector.GetInt32(ordNuCantidadParcelasMultiples),
+                            DsDescripcion = lector.IsDBNull(ordDsDescripcion) ? null : lector.GetString(ordDsDescripcion),
+                            DsEntrega = lector.IsDBNull(ordDsEntrega) ? null : lector.GetString(ordDsEntrega),
+                            DsCarpeta = lector.IsDBNull(ordDsCarpeta) ? null : lector.GetString(ordDsCarpeta)
                         });
                     }
                 }
@@ -996,12 +1311,25 @@ namespace IndexadorIA.Datos
                            SUM(CASE WHEN r.cdEstadoControl = 1 THEN 1 ELSE 0 END) AS nuCantidadPendiente,
                            SUM(CASE WHEN r.cdEstadoControl = 3 THEN 1 ELSE 0 END) AS nuCantidadPaginaIlegible,
                            SUM(CASE WHEN r.cdEstadoControl = 4 THEN 1 ELSE 0 END) AS nuCantidadDatosIlegibles,
+                           SUM(CASE WHEN r.cdEstadoControl = 5 THEN 1 ELSE 0 END) AS nuCantidadCasosEspeciales,
+                           SUM(CASE WHEN r.cdEstadoControl = 6 THEN 1 ELSE 0 END) AS nuCantidadParcelasMultiples,
                            (SELECT COUNT(DISTINCT c.cdResultado)
                             FROM TD_CORRECIONES c
                             INNER JOIN TD_001_RESULTADO_IA ri ON ri.cdResultado = c.cdResultado
-                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido
+                            WHERE ri.cdLote = l.cdLote) AS nuCantidadCorregido,
+                           l.dsDescripcion,
+                           ua.dsNombreCompleto AS dsUsuarioAuditor,
+                           (SELECT TOP 1 ap.dsEntrega
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsEntrega,
+                           (SELECT TOP 1 ap.dsCarpeta
+                              FROM TD_LOTE_ARCHIVOS la
+                              INNER JOIN TD_ARCHIVOS_PAGINAS ap ON ap.cdArchivoPagina = la.cdArchivoPagina
+                              WHERE la.cdLote = l.cdLote) AS dsCarpeta
                     FROM TD_LOTE l
                     LEFT JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
+                    LEFT JOIN TD_USUARIOS ua ON ua.cdUsuario = l.cdUsuarioAuditor
                     LEFT JOIN TD_001_RESULTADO_IA r ON r.cdLote = l.cdLote
                     WHERE l.cdEstadoLote = @cdEstadoLote";
 
@@ -1021,7 +1349,7 @@ namespace IndexadorIA.Datos
                 }
 
                 sql += @"
-                    GROUP BY l.cdLote, l.dsNombreLote, u.dsNombreCompleto
+                    GROUP BY l.cdLote, l.dsNombreLote, u.dsNombreCompleto, l.dsDescripcion, ua.dsNombreCompleto
                     ORDER BY l.cdLote DESC";
 
                 var comando = new SqlCommand(sql, conexion);
@@ -1039,6 +1367,13 @@ namespace IndexadorIA.Datos
                 conexion.Open();
                 using (var lector = comando.ExecuteReader())
                 {
+                    int ordDsDescripcion = lector.GetOrdinal("dsDescripcion");
+                    int ordDsEntrega = lector.GetOrdinal("dsEntrega");
+                    int ordDsCarpeta = lector.GetOrdinal("dsCarpeta");
+                    int ordDsUsuarioAuditor = lector.GetOrdinal("dsUsuarioAuditor");
+                    int ordNuCantidadCasosEspeciales = lector.GetOrdinal("nuCantidadCasosEspeciales");
+                    int ordNuCantidadParcelasMultiples = lector.GetOrdinal("nuCantidadParcelasMultiples");
+
                     while (lector.Read())
                     {
                         lotes.Add(new Entidades.LoteEnvioGridDto
@@ -1051,7 +1386,13 @@ namespace IndexadorIA.Datos
                             NuCantidadPendiente = lector.GetInt32(5),
                             NuCantidadPaginaIlegible = lector.GetInt32(6),
                             NuCantidadDatosIlegibles = lector.GetInt32(7),
-                            NuCantidadCorregido = lector.GetInt32(8)
+                            NuCantidadCasosEspeciales = lector.GetInt32(ordNuCantidadCasosEspeciales),
+                            NuCantidadParcelasMultiples = lector.GetInt32(ordNuCantidadParcelasMultiples),
+                            NuCantidadCorregido = lector.GetInt32(8),
+                            DsDescripcion = lector.IsDBNull(ordDsDescripcion) ? null : lector.GetString(ordDsDescripcion),
+                            DsEntrega = lector.IsDBNull(ordDsEntrega) ? null : lector.GetString(ordDsEntrega),
+                            DsCarpeta = lector.IsDBNull(ordDsCarpeta) ? null : lector.GetString(ordDsCarpeta),
+                            DsUsuarioAuditor = lector.IsDBNull(ordDsUsuarioAuditor) ? null : lector.GetString(ordDsUsuarioAuditor)
                         });
                     }
                 }

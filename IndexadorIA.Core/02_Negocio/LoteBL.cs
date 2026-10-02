@@ -124,5 +124,132 @@ namespace IndexadorIA.Negocio
                 return (false, mensajeError);
             }
         }
+
+        /// <summary>
+        /// Reubica un conjunto de archivos página (todos pertenecientes al mismo lote de
+        /// origen) hacia un nuevo lote, dejando el nuevo lote en cdEstadoLote=7
+        /// (Pendiente Asignar Auditoria). No permite reubicar si el lote de origen está
+        /// en cdEstadoLote=11 (Enviado).
+        /// </summary>
+        public (bool exito, string mensaje, int cdLoteNuevo) ReubicarEnNuevoLote(int cdLoteOrigen, List<int> cdArchivosPagina)
+        {
+            try
+            {
+                if (cdArchivosPagina == null || cdArchivosPagina.Count == 0)
+                {
+                    return (false, "Debe seleccionar al menos un registro para reubicar", 0);
+                }
+
+                int? cdEstadoLoteOrigen = _loteDAL.ObtenerEstadoLote(cdLoteOrigen);
+                if (cdEstadoLoteOrigen is null)
+                {
+                    return (false, "No se encontró el lote de origen", 0);
+                }
+
+                if (cdEstadoLoteOrigen == 11)
+                {
+                    return (false, "No se puede reubicar planos de un lote en estado Enviado", 0);
+                }
+
+                int cdLoteNuevo = _loteDAL.ReubicarArchivosEnNuevoLote(
+                    cdLoteOrigen, cdArchivosPagina, SesionActual.UsuarioActual?.CdUsuario ?? 0);
+
+                string mensaje = $"Se reubicaron {cdArchivosPagina.Count} plano(s) del lote {cdLoteOrigen} al nuevo lote {cdLoteNuevo}";
+
+                _logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.INFO,
+                    DsModulo = "REUBICACION_LOTE",
+                    DsMensaje = mensaje,
+                    CdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0
+                });
+
+                return (true, mensaje, cdLoteNuevo);
+            }
+            catch (Exception ex)
+            {
+                string mensajeError = $"Error al reubicar planos en nuevo lote: {ex.Message}";
+
+                _logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.ERROR,
+                    DsModulo = "REUBICACION_LOTE",
+                    DsMensaje = mensajeError,
+                    DsExcepcion = ex.ToString(),
+                    CdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0
+                });
+
+                return (false, mensajeError, 0);
+            }
+        }
+
+        /// <summary>
+        /// Reubica planos de m\u00faltiples lotes de origen (presentes en la grilla de Consulta de
+        /// Planos) hacia nuevos lotes: crea un nuevo lote por cada lote de origen distinto,
+        /// asigna la descripci\u00f3n indicada al campo dsDescripcion de cada lote nuevo y mueve
+        /// los archivos p\u00e1gina correspondientes. No valida que los archivos pertenezcan al
+        /// mismo lote de origen entre s\u00ed.
+        /// </summary>
+        public (bool exito, string mensaje, int cantidadLotesCreados) ReubicarEnNuevosLotesMultiples(
+            Dictionary<int, List<int>> archivosPorLoteOrigen, string dsDescripcionLote)
+        {
+            try
+            {
+                if (archivosPorLoteOrigen == null || archivosPorLoteOrigen.Count == 0)
+                {
+                    return (false, "Debe seleccionar al menos un registro para reubicar", 0);
+                }
+
+                if (string.IsNullOrWhiteSpace(dsDescripcionLote))
+                {
+                    return (false, "Debe ingresar una descripci\u00f3n de lote", 0);
+                }
+
+                foreach (var cdLoteOrigen in archivosPorLoteOrigen.Keys)
+                {
+                    int? cdEstadoLoteOrigen = _loteDAL.ObtenerEstadoLote(cdLoteOrigen);
+                    if (cdEstadoLoteOrigen is null)
+                    {
+                        return (false, $"No se encontr\u00f3 el lote de origen {cdLoteOrigen}", 0);
+                    }
+
+                    if (cdEstadoLoteOrigen == 11)
+                    {
+                        return (false, $"No se puede reubicar planos de un lote en estado Enviado (lote {cdLoteOrigen})", 0);
+                    }
+                }
+
+                int cantidadLotesCreados = _loteDAL.ReubicarArchivosEnNuevosLotesMultiples(
+                    archivosPorLoteOrigen, dsDescripcionLote, SesionActual.UsuarioActual?.CdUsuario ?? 0);
+
+                int totalArchivos = archivosPorLoteOrigen.Values.Sum(v => v.Count);
+                string mensaje = $"Se crearon {cantidadLotesCreados} lote(s) nuevo(s) y se reubicaron {totalArchivos} plano(s)";
+
+                _logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.INFO,
+                    DsModulo = "REUBICACION_LOTE",
+                    DsMensaje = mensaje,
+                    CdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0
+                });
+
+                return (true, mensaje, cantidadLotesCreados);
+            }
+            catch (Exception ex)
+            {
+                string mensajeError = $"Error al reubicar planos en nuevos lotes: {ex.Message}";
+
+                _logDAL.Insertar(new LogRegistro
+                {
+                    DsNivel = LogRegistro.Niveles.ERROR,
+                    DsModulo = "REUBICACION_LOTE",
+                    DsMensaje = mensajeError,
+                    DsExcepcion = ex.ToString(),
+                    CdUsuario = SesionActual.UsuarioActual?.CdUsuario ?? 0
+                });
+
+                return (false, mensajeError, 0);
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
     {
         private const int CD_ESTADO_PENDIENTE_FINALIZAR = 9;
         private List<LoteFinalizacionGridDto> _lotesActuales = new();
+        private int _indiceSeleccion50 = 0;
 
         public FrmFinalizarLote()
         {
@@ -76,9 +77,25 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "dsUsuarioAsignado",
-                DataPropertyName = "DsUsuarioAsignado",
-                HeaderText = "Usuario Control",
+                Name = "dsDescripcion",
+                DataPropertyName = "DsDescripcion",
+                HeaderText = "Descripción",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsEntrega",
+                DataPropertyName = "DsEntrega",
+                HeaderText = "Entrega",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsCarpeta",
+                DataPropertyName = "DsCarpeta",
+                HeaderText = "Carpeta",
                 ReadOnly = true
             });
 
@@ -100,22 +117,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuCantidadPendiente",
-                DataPropertyName = "NuCantidadPendiente",
-                HeaderText = "Pendiente",
-                ReadOnly = true
-            });
-
-            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "nuCantidadPaginaIlegible",
-                DataPropertyName = "NuCantidadPaginaIlegible",
-                HeaderText = "Pág. Ilegible",
-                ReadOnly = true
-            });
-
-            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
-            {
                 Name = "nuCantidadDatosIlegibles",
                 DataPropertyName = "NuCantidadDatosIlegibles",
                 HeaderText = "Datos Ilegibles",
@@ -124,9 +125,41 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuCantidadCorregido",
-                DataPropertyName = "NuCantidadCorregido",
-                HeaderText = "Corregido",
+                Name = "nuCantidadPaginaIlegible",
+                DataPropertyName = "NuCantidadPaginaIlegible",
+                HeaderText = "Página Ilegible",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadCasosEspeciales",
+                DataPropertyName = "NuCantidadCasosEspeciales",
+                HeaderText = "Casos Especiales",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadParcelasMultiples",
+                DataPropertyName = "NuCantidadParcelasMultiples",
+                HeaderText = "Parcelas Multiples",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsUsuarioAsignado",
+                DataPropertyName = "DsUsuarioAsignado",
+                HeaderText = "Usuario Control",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsUsuarioAuditor",
+                DataPropertyName = "DsUsuarioAuditor",
+                HeaderText = "Usuario Auditor",
                 ReadOnly = true
             });
         }
@@ -143,6 +176,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
                 _lotesActuales = loteDAL.ObtenerLotesPendientesFinalizarConEstadisticas(
                     dsNombreLote, feControlDesde, feControlHasta, CD_ESTADO_PENDIENTE_FINALIZAR);
+
+                _indiceSeleccion50 = 0;
 
                 dgvLotes.DataSource = null;
                 dgvLotes.DataSource = _lotesActuales;
@@ -184,6 +219,50 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private void btnCerrar_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void btnSeleccionarTodo_Click(object sender, EventArgs e)
+        {
+            foreach (var lote in _lotesActuales)
+            {
+                lote.SnSeleccionado = true;
+            }
+
+            _indiceSeleccion50 = 0;
+            dgvLotes.Refresh();
+        }
+
+        private void btnDeseleccionarTodo_Click(object sender, EventArgs e)
+        {
+            foreach (var lote in _lotesActuales)
+            {
+                lote.SnSeleccionado = false;
+            }
+
+            _indiceSeleccion50 = 0;
+            dgvLotes.Refresh();
+        }
+
+        private void btnSeleccionar50_Click(object sender, EventArgs e)
+        {
+            if (_lotesActuales.Count == 0)
+            {
+                return;
+            }
+
+            if (_indiceSeleccion50 >= _lotesActuales.Count)
+            {
+                _indiceSeleccion50 = 0;
+            }
+
+            int cantidad = Math.Min(50, _lotesActuales.Count - _indiceSeleccion50);
+            for (int i = 0; i < cantidad; i++)
+            {
+                _lotesActuales[_indiceSeleccion50 + i].SnSeleccionado = true;
+            }
+
+            _indiceSeleccion50 += cantidad;
+            dgvLotes.Refresh();
         }
 
         private async void btnFinalizarLote_Click(object sender, EventArgs e)
@@ -234,7 +313,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             continue;
                         }
 
-                        // Control 1: campos obligatorios
+                        // Control 1: campos obligatorios (solo aplica a registros Controlados)
                         var faltantes = loteFinalizacionBL.ValidarCamposObligatorios(filas);
                         if (faltantes.Count > 0)
                         {
@@ -243,7 +322,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             continue;
                         }
 
-                        // Control 2: archivos abiertos/bloqueados
+                        // Control 2: advertir si quedan registros sin controlar (Pendiente de Control)
+                        int cantidadPendientes = loteFinalizacionBL.ContarPendientesControl(filas);
+                        if (cantidadPendientes > 0)
+                        {
+                            lotesConAdvertencia.Add($"Lote {lote.CdLote}: {cantidadPendientes} registro(s) " +
+                                "sin controlar (Pendiente de Control); se finalizó de todas formas.");
+                        }
+
+                        // Control 3: archivos abiertos/bloqueados
                         var bloqueados = await Task.Run(() => loteFinalizacionBL.ValidarArchivosNoAbiertos(filas));
                         if (bloqueados.Count > 0)
                         {

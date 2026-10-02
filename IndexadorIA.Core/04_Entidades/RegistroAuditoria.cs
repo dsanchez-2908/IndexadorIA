@@ -1,5 +1,7 @@
 namespace IndexadorIA.Entidades
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// DTO utilizado por la pantalla de Auditoría (FrmAuditarLote) para mostrar los
     /// registros de TD_001_RESULTADO_IA de un lote, junto con los datos de lote y
@@ -46,5 +48,11 @@ namespace IndexadorIA.Entidades
 
         // Indica si el registro ya fue revisado/editado por el auditor en esta sesión (no persistido)
         public bool EsRevisado { get; set; }
+
+        // Posibles errores detectados por el SP_CONTROL_PLANOS_cdLote (no persistido)
+        public List<string> PosiblesErrores { get; set; } = new();
+
+        // Texto concatenado de los posibles errores, para mostrar en la grilla (no persistido)
+        public string DsPosiblesErroresTexto => string.Join("; ", PosiblesErrores);
     }
 }

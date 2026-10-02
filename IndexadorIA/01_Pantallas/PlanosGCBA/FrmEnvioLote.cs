@@ -80,9 +80,25 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "dsUsuarioAsignado",
-                DataPropertyName = "DsUsuarioAsignado",
-                HeaderText = "Usuario Control",
+                Name = "dsDescripcion",
+                DataPropertyName = "DsDescripcion",
+                HeaderText = "Descripción",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsEntrega",
+                DataPropertyName = "DsEntrega",
+                HeaderText = "Entrega",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsCarpeta",
+                DataPropertyName = "DsCarpeta",
+                HeaderText = "Carpeta",
                 ReadOnly = true
             });
 
@@ -104,22 +120,6 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuCantidadPendiente",
-                DataPropertyName = "NuCantidadPendiente",
-                HeaderText = "Pendiente",
-                ReadOnly = true
-            });
-
-            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "nuCantidadPaginaIlegible",
-                DataPropertyName = "NuCantidadPaginaIlegible",
-                HeaderText = "Pág. Ilegible",
-                ReadOnly = true
-            });
-
-            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
-            {
                 Name = "nuCantidadDatosIlegibles",
                 DataPropertyName = "NuCantidadDatosIlegibles",
                 HeaderText = "Datos Ilegibles",
@@ -128,9 +128,41 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "nuCantidadCorregido",
-                DataPropertyName = "NuCantidadCorregido",
-                HeaderText = "Corregido",
+                Name = "nuCantidadPaginaIlegible",
+                DataPropertyName = "NuCantidadPaginaIlegible",
+                HeaderText = "Página Ilegible",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadCasosEspeciales",
+                DataPropertyName = "NuCantidadCasosEspeciales",
+                HeaderText = "Casos Especiales",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "nuCantidadParcelasMultiples",
+                DataPropertyName = "NuCantidadParcelasMultiples",
+                HeaderText = "Parcelas Multiples",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsUsuarioAsignado",
+                DataPropertyName = "DsUsuarioAsignado",
+                HeaderText = "Usuario Control",
+                ReadOnly = true
+            });
+
+            dgvLotes.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "dsUsuarioAuditor",
+                DataPropertyName = "DsUsuarioAuditor",
+                HeaderText = "Usuario Auditor",
                 ReadOnly = true
             });
         }
@@ -288,6 +320,40 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             try
             {
+                // Fase 1: validacion previa de TODOS los lotes seleccionados, sin tocar
+                // disco ni base de datos. El objetivo es detectar de una sola pasada los
+                // problemas (archivos faltantes, datos incompletos, etc.) ANTES de
+                // arrancar el proceso real de copia/CSV, que para tandas grandes (cientos
+                // de lotes / miles de archivos) puede tardar una hora o mas. Asi se evita
+                // llegar al final del proceso para recien ahi enterarse de un error.
+                var filasPorLote = new Dictionary<int, List<LoteEnvioBL.FilaEnvio>>();
+                var erroresValidacion = new List<string>();
+
+                foreach (var lote in seleccionados)
+                {
+                    var filas = await Task.Run(() => ObtenerFilasDelLote(loteDAL, resultadoIADAL, lote.CdLote));
+                    filasPorLote[lote.CdLote] = filas;
+
+                    var erroresLote = await Task.Run(() => loteEnvioBL.ValidarLotePrevioEnvio(lote.CdLote, filas));
+                    erroresValidacion.AddRange(erroresLote);
+
+                    progressBar.Value = Math.Min(progressBar.Value + 1, progressBar.Maximum);
+                }
+
+                if (erroresValidacion.Count > 0)
+                {
+                    MessageBox.Show(
+                        "Se encontraron problemas al validar los lotes seleccionados. No se envio ningun lote; " +
+                        "corrija lo siguiente y vuelva a intentar:\n\n" +
+                        string.Join("\n", erroresValidacion),
+                        "Validacion previa fallida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // Fase 2: proceso real de envio, ya validado de antemano. Se reutilizan las
+                // filas obtenidas en la fase 1 para no volver a consultar la base de datos.
+                progressBar.Value = 0;
+
                 if (!Directory.Exists(carpetaEnvioBase))
                     Directory.CreateDirectory(carpetaEnvioBase);
 
@@ -295,13 +361,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 {
                     try
                     {
-                        var filas = await Task.Run(() => ObtenerFilasDelLote(loteDAL, resultadoIADAL, lote.CdLote));
-
-                        if (filas.Count == 0)
-                        {
-                            lotesConError.Add($"Lote {lote.CdLote}: no tiene registros para procesar.");
-                            continue;
-                        }
+                        var filas = filasPorLote[lote.CdLote];
 
                         var discrepancias = await Task.Run(() => loteEnvioBL.EnviarLote(
                             lote.CdLote, filas, cdUsuario, carpetaEnvioBase, nombreCarpetaSalida, observacionesEnvio));
@@ -360,7 +420,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             var archivosPorPagina = loteDAL.ObtenerArchivosPaginasPorLote(cdLote)
                 .ToDictionary(a => a.CdArchivoPagina, a => a);
 
+            // Solo se envían los registros que efectivamente fueron procesados en la
+            // finalización del lote y clasificados como "Planos Procesados"
+            // (Controlado). Los casos ilegibles (Página Ilegible, Datos Ilegibles) se
+            // excluyen temporalmente del envío a pedido del usuario (se retomarán más
+            // adelante), y los registros en otros estados (Pendiente de Control, Casos
+            // Especiales, Parcelas Múltiples) no tienen PDF final ni
+            // dsNombreArchivoFinal, y deben ignorarse aquí igual que en FrmFinalizarLote.
             return resultados
+                .Where(r => r.CdEstadoControl == ResultadoIA.EstadosControl.Controlado)
                 .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
                 .Select(r => new LoteEnvioBL.FilaEnvio
                 {

@@ -1,13 +1,15 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
+using IndexadorIA.Utilidades;
 
 namespace IndexadorIA.Negocio
 {
     /// <summary>
     /// Lógica de negocio para el envío de lotes finalizados (pantalla "Envio"):
-    /// mueve los PDFs finales y los registros de los CSV de índice correspondientes
+    /// copia los PDFs finales y unifica los registros de los CSV de índice correspondientes
     /// SOLO a los lotes seleccionados hacia la carpeta de envío final, y marca los
-    /// lotes (y sus páginas) como "Enviado".
+    /// lotes (y sus páginas) como "Enviado". Los archivos originales en "Terminado\{cdLote}"
+    /// NO se eliminan (se copian, no se mueven).
     /// </summary>
     public class LoteEnvioBL
     {
@@ -58,13 +60,102 @@ namespace IndexadorIA.Negocio
 
         /// <summary>
         /// Obtiene la carpeta "Planos Procesados"/"Planos ILEGIBLES" donde reside actualmente
-        /// el PDF final de una página, calculada igual que las queries de referencia:
-        /// dirname(dsRutaCompleta DEL ARCHIVO ORIGINAL) + "\Planos Procesados" o "\Planos ILEGIBLES".
+        /// el PDF final de una página, dentro de la carpeta aislada del lote generada en la
+        /// finalización: dirname(dsRutaCompleta DEL ARCHIVO ORIGINAL) + "\Terminado\{cdLote}\"
+        /// + "Planos Procesados" o "Planos ILEGIBLES".
         /// </summary>
-        private static string ObtenerCarpetaOrigen(ArchivoPagina archivo, bool esIlegible)
+        private static string ObtenerCarpetaOrigen(ArchivoPagina archivo, bool esIlegible, int cdLote)
         {
             string carpetaBase = Path.GetDirectoryName(archivo.DsRutaCompletaOriginal) ?? string.Empty;
-            return Path.Combine(carpetaBase, esIlegible ? CarpetaIlegibles : CarpetaProcesados);
+            return Path.Combine(LoteFinalizacionBL.ObtenerCarpetaLote(carpetaBase, cdLote),
+                esIlegible ? CarpetaIlegibles : CarpetaProcesados);
+        }
+
+        /// <summary>
+        /// Obtiene el valor de dsEntrega comun a todas las filas del lote (todas las filas
+        /// de un mismo lote comparten el mismo valor). Devuelve cadena vacia si no hay filas
+        /// o el valor no esta informado.
+        /// </summary>
+        public static string ObtenerEntregaDelLote(List<FilaEnvio> filas)
+        {
+            return filas
+                .Select(f => f.Archivo.DsEntrega)
+                .FirstOrDefault(e => !string.IsNullOrWhiteSpace(e)) ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Valida (sin tocar disco ni base de datos) que un lote este en condiciones de
+        /// enviarse correctamente: que tenga filas, que todas tengan dsEntrega y
+        /// dsNombreArchivoFinal informados, que el PDF fisico de origen exista, y que el
+        /// CSV de indice de origen (generado en la finalizacion) exista. Pensada para
+        /// ejecutarse ANTES de procesar el envio real de una tanda grande de lotes, de
+        /// forma de detectar de una sola pasada todos los problemas y evitar arrancar un
+        /// proceso largo (copia de miles de archivos) que termine fallando a la mitad.
+        /// </summary>
+        public List<string> ValidarLotePrevioEnvio(int cdLote, List<FilaEnvio> filas)
+        {
+            var errores = new List<string>();
+
+            if (filas.Count == 0)
+            {
+                errores.Add($"Lote {cdLote}: no tiene registros para procesar.");
+                return errores;
+            }
+
+            string dsEntrega = ObtenerEntregaDelLote(filas);
+            if (string.IsNullOrWhiteSpace(dsEntrega))
+            {
+                errores.Add($"Lote {cdLote}: no tiene dsEntrega informado en ninguna de sus filas.");
+            }
+
+            var carpetasCsvValidadas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var fila in filas)
+            {
+                string nombreArchivoFinal = fila.Archivo.DsNombreArchivoFinal ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(nombreArchivoFinal))
+                {
+                    errores.Add(
+                        $"Lote {cdLote}: el archivo/pagina {fila.Archivo.CdArchivoPagina} no tiene " +
+                        "nombre de archivo final registrado (dsNombreArchivoFinal).");
+                    continue;
+                }
+
+                bool esIlegible = EsIlegible(fila.Resultado);
+                string carpetaOrigen = ObtenerCarpetaOrigen(fila.Archivo, esIlegible, cdLote);
+                string rutaOrigen = Path.Combine(carpetaOrigen, nombreArchivoFinal);
+
+                if (!File.Exists(rutaOrigen))
+                {
+                    errores.Add(
+                        $"Lote {cdLote}: no se encontro el archivo fisico del archivo/pagina " +
+                        $"{fila.Archivo.CdArchivoPagina}: {rutaOrigen}");
+                }
+
+                if (carpetasCsvValidadas.Add(carpetaOrigen))
+                {
+                    string nombreCsvOrigen = ObtenerNombreCsvOrigen(carpetaOrigen, esIlegible);
+                    string rutaCsvOrigen = Path.Combine(carpetaOrigen, nombreCsvOrigen);
+
+                    if (!File.Exists(rutaCsvOrigen))
+                    {
+                        errores.Add(
+                            $"Lote {cdLote}: no se encontro el CSV de indice de origen: {rutaCsvOrigen}");
+                    }
+                }
+            }
+
+            return errores;
+        }
+
+        /// <summary>
+        /// Arma la carpeta de la Entrega dentro de la carpeta de envío base
+        /// (txtRutaSalida\txtNombreCarpetaSalida\{dsEntrega}).
+        /// </summary>
+        public static string ObtenerCarpetaEntrega(string carpetaEnvioBase, string dsEntrega)
+        {
+            return Path.Combine(carpetaEnvioBase, dsEntrega);
         }
 
         /// <summary>
@@ -75,17 +166,30 @@ namespace IndexadorIA.Negocio
             public int CdArchivoPagina { get; set; }
             public string CarpetaOrigen { get; set; } = string.Empty;
             public string CarpetaDestino { get; set; } = string.Empty;
+
+            /// <summary>
+            /// Nombre de archivo tal como esta persistido en dsNombreArchivoFinal (y como
+            /// figura en el CSV de indice de origen), previo a resolver colisiones en el
+            /// destino de envio.
+            /// </summary>
+            public string NombreArchivoOriginal { get; set; } = string.Empty;
+
+            /// <summary>
+            /// Nombre de archivo final efectivamente usado en la carpeta de destino de
+            /// envio, luego de resolver colisiones (puede tener sufijo "(1)", "(2)", etc.).
+            /// </summary>
             public string NombreArchivoFinal { get; set; } = string.Empty;
             public bool EsIlegible { get; set; }
         }
 
         /// <summary>
-        /// Mueve los PDFs finales de las filas indicadas (localizados en la subcarpeta
-        /// "Planos Procesados"/"Planos ILEGIBLES", con el nombre persistido en
-        /// dsNombreArchivoFinal) hacia la carpeta de envío indicada. No copia: mueve el
-        /// archivo físico.
+        /// Copia (y renombra si corresponde) los PDFs finales de las filas indicadas
+        /// (localizados en "Terminado\{cdLote}\Planos Procesados"/"Planos ILEGIBLES", con
+        /// el nombre persistido en dsNombreArchivoFinal) hacia la carpeta de envio de la
+        /// Entrega correspondiente. No mueve: copia el archivo fisico, dejando intacto el
+        /// original en "Terminado\{cdLote}\..." hasta confirmar que el envio es correcto.
         /// </summary>
-        public List<RegistroEnvio> MoverArchivos(List<FilaEnvio> filas, string carpetaEnvioBase)
+        public List<RegistroEnvio> MoverArchivos(List<FilaEnvio> filas, string carpetaEntrega, int cdLote)
         {
             var movimientos = new List<RegistroEnvio>();
 
@@ -98,26 +202,31 @@ namespace IndexadorIA.Negocio
                         $"El archivo/página {fila.Archivo.CdArchivoPagina} no tiene nombre de archivo final registrado (dsNombreArchivoFinal).");
 
                 bool esIlegible = EsIlegible(fila.Resultado);
-                string carpetaOrigen = ObtenerCarpetaOrigen(fila.Archivo, esIlegible);
+                string carpetaOrigen = ObtenerCarpetaOrigen(fila.Archivo, esIlegible, cdLote);
                 string rutaOrigen = Path.Combine(carpetaOrigen, nombreArchivoFinal);
 
                 if (!File.Exists(rutaOrigen))
                     throw new FileNotFoundException(
                         $"No se encontró el archivo físico del archivo/página {fila.Archivo.CdArchivoPagina}: {rutaOrigen}");
 
-                string carpetaDestino = Path.Combine(carpetaEnvioBase, esIlegible ? CarpetaIlegibles : CarpetaProcesados);
+                string carpetaDestino = Path.Combine(carpetaEntrega, esIlegible ? CarpetaIlegibles : CarpetaProcesados);
 
                 if (!Directory.Exists(carpetaDestino))
                     Directory.CreateDirectory(carpetaDestino);
 
                 string rutaDestino = Path.Combine(carpetaDestino, nombreArchivoFinal);
+                string nombreArchivoDestino = nombreArchivoFinal;
 
                 if (!string.Equals(rutaOrigen, rutaDestino, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (File.Exists(rutaDestino))
-                        throw new IOException($"Ya existe un archivo con el mismo nombre en el destino: {rutaDestino}");
+                    // Varios lotes (en especial los ilegibles, cuyo nombre suele ser generico)
+                    // pueden terminar aportando archivos con el mismo nombre a una misma
+                    // carpeta de Entrega. Se resuelve la colision agregando (1), (2), (3)...,
+                    // igual que en la finalizacion, para no fallar el envio.
+                    nombreArchivoDestino = GeneradorNombreArchivo.ResolverColision(carpetaDestino, nombreArchivoFinal);
+                    rutaDestino = Path.Combine(carpetaDestino, nombreArchivoDestino);
 
-                    File.Move(rutaOrigen, rutaDestino);
+                    File.Copy(rutaOrigen, rutaDestino);
                 }
 
                 movimientos.Add(new RegistroEnvio
@@ -125,7 +234,8 @@ namespace IndexadorIA.Negocio
                     CdArchivoPagina = fila.Archivo.CdArchivoPagina,
                     CarpetaOrigen = carpetaOrigen,
                     CarpetaDestino = carpetaDestino,
-                    NombreArchivoFinal = nombreArchivoFinal,
+                    NombreArchivoOriginal = nombreArchivoFinal,
+                    NombreArchivoFinal = nombreArchivoDestino,
                     EsIlegible = esIlegible
                 });
             }
@@ -134,28 +244,36 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
-        /// Nombre del CSV de índice ubicado en la carpeta de origen (misma carpeta donde
-        /// están los PDFs "Planos Procesados"/"Planos ILEGIBLES"), generado durante la
-        /// finalización del lote: "[carpeta entrega].csv" o "[carpeta entrega]_ILEGIBLE.csv".
+        /// Nombre del CSV de indice ubicado en la carpeta de origen (misma carpeta donde
+        /// estan los PDFs "Planos Procesados"/"Planos ILEGIBLES", dentro de
+        /// "Terminado\{cdLote}"), generado durante la finalizacion del lote:
+        /// "[carpeta entrega].csv" o "[carpeta entrega]_ILEGIBLE.csv". El nombre se basa en
+        /// la carpeta base de la entrega (dos niveles arriba de la carpeta de origen: sube
+        /// de "Planos Procesados/ILEGIBLES" a "Terminado\{cdLote}" y de ahi a la carpeta base).
         /// </summary>
         private static string ObtenerNombreCsvOrigen(string carpetaOrigen, bool esIlegible)
         {
             var directorioOrigen = new DirectoryInfo(carpetaOrigen);
-            string nombreCarpetaBase = directorioOrigen.Parent != null ? directorioOrigen.Parent.Name : directorioOrigen.Name;
+            var carpetaLote = directorioOrigen.Parent; // Terminado\{cdLote}
+            var carpetaTerminado = carpetaLote?.Parent; // Terminado
+            var carpetaBase = carpetaTerminado?.Parent; // carpeta base de la entrega
+
+            string nombreCarpetaBase = carpetaBase != null ? carpetaBase.Name : directorioOrigen.Name;
 
             return esIlegible ? $"{nombreCarpetaBase}_ILEGIBLE.csv" : $"{nombreCarpetaBase}.csv";
         }
 
         /// <summary>
-        /// Mueve SOLO los registros de los CSV de índice (ubicados en la misma carpeta de
-        /// origen de los PDFs) cuya columna "Nombre Nuevo" coincida con el nombre de archivo
-        /// final movido, hacia el CSV de índice en la carpeta de envío. Los registros de
-        /// otros lotes que compartan la misma carpeta permanecen intactos en el CSV de origen.
-        /// El CSV de destino se nombra "{nombreCarpetaSalida}.csv".
+        /// Mueve (fusiona) TODOS los registros del CSV de indice del lote (ubicado en
+        /// "Terminado\{cdLote}\Planos Procesados"/"Planos ILEGIBLES") hacia el CSV
+        /// consolidado de la carpeta de Entrega correspondiente. Como el CSV de origen es
+        /// exclusivo de ese lote (ya no se comparte entre lotes), se fusiona completo.
+        /// El CSV consolidado se nombra "{nombreCarpetaSalida}.csv" (Procesados) o
+        /// "{nombreCarpetaSalida}-ILEGIBLES.csv" (Ilegibles).
         /// </summary>
         public void MoverRegistrosCsv(List<RegistroEnvio> movimientos, string nombreCarpetaSalida)
         {
-            var porCarpetaOrigen = movimientos.GroupBy(m => (m.CarpetaOrigen, m.EsIlegible), m => m);
+            var porCarpetaOrigen = movimientos.GroupBy(m => (m.CarpetaOrigen, m.CarpetaDestino, m.EsIlegible), m => m);
 
             foreach (var grupo in porCarpetaOrigen)
             {
@@ -168,47 +286,40 @@ namespace IndexadorIA.Negocio
                 if (!File.Exists(rutaCsvOrigen))
                     throw new FileNotFoundException($"No se encontró el CSV de índice de origen: {rutaCsvOrigen}");
 
-                var nombresAMover = new HashSet<string>(
-                    grupo.Select(m => m.NombreArchivoFinal), StringComparer.OrdinalIgnoreCase);
-
                 var todasLasLineas = File.ReadAllLines(rutaCsvOrigen).ToList();
                 if (todasLasLineas.Count == 0)
                     continue;
 
                 string encabezado = todasLasLineas[0];
-                var lineasRestantes = new List<string>();
-                var lineasAMover = new List<string>();
+                var lineasDatos = todasLasLineas.Skip(1).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
 
-                for (int i = 1; i < todasLasLineas.Count; i++)
-                {
-                    string linea = todasLasLineas[i];
-                    if (string.IsNullOrWhiteSpace(linea))
-                        continue;
-
-                    string nombreNuevo = ObtenerCampoNombreNuevo(linea);
-
-                    if (!string.IsNullOrEmpty(nombreNuevo) && nombresAMover.Contains(nombreNuevo))
-                    {
-                        lineasAMover.Add(linea);
-                    }
-                    else
-                    {
-                        lineasRestantes.Add(linea);
-                    }
-                }
-
-                if (lineasAMover.Count == 0)
+                if (lineasDatos.Count == 0)
                     continue;
 
-                // Reescribe el CSV de origen sin los registros movidos
-                var lineasFinalesOrigen = new List<string> { encabezado };
-                lineasFinalesOrigen.AddRange(lineasRestantes);
-                File.WriteAllLines(rutaCsvOrigen, lineasFinalesOrigen, System.Text.Encoding.UTF8);
+                // Si alguno de los archivos de este grupo debio renombrarse por colision
+                // ((1), (2), (3)... en el destino de envio), se refleja el mismo nombre
+                // final en la columna "Nombre Nuevo" del CSV consolidado.
+                var renombres = grupo
+                    .Where(m => !string.Equals(m.NombreArchivoOriginal, m.NombreArchivoFinal, StringComparison.Ordinal))
+                    .GroupBy(m => m.NombreArchivoOriginal)
+                    .ToDictionary(g => g.Key, g => g.First().NombreArchivoFinal, StringComparer.Ordinal);
 
-                // Agrega los registros movidos al CSV de destino (carpeta de envío)
-                string carpetaDestino = grupo.First().CarpetaDestino;
-                string nombreCsvDestino = $"{nombreCarpetaSalida}.csv";
-                string rutaCsvDestino = Path.Combine(carpetaDestino, nombreCsvDestino);
+                if (renombres.Count > 0)
+                {
+                    lineasDatos = lineasDatos
+                        .Select(linea => AplicarRenombreEnLineaCsv(linea, renombres))
+                        .ToList();
+                }
+
+                string carpetaDestino = grupo.Key.CarpetaDestino;
+                string nombreCsvDestino = esIlegible
+                    ? $"{nombreCarpetaSalida}-ILEGIBLES.csv"
+                    : $"{nombreCarpetaSalida}.csv";
+
+                // La carpeta destino es "{carpetaEntrega}\Planos Procesados"/"...ILEGIBLES";
+                // el CSV consolidado se ubica un nivel arriba, directo en la carpeta de Entrega.
+                string carpetaEntrega = new DirectoryInfo(carpetaDestino).Parent?.FullName ?? carpetaDestino;
+                string rutaCsvDestino = Path.Combine(carpetaEntrega, nombreCsvDestino);
                 bool destinoExiste = File.Exists(rutaCsvDestino);
 
                 using var writer = new StreamWriter(rutaCsvDestino, append: true, System.Text.Encoding.UTF8);
@@ -216,7 +327,7 @@ namespace IndexadorIA.Negocio
                 if (!destinoExiste)
                     writer.WriteLine(encabezado);
 
-                foreach (var linea in lineasAMover)
+                foreach (var linea in lineasDatos)
                     writer.WriteLine(linea);
             }
         }
@@ -229,6 +340,39 @@ namespace IndexadorIA.Negocio
         {
             var campos = DividirLineaCsv(linea);
             return campos.Count > 2 ? campos[2] : string.Empty;
+        }
+
+        /// <summary>
+        /// Si la línea del CSV de índice referencia (columna "Nombre Nuevo") a un archivo
+        /// que debió renombrarse por colisión en el destino de envío, reescribe esa
+        /// columna con el nombre final efectivamente usado, dejando el resto de las
+        /// columnas intactas.
+        /// </summary>
+        private static string AplicarRenombreEnLineaCsv(string linea, Dictionary<string, string> renombres)
+        {
+            string nombreNuevo = ObtenerCampoNombreNuevo(linea);
+
+            if (string.IsNullOrEmpty(nombreNuevo) || !renombres.TryGetValue(nombreNuevo, out string? nombreFinal))
+                return linea;
+
+            var campos = DividirLineaCsv(linea);
+            if (campos.Count <= 2)
+                return linea;
+
+            campos[2] = EscaparCampoCsv(nombreFinal);
+
+            return string.Join(";", campos);
+        }
+
+        private static string EscaparCampoCsv(string valor)
+        {
+            if (string.IsNullOrEmpty(valor))
+                return string.Empty;
+
+            if (valor.Contains(';') || valor.Contains('"'))
+                return "\"" + valor.Replace("\"", "\"\"") + "\"";
+
+            return valor;
         }
 
         private static List<string> DividirLineaCsv(string linea)
@@ -263,32 +407,36 @@ namespace IndexadorIA.Negocio
         /// <summary>
         /// Valida que la cantidad de archivos PDF presentes en cada carpeta de destino
         /// (Procesados/Ilegibles) coincida con la cantidad de registros de datos (sin
-        /// contar encabezado) del CSV de índice ubicado en esa misma carpeta. Devuelve una
-        /// lista de mensajes describiendo las discrepancias encontradas (vacía si todo coincide).
+        /// contar encabezado) del CSV consolidado de índice ubicado en la carpeta de Entrega
+        /// (un nivel arriba de la carpeta de PDFs). Devuelve una lista de mensajes
+        /// describiendo las discrepancias encontradas (vacía si todo coincide).
         /// </summary>
-        public List<string> ValidarCantidadArchivosVsCsv(IEnumerable<string> carpetasDestino)
+        public List<string> ValidarCantidadArchivosVsCsv(IEnumerable<(string CarpetaPdfs, string RutaCsv)> carpetasDestino)
         {
             var discrepancias = new List<string>();
 
-            foreach (var carpeta in carpetasDestino.Distinct(StringComparer.OrdinalIgnoreCase))
+            foreach (var item in carpetasDestino.Distinct())
             {
+                string carpeta = item.CarpetaPdfs;
+                string rutaCsv = item.RutaCsv;
+
                 if (!Directory.Exists(carpeta))
                     continue;
 
                 int cantidadPdf = Directory.GetFiles(carpeta, "*.pdf").Length;
 
                 int cantidadRegistrosCsv = 0;
-                foreach (var rutaCsv in Directory.GetFiles(carpeta, "*.csv"))
+                if (File.Exists(rutaCsv))
                 {
                     int cantidadLineas = File.ReadAllLines(rutaCsv).Count(l => !string.IsNullOrWhiteSpace(l));
-                    cantidadRegistrosCsv += Math.Max(cantidadLineas - 1, 0);
+                    cantidadRegistrosCsv = Math.Max(cantidadLineas - 1, 0);
                 }
 
                 if (cantidadPdf != cantidadRegistrosCsv)
                 {
                     discrepancias.Add(
                         $"La carpeta '{carpeta}' tiene {cantidadPdf} archivo(s) PDF pero " +
-                        $"{cantidadRegistrosCsv} registro(s) en el/los CSV de índice.");
+                        $"{cantidadRegistrosCsv} registro(s) en el CSV de índice '{rutaCsv}'.");
                 }
             }
 
@@ -316,18 +464,49 @@ namespace IndexadorIA.Negocio
         public List<string> EnviarLote(int cdLote, List<FilaEnvio> filas, int cdUsuario,
             string carpetaEnvioBase, string dsCarpetaEnvio, string? dsObservacionesEnvio)
         {
-            var movimientos = MoverArchivos(filas, carpetaEnvioBase);
+            string dsEntrega = ObtenerEntregaDelLote(filas);
+            string carpetaEntrega = ObtenerCarpetaEntrega(carpetaEnvioBase, dsEntrega);
+
+            var movimientos = MoverArchivos(filas, carpetaEntrega, cdLote);
             MoverRegistrosCsv(movimientos, dsCarpetaEnvio);
 
-            var carpetasDestino = movimientos.Select(m => m.CarpetaDestino);
+            var carpetasDestino = movimientos
+                .Select(m => (
+                    CarpetaPdfs: m.CarpetaDestino,
+                    RutaCsv: Path.Combine(carpetaEntrega, m.EsIlegible
+                        ? $"{dsCarpetaEnvio}-ILEGIBLES.csv"
+                        : $"{dsCarpetaEnvio}.csv")))
+                .Distinct();
             var discrepancias = ValidarCantidadArchivosVsCsv(carpetasDestino);
 
             if (discrepancias.Count > 0)
                 return discrepancias;
 
+            RegistrarNombresArchivoFinalEnviado(movimientos);
             MarcarLoteEnviado(cdLote, cdUsuario, dsCarpetaEnvio, dsObservacionesEnvio);
 
             return discrepancias;
+        }
+
+        /// <summary>
+        /// Persiste en TD_ARCHIVOS_PAGINAS.dsNombreArchivoFinalEnviado el nombre de PDF
+        /// efectivamente entregado en la carpeta de destino de envio. Se registra null
+        /// cuando no hubo colision (el nombre enviado coincide con dsNombreArchivoFinal),
+        /// y el nombre con sufijo "(1)", "(2)", etc. cuando hubo que renombrar por colision,
+        /// de forma de no dejar desactualizado el nombre realmente enviado si el lote se
+        /// reenvia o se consulta mas adelante.
+        /// </summary>
+        private void RegistrarNombresArchivoFinalEnviado(List<RegistroEnvio> movimientos)
+        {
+            foreach (var movimiento in movimientos)
+            {
+                string? nombreEnviado = string.Equals(
+                    movimiento.NombreArchivoOriginal, movimiento.NombreArchivoFinal, StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : movimiento.NombreArchivoFinal;
+
+                _archivoPaginaDAL.ActualizarNombreArchivoFinalEnviado(movimiento.CdArchivoPagina, nombreEnviado);
+            }
         }
 
         /// <summary>

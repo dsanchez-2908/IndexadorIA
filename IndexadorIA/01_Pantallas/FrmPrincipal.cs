@@ -199,6 +199,11 @@ namespace IndexadorIA.Pantallas
             AbrirFormularioEnPanel(new PlanosGCBA.FrmMonitorAuditoria());
         }
 
+        private void menuPlanos_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Consultas.FrmConsultaPlanos());
+        }
+
         private void menuConsumosIA_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmConsumosIA());
@@ -207,6 +212,11 @@ namespace IndexadorIA.Pantallas
         private void menuProduccionUsuarios_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmProduccionUsuarios());
+        }
+
+        private void menuAuditoriaUsuarios_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Reportes.FrmAuditoriaUsuarios());
         }
 
         private void menuEstadoProyecto_Click(object sender, EventArgs e)

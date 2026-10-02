@@ -181,6 +181,29 @@ namespace IndexadorIA.Datos
         }
 
         /// <summary>
+        /// Actualiza el nombre de PDF efectivamente entregado (dsNombreArchivoFinalEnviado)
+        /// de una página, usado por el proceso de Envío cuando el nombre debió renombrarse
+        /// por colisión en la carpeta de destino. Pasar null para limpiar el valor (envío
+        /// sin colisión, incluso si antes hubo una colisión en un intento anterior).
+        /// </summary>
+        public void ActualizarNombreArchivoFinalEnviado(int cdArchivoPagina, string? dsNombreArchivoFinalEnviado)
+        {
+            using (var conexion = new SqlConnection(_cadenaConexion))
+            {
+                var comando = new SqlCommand(@"
+                    UPDATE TD_ARCHIVOS_PAGINAS
+                    SET dsNombreArchivoFinalEnviado = @dsNombreArchivoFinalEnviado
+                    WHERE cdArchivoPagina = @cdArchivoPagina", conexion);
+
+                comando.Parameters.AddWithValue("@dsNombreArchivoFinalEnviado", (object?)dsNombreArchivoFinalEnviado ?? DBNull.Value);
+                comando.Parameters.AddWithValue("@cdArchivoPagina", cdArchivoPagina);
+
+                conexion.Open();
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
         /// Obtiene un archivo/página por su Id (usado por las pantallas de detalle
         /// para acceder a la ruta del PDF/JPG y al estado de rotación).
         /// </summary>
