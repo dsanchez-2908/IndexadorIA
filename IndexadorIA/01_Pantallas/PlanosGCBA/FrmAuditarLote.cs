@@ -407,6 +407,55 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         {
             try
             {
+                // Validación 1: no se permite finalizar la auditoría si quedan registros
+                // Pendiente de Control (cdEstadoControl = 1). Se valida también en el
+                // servidor (local/API) para evitar inconsistencias.
+                int cantidadPendientes;
+                if (SesionApi.ModoRemoto)
+                {
+                    cantidadPendientes = _apiCliente!.ContarPendientesControlAsync(_cdLote).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    var resultadoDAL = new ResultadoIADAL();
+                    cantidadPendientes = resultadoDAL.ContarPendientesControl(_cdLote);
+                }
+
+                if (cantidadPendientes > 0)
+                {
+                    MessageBox.Show(
+                        $"No se puede finalizar la auditoría: quedan {cantidadPendientes} registro(s) " +
+                        "sin controlar (Pendiente de Control).\n\n" +
+                        "Complete el control de todos los registros antes de continuar.",
+                        "Registros sin controlar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Validación 2: advertir (no bloquear) si hay registros Controlados a los
+                // que les falta algún campo obligatorio.
+                int cantidadIncompletos;
+                if (SesionApi.ModoRemoto)
+                {
+                    cantidadIncompletos = _apiCliente!.ContarControladosIncompletosAuditoriaAsync(_cdLote).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    var resultadoDAL = new ResultadoIADAL();
+                    cantidadIncompletos = resultadoDAL.ContarControladosConCamposIncompletos(_cdLote);
+                }
+
+                if (cantidadIncompletos > 0)
+                {
+                    var respuestaIncompletos = MessageBox.Show(
+                        $"Hay {cantidadIncompletos} registro(s) en estado Controlado a los que les falta " +
+                        "completar algún campo obligatorio (Categoría de Plano, Tipo de Plano, Sección, " +
+                        "Manzana, Parcela o Dirección).\n\n¿Desea continuar de todas formas?",
+                        "Registros incompletos", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                    if (respuestaIncompletos != DialogResult.Yes)
+                        return;
+                }
+
                 var confirmacion = MessageBox.Show(
                     "¿Esta seguro que desea marcar como auditado el lote?",
                     "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);

@@ -1780,17 +1780,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     return;
                 }
 
-                // Control 2: advertir si quedan registros sin controlar (Pendiente de Control)
+                // Control 2: no se permite marcar el lote como completado si quedan
+                // registros sin controlar (Pendiente de Control). Se valida tambien en la
+                // capa de negocio (LoteFinalizacionBL.MarcarLotePendienteFinalizar), tanto
+                // en modo local como remoto (API), para evitar inconsistencias.
                 int cantidadPendientes = loteFinalizacionBL.ContarPendientesControl(filas);
                 if (cantidadPendientes > 0)
                 {
-                    var respuesta = MessageBox.Show(
-                        $"Quedan {cantidadPendientes} registro(s) sin controlar (Pendiente de Control).\n\n" +
-                        "¿Desea continuar de todas formas?",
-                        "Registros sin controlar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                    if (respuesta != DialogResult.Yes)
-                        return;
+                    MessageBox.Show(
+                        $"No se puede marcar el lote como completado: quedan {cantidadPendientes} registro(s) " +
+                        "sin controlar (Pendiente de Control).\n\n" +
+                        "Complete el control de todos los registros antes de continuar.",
+                        "Registros sin controlar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
                 var confirmacion = MessageBox.Show(

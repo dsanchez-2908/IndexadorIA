@@ -205,20 +205,6 @@ namespace IndexadorIA.Negocio
                     return (false, "Debe ingresar una descripci\u00f3n de lote", 0);
                 }
 
-                foreach (var cdLoteOrigen in archivosPorLoteOrigen.Keys)
-                {
-                    int? cdEstadoLoteOrigen = _loteDAL.ObtenerEstadoLote(cdLoteOrigen);
-                    if (cdEstadoLoteOrigen is null)
-                    {
-                        return (false, $"No se encontr\u00f3 el lote de origen {cdLoteOrigen}", 0);
-                    }
-
-                    if (cdEstadoLoteOrigen == 11)
-                    {
-                        return (false, $"No se puede reubicar planos de un lote en estado Enviado (lote {cdLoteOrigen})", 0);
-                    }
-                }
-
                 int cantidadLotesCreados = _loteDAL.ReubicarArchivosEnNuevosLotesMultiples(
                     archivosPorLoteOrigen, dsDescripcionLote, SesionActual.UsuarioActual?.CdUsuario ?? 0);
 

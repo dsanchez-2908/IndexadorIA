@@ -1,6 +1,7 @@
 using System.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using IndexadorIA.Entidades;
 
 namespace IndexadorIA.Negocio.Api
 {
@@ -415,6 +416,24 @@ namespace IndexadorIA.Negocio.Api
         }
 
         /// <summary>
+        /// Llama a GET /api/auditoria/lotes/{cdLote}/pendientes-control (equivalente
+        /// remoto de ResultadoIADAL.ContarPendientesControl(cdLote)), usado por
+        /// FrmAuditarLote.btnMarcarLoteAuditado_Click para bloquear la finalizacion de la
+        /// auditoria mientras queden registros sin controlar.
+        /// </summary>
+        public async Task<int> ContarPendientesControlAsync(int cdLote)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync($"api/auditoria/lotes/{cdLote}/pendientes-control").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<ControladosIncompletosApiDto>().ConfigureAwait(false);
+            return resultado?.Cantidad ?? 0;
+        }
+
+        /// <summary>
         /// Llama a PUT /api/auditoria/lotes/{cdLote}/marcar-auditado (equivalente remoto
         /// de FrmAuditarLote.btnMarcarLoteAuditado_Click).
         /// </summary>
@@ -425,6 +444,24 @@ namespace IndexadorIA.Negocio.Api
             HttpResponseMessage respuesta = await _httpClient.PutAsync($"api/auditoria/lotes/{cdLote}/marcar-auditado", null).ConfigureAwait(false);
             if (!respuesta.IsSuccessStatusCode)
                 throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Llama a GET /api/auditoria/lotes/{cdLote}/controlados-incompletos (equivalente
+        /// remoto de ResultadoIADAL.ContarControladosConCamposIncompletos(cdLote)), usado
+        /// por FrmAuditarLote.btnMarcarLoteAuditado_Click para advertir al auditor antes
+        /// de finalizar la auditoria.
+        /// </summary>
+        public async Task<int> ContarControladosIncompletosAuditoriaAsync(int cdLote)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync($"api/auditoria/lotes/{cdLote}/controlados-incompletos").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<ControladosIncompletosApiDto>().ConfigureAwait(false);
+            return resultado?.Cantidad ?? 0;
         }
 
         /// <summary>
@@ -480,6 +517,60 @@ namespace IndexadorIA.Negocio.Api
             HttpResponseMessage respuesta = await _httpClient.PutAsJsonAsync($"api/auditoria/resultados/{cdResultado}/propagar-direccion", request).ConfigureAwait(false);
             if (!respuesta.IsSuccessStatusCode)
                 throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Llama a GET /api/estado-x-entrega/resumen (equivalente remoto de
+        /// EstadoXEntregaDAL.ObtenerResumenPorEntrega()), usado por FrmEstadoXEntrega.
+        /// </summary>
+        public async Task<List<EstadoXEntregaDto>> ObtenerResumenEstadoXEntregaAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/estado-x-entrega/resumen").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<EstadoXEntregaDto>>().ConfigureAwait(false);
+            return resultado ?? new List<EstadoXEntregaDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/estado-x-entrega/lotes-pendientes-por-estado (equivalente
+        /// remoto de EstadoXEntregaDAL.ObtenerLotesPendientesPorEstado()), usado por
+        /// FrmLotesPendientesEntrega.
+        /// </summary>
+        public async Task<List<LoteEstadoAgrupadoDto>> ObtenerLotesPendientesPorEstadoAsync(string dsEntrega)
+        {
+            AplicarToken();
+
+            string url = $"api/estado-x-entrega/lotes-pendientes-por-estado?dsEntrega={Uri.EscapeDataString(dsEntrega)}";
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<LoteEstadoAgrupadoDto>>().ConfigureAwait(false);
+            return resultado ?? new List<LoteEstadoAgrupadoDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/estado-x-entrega/detalle-lotes (equivalente remoto de
+        /// EstadoXEntregaDAL.ObtenerDetalleLotesPorEntregaYEstado()), usado por
+        /// FrmLotesPendientesEntrega.
+        /// </summary>
+        public async Task<List<LoteDetalleEstadoDto>> ObtenerDetalleLotesPorEntregaYEstadoAsync(string dsEntrega, int cdEstadoLote)
+        {
+            AplicarToken();
+
+            string url = $"api/estado-x-entrega/detalle-lotes?dsEntrega={Uri.EscapeDataString(dsEntrega)}&cdEstadoLote={cdEstadoLote}";
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<LoteDetalleEstadoDto>>().ConfigureAwait(false);
+            return resultado ?? new List<LoteDetalleEstadoDto>();
         }
 
         private static async Task<string> ObtenerMensajeErrorAsync(HttpResponseMessage respuesta)

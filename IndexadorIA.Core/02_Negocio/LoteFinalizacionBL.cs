@@ -72,11 +72,13 @@ namespace IndexadorIA.Negocio
 
         private readonly LoteDAL _loteDAL;
         private readonly LogDAL _logDAL;
+        private readonly ResultadoIADAL _resultadoIADAL;
 
         public LoteFinalizacionBL()
         {
             _loteDAL = new LoteDAL();
             _logDAL = new LogDAL();
+            _resultadoIADAL = new ResultadoIADAL();
         }
 
         /// <summary>
@@ -179,9 +181,17 @@ namespace IndexadorIA.Negocio
         /// Marca el lote con el estado "Pendiente de Finalizar" (usado desde FrmVerLote
         /// cuando el control de todas las páginas del lote se completó), dejando registro
         /// de la fecha/hora y el usuario que finalizó el control.
+        /// No permite marcar el lote si quedan registros Pendiente de Control
+        /// (cdEstadoControl = 1); se valida directamente contra la base de datos para
+        /// cubrir tanto el acceso local como el remoto (API).
         /// </summary>
         public void MarcarLotePendienteFinalizar(int cdLote, int cdUsuario)
         {
+            int cantidadPendientes = _resultadoIADAL.ContarPendientesControl(cdLote);
+            if (cantidadPendientes > 0)
+                throw new InvalidOperationException(
+                    $"No se puede marcar el lote como completado: quedan {cantidadPendientes} registro(s) Pendiente de Control.");
+
             _loteDAL.MarcarFinControl(cdLote, EstadoLotePendienteFinalizar, cdUsuario);
         }
 

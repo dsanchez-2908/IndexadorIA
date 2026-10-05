@@ -408,8 +408,10 @@ namespace IndexadorIA.Negocio
         /// Valida que la cantidad de archivos PDF presentes en cada carpeta de destino
         /// (Procesados/Ilegibles) coincida con la cantidad de registros de datos (sin
         /// contar encabezado) del CSV consolidado de índice ubicado en la carpeta de Entrega
-        /// (un nivel arriba de la carpeta de PDFs). Devuelve una lista de mensajes
-        /// describiendo las discrepancias encontradas (vacía si todo coincide).
+        /// (un nivel arriba de la carpeta de PDFs), y que el nombre de cada PDF físico
+        /// coincida exactamente con alguno de los nombres registrados en la columna
+        /// "Nombre Nuevo" del CSV. Devuelve una lista de mensajes describiendo las
+        /// discrepancias encontradas (vacía si todo coincide).
         /// </summary>
         public List<string> ValidarCantidadArchivosVsCsv(IEnumerable<(string CarpetaPdfs, string RutaCsv)> carpetasDestino)
         {
@@ -423,24 +425,77 @@ namespace IndexadorIA.Negocio
                 if (!Directory.Exists(carpeta))
                     continue;
 
-                int cantidadPdf = Directory.GetFiles(carpeta, "*.pdf").Length;
+                var archivosPdf = Directory.GetFiles(carpeta, "*.pdf")
+                    .Select(Path.GetFileName)
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Select(n => n!)
+                    .ToList();
 
-                int cantidadRegistrosCsv = 0;
+                var nombresCsv = new List<string>();
                 if (File.Exists(rutaCsv))
                 {
-                    int cantidadLineas = File.ReadAllLines(rutaCsv).Count(l => !string.IsNullOrWhiteSpace(l));
-                    cantidadRegistrosCsv = Math.Max(cantidadLineas - 1, 0);
+                    var lineasDatos = File.ReadAllLines(rutaCsv)
+                        .Where(l => !string.IsNullOrWhiteSpace(l))
+                        .Skip(1)
+                        .ToList();
+
+                    nombresCsv = lineasDatos
+                        .Select(ObtenerCampoNombreNuevo)
+                        .Where(n => !string.IsNullOrWhiteSpace(n))
+                        .ToList();
                 }
 
-                if (cantidadPdf != cantidadRegistrosCsv)
+                if (archivosPdf.Count != nombresCsv.Count)
                 {
                     discrepancias.Add(
-                        $"La carpeta '{carpeta}' tiene {cantidadPdf} archivo(s) PDF pero " +
-                        $"{cantidadRegistrosCsv} registro(s) en el CSV de índice '{rutaCsv}'.");
+                        $"La carpeta '{carpeta}' tiene {archivosPdf.Count} archivo(s) PDF pero " +
+                        $"{nombresCsv.Count} registro(s) en el CSV de índice '{rutaCsv}'.");
+                }
+
+                var soloEnCarpeta = archivosPdf.Except(nombresCsv, StringComparer.OrdinalIgnoreCase).ToList();
+                var soloEnCsv = nombresCsv.Except(archivosPdf, StringComparer.OrdinalIgnoreCase).ToList();
+
+                if (soloEnCarpeta.Count > 0)
+                {
+                    discrepancias.Add(
+                        $"La carpeta '{carpeta}' tiene archivo(s) PDF que no figuran en el CSV '{rutaCsv}': " +
+                        string.Join(", ", soloEnCarpeta));
+                }
+
+                if (soloEnCsv.Count > 0)
+                {
+                    discrepancias.Add(
+                        $"El CSV de índice '{rutaCsv}' tiene registro(s) cuyo archivo PDF no se encuentra en la carpeta '{carpeta}': " +
+                        string.Join(", ", soloEnCsv));
                 }
             }
 
             return discrepancias;
+        }
+
+        /// <summary>
+        /// Escribe (o agrega, si ya existe) un informe en texto plano con las
+        /// discrepancias detectadas entre los PDFs físicos y el CSV de índice de una
+        /// carpeta de Entrega. El archivo se ubica directamente en la carpeta de envío
+        /// base (txtRutaSalida + txtNombreCarpetaSalida), con el nombre
+        /// "Informe_Discrepancias.txt".
+        /// </summary>
+        private static void EscribirInformeDiscrepancias(string carpetaEnvioBase, string carpetaEntrega,
+            List<string> discrepancias)
+        {
+            if (discrepancias.Count == 0)
+                return;
+
+            if (!Directory.Exists(carpetaEnvioBase))
+                Directory.CreateDirectory(carpetaEnvioBase);
+
+            string rutaInforme = Path.Combine(carpetaEnvioBase, "Informe_Discrepancias.txt");
+
+            using var writer = new StreamWriter(rutaInforme, append: true, System.Text.Encoding.UTF8);
+            writer.WriteLine($"=== {DateTime.Now:yyyy-MM-dd HH:mm:ss} - Carpeta de Entrega: {carpetaEntrega} ===");
+            foreach (var discrepancia in discrepancias)
+                writer.WriteLine(discrepancia);
+            writer.WriteLine();
         }
 
         /// <summary>
@@ -480,7 +535,10 @@ namespace IndexadorIA.Negocio
             var discrepancias = ValidarCantidadArchivosVsCsv(carpetasDestino);
 
             if (discrepancias.Count > 0)
+            {
+                EscribirInformeDiscrepancias(carpetaEnvioBase, carpetaEntrega, discrepancias);
                 return discrepancias;
+            }
 
             RegistrarNombresArchivoFinalEnviado(movimientos);
             MarcarLoteEnviado(cdLote, cdUsuario, dsCarpetaEnvio, dsObservacionesEnvio);

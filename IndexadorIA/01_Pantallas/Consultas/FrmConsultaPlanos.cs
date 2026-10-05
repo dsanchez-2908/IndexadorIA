@@ -12,7 +12,20 @@ namespace IndexadorIA.Pantallas.Consultas
     /// </summary>
     public partial class FrmConsultaPlanos : Form
     {
-        private const int MaxRegistrosResultado = 50000;
+        /// <summary>
+        /// Valor de respaldo para la cantidad máxima de registros a mostrar, usado
+        /// únicamente si el parámetro MAX_CONSULTA no está configurado en
+        /// TD_PARAMETROS o su valor no es un número válido.
+        /// </summary>
+        private const int MaxRegistrosResultadoPorDefecto = 50000;
+
+        /// <summary>
+        /// Clave del parámetro en TD_PARAMETROS que define la cantidad máxima de
+        /// registros a mostrar en la grilla de Consulta de Planos.
+        /// </summary>
+        private const string ClaveParametroMaxConsulta = "MAX_CONSULTA";
+
+        private int _maxRegistrosResultado = MaxRegistrosResultadoPorDefecto;
 
         private class ComboItem
         {
@@ -29,6 +42,7 @@ namespace IndexadorIA.Pantallas.Consultas
         {
             try
             {
+                CargarMaxRegistrosResultado();
                 ConfigurarDataGridView();
                 CargarCombos();
                 ActualizarContadorRegistros();
@@ -38,6 +52,21 @@ namespace IndexadorIA.Pantallas.Consultas
                 MessageBox.Show($"Error al inicializar el formulario: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// Lee de TD_PARAMETROS la clave MAX_CONSULTA y la usa como cantidad máxima
+        /// de registros a traer/mostrar en la grilla. Si el parámetro no existe o su
+        /// valor no es un entero válido, se usa MaxRegistrosResultadoPorDefecto.
+        /// </summary>
+        private void CargarMaxRegistrosResultado()
+        {
+            var parametrosDAL = new ParametrosDAL();
+            string? valor = parametrosDAL.ObtenerValor(ClaveParametroMaxConsulta);
+
+            _maxRegistrosResultado = int.TryParse(valor, out int maxRegistros) && maxRegistros > 0
+                ? maxRegistros
+                : MaxRegistrosResultadoPorDefecto;
         }
 
         private void CargarCombos()
@@ -145,7 +174,7 @@ namespace IndexadorIA.Pantallas.Consultas
                     DsDireccion = txtDireccion.Text,
                     DsNumeroPlano = txtNumeroPlano.Text,
                     DsObservaciones = txtObservaciones.Text,
-                    MaxRegistros = MaxRegistrosResultado
+                    MaxRegistros = _maxRegistrosResultado
                 };
 
                 var dal = new PlanoConsultaDAL();
@@ -156,10 +185,10 @@ namespace IndexadorIA.Pantallas.Consultas
 
                 ActualizarContadorRegistros();
 
-                if (resultado.Count >= MaxRegistrosResultado)
+                if (resultado.Count >= _maxRegistrosResultado)
                 {
                     MessageBox.Show(
-                        $"Se alcanzó el límite máximo de {MaxRegistrosResultado:N0} registros. Refine los filtros para obtener resultados más precisos.",
+                        $"Se alcanzó el límite máximo de {_maxRegistrosResultado:N0} registros. Refine los filtros para obtener resultados más precisos.",
                         "Límite de resultados", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }

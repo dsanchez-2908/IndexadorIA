@@ -39,6 +39,7 @@ namespace IndexadorIA.Pantallas
             menuAuditoriaUsuarios = new ToolStripMenuItem();
             menuEstadoProyecto = new ToolStripMenuItem();
             menuPlanosParaEnviar = new ToolStripMenuItem();
+            menuEstadoXEntrega = new ToolStripMenuItem();
             menuConfiguracion = new ToolStripMenuItem();
             menuProyectos = new ToolStripMenuItem();
             menuUsuarios = new ToolStripMenuItem();
@@ -224,7 +225,7 @@ namespace IndexadorIA.Pantallas
             // 
             // menuReportes
             // 
-            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA, menuProduccionUsuarios, menuAuditoriaUsuarios, menuEstadoProyecto, menuPlanosParaEnviar });
+            menuReportes.DropDownItems.AddRange(new ToolStripItem[] { menuConsumosIA, menuProduccionUsuarios, menuAuditoriaUsuarios, menuEstadoProyecto, menuPlanosParaEnviar, menuEstadoXEntrega });
             menuReportes.Font = new Font("Segoe UI", 10F);
             menuReportes.ForeColor = Color.White;
             menuReportes.Name = "menuReportes";
@@ -275,6 +276,15 @@ namespace IndexadorIA.Pantallas
             menuPlanosParaEnviar.Size = new Size(221, 24);
             menuPlanosParaEnviar.Text = "Planos para enviar";
             menuPlanosParaEnviar.Click += menuPlanosParaEnviar_Click;
+            // 
+            // menuEstadoXEntrega
+            // 
+            menuEstadoXEntrega.BackColor = Color.FromArgb(45, 45, 48);
+            menuEstadoXEntrega.ForeColor = Color.White;
+            menuEstadoXEntrega.Name = "menuEstadoXEntrega";
+            menuEstadoXEntrega.Size = new Size(221, 24);
+            menuEstadoXEntrega.Text = "Estado x Entrega";
+            menuEstadoXEntrega.Click += menuEstadoXEntrega_Click;
             // 
             // menuConfiguracion
             // 
@@ -410,7 +420,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20261001)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20261005)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
@@ -447,6 +457,7 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuAuditoriaUsuarios;
         private ToolStripMenuItem menuEstadoProyecto;
         private ToolStripMenuItem menuPlanosParaEnviar;
+        private ToolStripMenuItem menuEstadoXEntrega;
         private ToolStripMenuItem menuConfiguracion;
         private ToolStripMenuItem menuAyudaControl;
         private ToolStripMenuItem menuProyectos;

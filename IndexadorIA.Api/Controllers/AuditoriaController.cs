@@ -119,16 +119,52 @@ namespace IndexadorIA.Api.Controllers
         }
 
         /// <summary>
+        /// Cantidad de registros Pendiente de Control (cdEstadoControl = 1) de un lote.
+        /// Equivalente remoto de ResultadoIADAL.ContarPendientesControl(), usado por
+        /// FrmAuditarLote.btnMarcarLoteAuditado_Click para bloquear la finalizacion de la
+        /// auditoria mientras queden registros sin controlar.
+        /// </summary>
+        [HttpGet("lotes/{cdLote:int}/pendientes-control")]
+        public IActionResult ObtenerCantidadPendientesControl(int cdLote)
+        {
+            int cantidad = _resultadoIADAL.ContarPendientesControl(cdLote);
+            return Ok(new { cantidad });
+        }
+
+        /// <summary>
         /// Marca el lote como auditado. Equivalente remoto de
         /// FrmAuditarLote.btnMarcarLoteAuditado_Click.
+        /// No permite finalizar la auditoria si quedan registros Pendiente de Control
+        /// (cdEstadoControl = 1).
         /// </summary>
         [HttpPut("lotes/{cdLote:int}/marcar-auditado")]
         public IActionResult MarcarLoteAuditado(int cdLote)
         {
+            int cantidadPendientes = _resultadoIADAL.ContarPendientesControl(cdLote);
+            if (cantidadPendientes > 0)
+                return BadRequest(new
+                {
+                    mensaje = $"No se puede finalizar la auditoria: quedan {cantidadPendientes} registro(s) Pendiente de Control."
+                });
+
             int cdUsuario = ObtenerCdUsuarioActual();
             _loteDAL.MarcarLoteAuditado(cdLote, cdUsuario);
 
             return Ok(new { mensaje = "Lote marcado como auditado correctamente." });
+        }
+
+        /// <summary>
+        /// Cantidad de registros Controlados (cdEstadoControl = 2) de un lote a los que
+        /// les falta algun campo obligatorio. Equivalente remoto de
+        /// ResultadoIADAL.ContarControladosConCamposIncompletos(), usado por
+        /// FrmAuditarLote.btnMarcarLoteAuditado_Click para advertir al auditor antes de
+        /// finalizar la auditoria.
+        /// </summary>
+        [HttpGet("lotes/{cdLote:int}/controlados-incompletos")]
+        public IActionResult ObtenerCantidadControladosIncompletos(int cdLote)
+        {
+            int cantidad = _resultadoIADAL.ContarControladosConCamposIncompletos(cdLote);
+            return Ok(new { cantidad });
         }
 
         /// <summary>

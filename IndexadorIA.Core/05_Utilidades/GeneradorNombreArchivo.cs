@@ -66,7 +66,7 @@ namespace IndexadorIA.Utilidades
         /// del nombre de archivo (no afecta el valor almacenado en base de datos ni el
         /// volcado en el CSV de metadatos).
         /// </summary>
-        private const int MaxLongitudDireccionEnNombreArchivo = 100;
+        private const int MaxLongitudDireccionEnNombreArchivo = 50;
 
         /// <summary>
         /// Determina si una categoria de plano corresponde a Catastro (case-insensitive).

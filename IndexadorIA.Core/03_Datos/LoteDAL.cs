@@ -791,6 +791,7 @@ namespace IndexadorIA.Datos
                     UPDATE TD_LOTE
                     SET cdEstadoLote = @cdEstadoLote,
                         feAuditado = GETDATE(),
+                        feFinAuditoria = GETDATE(),
                         cdUsuarioAuditado = @cdUsuarioAuditado
                     WHERE cdLote = @cdLote", conexion);
 

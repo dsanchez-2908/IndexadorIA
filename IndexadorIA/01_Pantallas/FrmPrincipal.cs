@@ -120,8 +120,12 @@ namespace IndexadorIA.Pantallas
             menuPlanosParaEnviar.Visible = esAdmin;
 
             // "Ayuda Control" es un mantenimiento solo para el rol ADMIN (funciona tanto local
-            // como remoto, ya que el texto de ayuda se lee/escribe también vía API).
+            // como remoto, ya que el texto de ayuda se lee/escribe tambien via API).
             menuAyudaControl.Visible = esAdmin;
+
+            // "Estado x Entrega" es un reporte local (no tiene soporte remoto via API)
+            // y solo debe estar disponible para usuarios con rol ADMIN.
+            menuEstadoXEntrega.Visible = esAdmin && !SesionApi.ModoRemoto;
         }
 
         private void menuUsuarios_Click(object sender, EventArgs e)
@@ -227,6 +231,11 @@ namespace IndexadorIA.Pantallas
         private void menuPlanosParaEnviar_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new Reportes.FrmPlanosParaEnviar());
+        }
+
+        private void menuEstadoXEntrega_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new Reportes.FrmEstadoXEntrega());
         }
 
         private void menuAyudaControl_Click(object sender, EventArgs e)

@@ -515,7 +515,8 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
         /// <summary>
         /// Obtiene los estados de control (dsProceso='CONTROL') utilizados como filtro
-        /// en la pantalla de auditoría (FrmAuditarLote): Controlado, Página Ilegible, Datos Ilegibles, Casos Especiales, Parcelas Múltiples.
+        /// en la pantalla de auditoría (FrmAuditarLote): Pendiente de Control, Controlado,
+        /// Página Ilegible, Datos Ilegibles, Casos Especiales, Parcelas Múltiples.
         /// </summary>
         public List<KeyValuePair<int, string>> ObtenerEstadosControlParaFiltro()
         {
@@ -523,7 +524,7 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
 
             using var conn = new SqlConnection(_cadenaConexion);
             using var cmd = new SqlCommand(
-                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (2,3,4,5,6) ORDER BY 1", conn);
+                "SELECT cdEstado, dsEstado FROM TD_ESTADOS WHERE dsProceso='CONTROL' AND cdEstado IN (1,2,3,4,5,6) ORDER BY 1", conn);
 
             conn.Open();
             using var reader = cmd.ExecuteReader();
@@ -540,6 +541,57 @@ WHERE		b.cdEstadoLote=8 AND b.cdLote=@cdLote";
         /// los posibles errores detectados por cdResultado. Puede haber m�s de un posible
         /// error para un mismo cdResultado, por lo que se agrupan en una lista.
         /// </summary>
+        /// <summary>
+        /// Cuenta la cantidad de registros de un lote que aun estan Pendiente de Control
+        /// (cdEstadoControl = 1), consultado directamente en la base de datos (no depende
+        /// de lo cargado en memoria por la pantalla). Usado para bloquear, tanto en modo
+        /// local como remoto (API), el marcado del lote como "Pendiente de Finalizar"
+        /// mientras queden registros sin controlar.
+        /// </summary>
+        public int ContarPendientesControl(int cdLote)
+        {
+            using var conn = new SqlConnection(_cadenaConexion);
+            using var cmd = new SqlCommand(@"
+                SELECT COUNT(*)
+                FROM TD_001_RESULTADO_IA r
+                INNER JOIN TD_LOTE_ARCHIVOS la ON la.cdArchivoPagina = r.cdArchivoPagina
+                WHERE la.cdLote = @cdLote
+                  AND r.cdEstadoControl = 1", conn);
+
+            cmd.Parameters.AddWithValue("@cdLote", cdLote);
+
+            conn.Open();
+            return (int)cmd.ExecuteScalar();
+        }
+
+        /// <summary>
+        /// Cuenta la cantidad de registros en estado Controlado (cdEstadoControl = 2) de
+        /// un lote a los que les falta alguno de los campos obligatorios (CdCategoriaPlano,
+        /// CdTipoPlano, DsSeccion, DsManzana, DsParcela, DsDireccion). Usado por
+        /// FrmAuditarLote.btnMarcarLoteAuditado_Click (y su equivalente remoto, API) para
+        /// advertir al auditor antes de finalizar la auditoria del lote.
+        /// </summary>
+        public int ContarControladosConCamposIncompletos(int cdLote)
+        {
+            using var conn = new SqlConnection(_cadenaConexion);
+            using var cmd = new SqlCommand(@"
+                SELECT COUNT(*)
+                FROM TD_001_RESULTADO_IA r
+                WHERE r.cdLote = @cdLote
+                  AND r.cdEstadoControl = 2
+                  AND (r.cdCategoriaPlano IS NULL
+                       OR r.cdTipoPlano IS NULL
+                       OR NULLIF(LTRIM(RTRIM(r.dsSeccion)), '') IS NULL
+                       OR NULLIF(LTRIM(RTRIM(r.dsManzana)), '') IS NULL
+                       OR NULLIF(LTRIM(RTRIM(r.dsParcela)), '') IS NULL
+                       OR NULLIF(LTRIM(RTRIM(r.dsDireccion)), '') IS NULL)", conn);
+
+            cmd.Parameters.AddWithValue("@cdLote", cdLote);
+
+            conn.Open();
+            return (int)cmd.ExecuteScalar();
+        }
+
         public Dictionary<int, List<string>> ObtenerPosiblesErrores(int cdLote)
         {
             var posiblesErrores = new Dictionary<int, List<string>>();

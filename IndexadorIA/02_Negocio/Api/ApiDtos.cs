@@ -256,4 +256,14 @@ namespace IndexadorIA.Negocio.Api
         public int CdResultado { get; set; }
         public List<string> PosiblesErrores { get; set; } = new();
     }
+
+    /// <summary>
+    /// Cantidad de registros Controlados (cdEstadoControl = 2) de un lote a los que les
+    /// falta algun campo obligatorio, espejo remoto de la respuesta del endpoint
+    /// GET /api/auditoria/lotes/{cdLote}/controlados-incompletos.
+    /// </summary>
+    public class ControladosIncompletosApiDto
+    {
+        public int Cantidad { get; set; }
+    }
 }

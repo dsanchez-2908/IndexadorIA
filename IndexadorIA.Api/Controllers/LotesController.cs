@@ -93,7 +93,15 @@ namespace IndexadorIA.Api.Controllers
 
             int cdUsuario = ObtenerCdUsuarioActual();
             var loteFinalizacionBL = new IndexadorIA.Negocio.LoteFinalizacionBL();
-            loteFinalizacionBL.MarcarLotePendienteFinalizar(cdLote, cdUsuario);
+
+            try
+            {
+                loteFinalizacionBL.MarcarLotePendienteFinalizar(cdLote, cdUsuario);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
 
             return Ok(new { mensaje = "Lote marcado como Pendiente de Finalizar." });
         }
