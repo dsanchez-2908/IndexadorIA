@@ -67,6 +67,7 @@ namespace IndexadorIA.Pantallas
         /// Restringe la visibilidad de los menús según el rol del usuario autenticado.
         /// El rol "Data Entry" solo puede acceder a:
         ///   Planos de GCBA / Control y Finalización
+        ///   Consultas / Planos
         ///   Configuración / Cambiar Clave y Cerrar Sesión
         /// </summary>
         private void AplicarPermisosPorRol()
@@ -81,9 +82,9 @@ namespace IndexadorIA.Pantallas
                 // Oculta el menú "Lotes" completo
                 menuLotes.Visible = false;
 
-                // Oculta los menús de nivel superior "Consultas" y "Reportes" (y cualquier
-                // menú nuevo que se agregue a futuro a nivel del menuStrip queda oculto por defecto)
-                menuConsultas.Visible = false;
+                // Oculta los menús de nivel superior "Reportes" (y cualquier
+                // menú nuevo que se agregue a futuro a nivel del menuStrip queda oculto por defecto).
+                // "Consultas / Planos" si tiene soporte remoto via API, por lo que queda visible.
                 menuReportes.Visible = false;
 
                 // En "Planos de GCBA" solo deja visible "Control y Finalización" y "Auditar"

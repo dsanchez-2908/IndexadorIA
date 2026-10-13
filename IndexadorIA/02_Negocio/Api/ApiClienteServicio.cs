@@ -593,6 +593,89 @@ namespace IndexadorIA.Negocio.Api
                 _ => $"Error de comunicación con la API ({(int)respuesta.StatusCode})."
             };
         }
+
+        /// <summary>
+        /// Llama a POST /api/planos-consulta/buscar (equivalente remoto de
+        /// PlanoConsultaDAL.Consultar(), usado por FrmConsultaPlanos.Buscar()).
+        /// </summary>
+        public async Task<List<PlanoConsultaApiDto>> BuscarPlanosConsultaAsync(PlanoConsultaFiltroApiRequestDto filtro)
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.PostAsJsonAsync("api/planos-consulta/buscar", filtro).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<PlanoConsultaApiDto>>().ConfigureAwait(false);
+            return resultado ?? new List<PlanoConsultaApiDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/planos-consulta/estados-lote (equivalente remoto de
+        /// PlanoConsultaDAL.ObtenerEstadosLoteParaFiltro()).
+        /// </summary>
+        public async Task<List<EstadoLoteFiltroApiDto>> ObtenerEstadosLoteParaFiltroAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/planos-consulta/estados-lote").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<EstadoLoteFiltroApiDto>>().ConfigureAwait(false);
+            return resultado ?? new List<EstadoLoteFiltroApiDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/planos-consulta/estados-control (equivalente remoto de
+        /// PlanoConsultaDAL.ObtenerEstadosControlParaFiltro()).
+        /// </summary>
+        public async Task<List<EstadoLoteFiltroApiDto>> ObtenerEstadosControlParaFiltroAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/planos-consulta/estados-control").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<EstadoLoteFiltroApiDto>>().ConfigureAwait(false);
+            return resultado ?? new List<EstadoLoteFiltroApiDto>();
+        }
+
+        /// <summary>
+        /// Llama a GET /api/planos-consulta/max-registros (equivalente remoto de
+        /// FrmConsultaPlanos.CargarMaxRegistrosResultado()).
+        /// </summary>
+        public async Task<int> ObtenerMaxRegistrosConsultaPlanosAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/planos-consulta/max-registros").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<MaxRegistrosApiDto>().ConfigureAwait(false);
+            return resultado?.MaxRegistros ?? 50000;
+        }
+
+        /// <summary>
+        /// Llama a GET /api/calles/nombres (equivalente remoto de
+        /// CalleDAL.ObtenerNombresCalles()), usado por FrmVerLote para validar el
+        /// campo Direccion contra TV_CALLES.
+        /// </summary>
+        public async Task<HashSet<string>> ObtenerNombresCallesAsync()
+        {
+            AplicarToken();
+
+            HttpResponseMessage respuesta = await _httpClient.GetAsync("api/calles/nombres").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+
+            var resultado = await respuesta.Content.ReadFromJsonAsync<List<string>>().ConfigureAwait(false);
+            return resultado != null
+                ? new HashSet<string>(resultado, StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     public class ApiException : Exception

@@ -226,8 +226,10 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         }
 
         /// <summary>
-        /// Parsea el expediente desde el nombre del archivo original (mismo formato y
-        /// lógica que FrmVerLote.btnParsearExpedienteDeArchivo_Click): EX-ANIO-NUMERO-...-REPARTICION.
+        /// Parsea el expediente desde el nombre del archivo original (misma lógica que
+        /// FrmVerLote.TryParsearExpedienteDeArchivo), soportando el formato con la reparticion
+        /// en la parte [5] (cuando la parte [3] viene vacia/espacios) y el formato con la
+        /// reparticion directamente en la parte [3].
         /// </summary>
         private void btnParsearExpedienteDeArchivo_Click(object sender, EventArgs e)
         {
@@ -238,24 +240,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             string nombreSinExtension = Path.GetFileNameWithoutExtension(nombreArchivoOriginal);
             string[] partes = nombreSinExtension.Split('-', StringSplitOptions.None);
 
-            if (partes.Length < 6)
-                return;
-
-            string ex = partes[0].Trim();
-            string anio = partes[1].Trim();
-            string numero = partes[2].Trim();
-            string reparticion = partes[5].Trim();
-
-            if (string.IsNullOrWhiteSpace(ex))
-                return;
-
-            if (!int.TryParse(anio, out int anioValor) || anioValor < 1900 || anioValor > 2050)
-                return;
-
-            if (numero.Length != 8 || !numero.All(char.IsDigit))
-                return;
-
-            if (string.IsNullOrWhiteSpace(reparticion))
+            if (!FrmVerLote.TryParsearExpedienteDeArchivo(partes, out string ex, out string anio, out string numero, out string reparticion))
                 return;
 
             txtExpedienteEx.Text = ex;

@@ -266,4 +266,71 @@ namespace IndexadorIA.Negocio.Api
     {
         public int Cantidad { get; set; }
     }
+
+    /// <summary>
+    /// Registro de VW_PLANOS_CONSULTAS, espejo remoto de PlanoConsulta, usado por
+    /// FrmConsultaPlanos en modo remoto.
+    /// </summary>
+    public class PlanoConsultaApiDto
+    {
+        public int CdResultado { get; set; }
+        public int CdLote { get; set; }
+        public int? CdEstadoLote { get; set; }
+        public string? DsEstadoLote { get; set; }
+        public string? DsDescripcionLote { get; set; }
+        public string? DsEntrega { get; set; }
+        public string? DsCarpeta { get; set; }
+        public int? CdEstadoControl { get; set; }
+        public string? DsEstadoControl { get; set; }
+        public int? CdArchivoPagina { get; set; }
+        public int? CdCategoriaPlano { get; set; }
+        public string? DsCategoriaPlano { get; set; }
+        public int? CdTipoPlano { get; set; }
+        public string? DsTipoPlano { get; set; }
+        public string? DsExpediente { get; set; }
+        public string? DsSeccion { get; set; }
+        public string? DsManzana { get; set; }
+        public string? DsParcela { get; set; }
+        public string? DsDireccion { get; set; }
+        public string? DsNumeroPlano { get; set; }
+        public string? DsObservaciones { get; set; }
+        public string? DsNombreArchivoOriginal { get; set; }
+        public string? DsNombreArchivoPagina { get; set; }
+        public int? NuPagina { get; set; }
+    }
+
+    /// <summary>
+    /// Filtros de busqueda para POST /api/planos-consulta/buscar, espejo remoto de
+    /// PlanoConsultaFiltro.
+    /// </summary>
+    public class PlanoConsultaFiltroApiRequestDto
+    {
+        public int? CdLote { get; set; }
+        public int? CdEstadoLote { get; set; }
+        public string? DsDescripcionLote { get; set; }
+        public string? DsEntrega { get; set; }
+        public string? DsCarpeta { get; set; }
+        public int? CdEstadoControl { get; set; }
+        public int? CdCategoriaPlano { get; set; }
+        public int? CdTipoPlano { get; set; }
+        public string? DsExpediente { get; set; }
+        public string? DsSeccion { get; set; }
+        public string? DsManzana { get; set; }
+        public string? DsParcela { get; set; }
+        public string? DsDireccion { get; set; }
+        public string? DsNumeroPlano { get; set; }
+        public string? DsObservaciones { get; set; }
+        public int MaxRegistros { get; set; } = 10000;
+    }
+
+    public class EstadoLoteFiltroApiDto
+    {
+        public int CdEstado { get; set; }
+        public string DsEstado { get; set; } = string.Empty;
+    }
+
+    public class MaxRegistrosApiDto
+    {
+        public int MaxRegistros { get; set; }
+    }
 }

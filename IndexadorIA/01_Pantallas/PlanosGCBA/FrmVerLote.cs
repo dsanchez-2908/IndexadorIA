@@ -30,6 +30,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private string? _ultimaManzana;
         private string? _ultimaParcela;
         private string? _ultimaDireccion;
+        private HashSet<string> _nombresCalles = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Combina la información de ArchivoPagina + ResultadoIA para mostrar en la grilla
@@ -89,6 +90,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             KeyPreview = true;
             KeyDown += FrmVerLote_KeyDown;
+            FormClosed += FrmVerLote_FormClosed;
+        }
+
+        /// <summary>
+        /// Libera el listado de calles cacheado en memoria al cerrar el formulario, para
+        /// evitar que se acumule al abrir sucesivos lotes.
+        /// </summary>
+        private void FrmVerLote_FormClosed(object? sender, FormClosedEventArgs e)
+        {
+            _nombresCalles.Clear();
         }
 
         private void FrmVerLote_KeyDown(object? sender, KeyEventArgs e)
@@ -109,6 +120,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 {
                     _detalleRemoto = _apiCliente!.ObtenerDetalleLoteAsync(_cdLote, chkMostrarTodos.Checked)
                         .GetAwaiter().GetResult();
+                    _nombresCalles = _apiCliente!.ObtenerNombresCallesAsync().GetAwaiter().GetResult();
+                }
+                else
+                {
+                    _nombresCalles = new CalleDAL().ObtenerNombresCalles();
                 }
 
                 CargarEncabezadoLote();
@@ -655,6 +671,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         /// que las validaciones (anio entre 1900-2050, numero de 8 digitos) se cumplan.
         /// Si el parseo o alguna validacion falla, no realiza ningun cambio.
         /// </summary>
+        /// <summary>
+        /// Parsea el expediente desde el nombre del archivo original. Soporta dos formatos:
+        /// - Forma 1: EX-ANIO-NUMERO-   -MGEYA-REPARTICION-PLANOS (la parte [3] viene vacia/solo espacios,
+        ///   la reparticion esta en la parte [5]).
+        /// - Forma 2: EX-ANIO-NUMERO-REPARTICION-PLANOS_PAGINA (la parte [3] no esta vacia,
+        ///   la reparticion esta directamente en la parte [3]).
+        /// </summary>
         private void btnParsearExpedienteDeArchivo_Click(object sender, EventArgs e)
         {
             if (_filaSeleccionada == null)
@@ -667,30 +690,62 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             string nombreSinExtension = Path.GetFileNameWithoutExtension(nombreArchivoOriginal);
             string[] partes = nombreSinExtension.Split('-', StringSplitOptions.None);
 
-            if (partes.Length < 6)
-                return;
-
-            string ex = partes[0].Trim();
-            string anio = partes[1].Trim();
-            string numero = partes[2].Trim();
-            string reparticion = partes[5].Trim();
-
-            if (string.IsNullOrWhiteSpace(ex))
-                return;
-
-            if (!int.TryParse(anio, out int anioValor) || anioValor < 1900 || anioValor > 2050)
-                return;
-
-            if (numero.Length != 8 || !numero.All(char.IsDigit))
-                return;
-
-            if (string.IsNullOrWhiteSpace(reparticion))
+            if (!TryParsearExpedienteDeArchivo(partes, out string ex, out string anio, out string numero, out string reparticion))
                 return;
 
             txtExpedienteEx.Text = ex;
             txtExpedienteAnio.Text = anio;
             txtExpedienteNumero.Text = numero;
             txtExpedienteReparticion.Text = reparticion;
+        }
+
+        /// <summary>
+        /// Logica compartida (tambien usada por FrmVerRegistroAuditoria) para interpretar las
+        /// partes del nombre de archivo separadas por "-" y extraer Ex/Anio/Numero/Reparticion,
+        /// soportando tanto el formato EX-ANIO-NUMERO-   -MGEYA-REPARTICION-PLANOS como el
+        /// formato EX-ANIO-NUMERO-REPARTICION-PLANOS_PAGINA.
+        /// </summary>
+        internal static bool TryParsearExpedienteDeArchivo(string[] partes, out string ex, out string anio, out string numero, out string reparticion)
+        {
+            ex = string.Empty;
+            anio = string.Empty;
+            numero = string.Empty;
+            reparticion = string.Empty;
+
+            if (partes.Length < 4)
+                return false;
+
+            ex = partes[0].Trim();
+            anio = partes[1].Trim();
+            numero = partes[2].Trim();
+
+            bool esFormaConEspacioEnParte3 = string.IsNullOrWhiteSpace(partes[3]);
+
+            if (esFormaConEspacioEnParte3)
+            {
+                if (partes.Length < 6)
+                    return false;
+
+                reparticion = partes[5].Trim();
+            }
+            else
+            {
+                reparticion = partes[3].Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(ex))
+                return false;
+
+            if (!int.TryParse(anio, out int anioValor) || anioValor < 1900 || anioValor > 2050)
+                return false;
+
+            if (numero.Length != 8 || !numero.All(char.IsDigit))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(reparticion))
+                return false;
+
+            return true;
         }
 
         /// <summary>
@@ -1174,6 +1229,16 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     return;
             }
 
+            if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && ContieneCalleDesconocida(txtDireccion.Text))
+            {
+                var confirmacionCalle = MessageBox.Show(
+                    "Advertencia: Esta seguro que la calle ingresada es correcta?",
+                    "Verifique la Dirección", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionCalle != DialogResult.Yes)
+                    return;
+            }
+
             try
             {
                 var resultado = _filaSeleccionada.Resultado;
@@ -1294,6 +1359,26 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 {
                     longitudActual = 0;
                 }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Divide la direccion por espacios y, para cada valor que sea texto (sin digitos)
+        /// de mas de 4 caracteres, verifica si existe como nombre de calle en TV_CALLES
+        /// (cacheado en _nombresCalles). Devuelve true si al menos uno de esos valores no
+        /// existe en el listado, para advertir al usuario sobre una posible calle mal ingresada.
+        /// </summary>
+        private bool ContieneCalleDesconocida(string direccion)
+        {
+            var valores = direccion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var valor in valores)
+            {
+                bool esTexto = valor.All(c => !char.IsDigit(c));
+                if (esTexto && valor.Length > 4 && !_nombresCalles.Contains(valor))
+                    return true;
             }
 
             return false;

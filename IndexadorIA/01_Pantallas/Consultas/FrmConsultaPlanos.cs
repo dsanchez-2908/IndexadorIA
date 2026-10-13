@@ -2,6 +2,7 @@ using ClosedXML.Excel;
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 using IndexadorIA.Pantallas.PlanosGCBA;
 
 namespace IndexadorIA.Pantallas.Consultas
@@ -9,6 +10,7 @@ namespace IndexadorIA.Pantallas.Consultas
     /// <summary>
     /// Pantalla de "Consulta de Planos": permite filtrar registros de la vista
     /// VW_PLANOS_CONSULTAS por múltiples criterios y exportar el resultado a Excel.
+    /// Soporta modo local (acceso directo a BD) y modo remoto (consumiendo IndexadorIA.Api).
     /// </summary>
     public partial class FrmConsultaPlanos : Form
     {
@@ -27,6 +29,8 @@ namespace IndexadorIA.Pantallas.Consultas
 
         private int _maxRegistrosResultado = MaxRegistrosResultadoPorDefecto;
 
+        private readonly ApiClienteServicio? _apiCliente;
+
         private class ComboItem
         {
             public int? Codigo { get; set; }
@@ -36,6 +40,7 @@ namespace IndexadorIA.Pantallas.Consultas
         public FrmConsultaPlanos()
         {
             InitializeComponent();
+            _apiCliente = SesionApi.ModoRemoto ? new ApiClienteServicio() : null;
         }
 
         private void FrmConsultaPlanos_Load(object sender, EventArgs e)
@@ -61,6 +66,12 @@ namespace IndexadorIA.Pantallas.Consultas
         /// </summary>
         private void CargarMaxRegistrosResultado()
         {
+            if (SesionApi.ModoRemoto)
+            {
+                _maxRegistrosResultado = _apiCliente!.ObtenerMaxRegistrosConsultaPlanosAsync().GetAwaiter().GetResult();
+                return;
+            }
+
             var parametrosDAL = new ParametrosDAL();
             string? valor = parametrosDAL.ObtenerValor(ClaveParametroMaxConsulta);
 
@@ -71,40 +82,70 @@ namespace IndexadorIA.Pantallas.Consultas
 
         private void CargarCombos()
         {
-            var dal = new PlanoConsultaDAL();
+            List<ComboItem> estadosLote;
+            List<ComboItem> estadosControl;
+            List<ComboItem> categorias;
+            List<ComboItem> tipos;
 
-            var estadosLote = dal.ObtenerEstadosLoteParaFiltro()
-                .Select(kv => new ComboItem { Codigo = kv.Key, Texto = kv.Value })
-                .ToList();
+            if (SesionApi.ModoRemoto)
+            {
+                estadosLote = _apiCliente!.ObtenerEstadosLoteParaFiltroAsync().GetAwaiter().GetResult()
+                    .Select(e => new ComboItem { Codigo = e.CdEstado, Texto = e.DsEstado })
+                    .ToList();
+
+                estadosControl = _apiCliente!.ObtenerEstadosControlParaFiltroAsync().GetAwaiter().GetResult()
+                    .Select(e => new ComboItem { Codigo = e.CdEstado, Texto = e.DsEstado })
+                    .ToList();
+
+                categorias = _apiCliente!.ObtenerCategoriasPlanoAsync().GetAwaiter().GetResult()
+                    .Select(c => new ComboItem { Codigo = c.CdCategoriaPlano, Texto = c.DsCategoriaPlano })
+                    .ToList();
+
+                tipos = _apiCliente!.ObtenerTiposPlanoAsync().GetAwaiter().GetResult()
+                    .Select(t => new ComboItem { Codigo = t.CdTipoPlano, Texto = t.DsTipoPlano })
+                    .ToList();
+            }
+            else
+            {
+                var dal = new PlanoConsultaDAL();
+
+                estadosLote = dal.ObtenerEstadosLoteParaFiltro()
+                    .Select(kv => new ComboItem { Codigo = kv.Key, Texto = kv.Value })
+                    .ToList();
+
+                estadosControl = dal.ObtenerEstadosControlParaFiltro()
+                    .Select(kv => new ComboItem { Codigo = kv.Key, Texto = kv.Value })
+                    .ToList();
+
+                var categoriaDAL = new CategoriaPlanoDAL();
+                categorias = categoriaDAL.ObtenerTodos()
+                    .Select(c => new ComboItem { Codigo = c.CdCategoriaPlano, Texto = c.DsCategoriaPlano })
+                    .ToList();
+
+                var tipoDAL = new TipoPlanoDAL();
+                tipos = tipoDAL.ObtenerTodos()
+                    .Select(t => new ComboItem { Codigo = t.CdTipoPlano, Texto = t.DsTipoPlano })
+                    .ToList();
+            }
+
             estadosLote.Insert(0, new ComboItem { Codigo = null, Texto = "Todos" });
             cboEstadoLote.DisplayMember = "Texto";
             cboEstadoLote.ValueMember = "Codigo";
             cboEstadoLote.DataSource = estadosLote;
             cboEstadoLote.SelectedIndex = 0;
 
-            var estadosControl = dal.ObtenerEstadosControlParaFiltro()
-                .Select(kv => new ComboItem { Codigo = kv.Key, Texto = kv.Value })
-                .ToList();
             estadosControl.Insert(0, new ComboItem { Codigo = null, Texto = "Todos" });
             cboEstadoControl.DisplayMember = "Texto";
             cboEstadoControl.ValueMember = "Codigo";
             cboEstadoControl.DataSource = estadosControl;
             cboEstadoControl.SelectedIndex = 0;
 
-            var categoriaDAL = new CategoriaPlanoDAL();
-            var categorias = categoriaDAL.ObtenerTodos()
-                .Select(c => new ComboItem { Codigo = c.CdCategoriaPlano, Texto = c.DsCategoriaPlano })
-                .ToList();
             categorias.Insert(0, new ComboItem { Codigo = null, Texto = "Todos" });
             cboCategoriaPlano.DisplayMember = "Texto";
             cboCategoriaPlano.ValueMember = "Codigo";
             cboCategoriaPlano.DataSource = categorias;
             cboCategoriaPlano.SelectedIndex = 0;
 
-            var tipoDAL = new TipoPlanoDAL();
-            var tipos = tipoDAL.ObtenerTodos()
-                .Select(t => new ComboItem { Codigo = t.CdTipoPlano, Texto = t.DsTipoPlano })
-                .ToList();
             tipos.Insert(0, new ComboItem { Codigo = null, Texto = "Todos" });
             cboTipoPlano.DisplayMember = "Texto";
             cboTipoPlano.ValueMember = "Codigo";
@@ -157,28 +198,87 @@ namespace IndexadorIA.Pantallas.Consultas
         {
             try
             {
-                var filtro = new PlanoConsultaFiltro
-                {
-                    CdLote = string.IsNullOrWhiteSpace(txtCdLote.Text) ? null : (int.TryParse(txtCdLote.Text, out int cdLote) ? cdLote : null),
-                    CdEstadoLote = ObtenerCodigoSeleccionado(cboEstadoLote),
-                    DsDescripcionLote = txtDescripcionLote.Text,
-                    DsEntrega = txtEntrega.Text,
-                    DsCarpeta = txtCarpeta.Text,
-                    CdEstadoControl = ObtenerCodigoSeleccionado(cboEstadoControl),
-                    CdCategoriaPlano = ObtenerCodigoSeleccionado(cboCategoriaPlano),
-                    CdTipoPlano = ObtenerCodigoSeleccionado(cboTipoPlano),
-                    DsExpediente = txtExpediente.Text,
-                    DsSeccion = txtSeccion.Text,
-                    DsManzana = txtManzana.Text,
-                    DsParcela = txtParcela.Text,
-                    DsDireccion = txtDireccion.Text,
-                    DsNumeroPlano = txtNumeroPlano.Text,
-                    DsObservaciones = txtObservaciones.Text,
-                    MaxRegistros = _maxRegistrosResultado
-                };
+                int? cdLoteFiltro = string.IsNullOrWhiteSpace(txtCdLote.Text) ? null : (int.TryParse(txtCdLote.Text, out int cdLote) ? cdLote : null);
 
-                var dal = new PlanoConsultaDAL();
-                var resultado = dal.Consultar(filtro);
+                List<PlanoConsulta> resultado;
+
+                if (SesionApi.ModoRemoto)
+                {
+                    var filtroApi = new PlanoConsultaFiltroApiRequestDto
+                    {
+                        CdLote = cdLoteFiltro,
+                        CdEstadoLote = ObtenerCodigoSeleccionado(cboEstadoLote),
+                        DsDescripcionLote = txtDescripcionLote.Text,
+                        DsEntrega = txtEntrega.Text,
+                        DsCarpeta = txtCarpeta.Text,
+                        CdEstadoControl = ObtenerCodigoSeleccionado(cboEstadoControl),
+                        CdCategoriaPlano = ObtenerCodigoSeleccionado(cboCategoriaPlano),
+                        CdTipoPlano = ObtenerCodigoSeleccionado(cboTipoPlano),
+                        DsExpediente = txtExpediente.Text,
+                        DsSeccion = txtSeccion.Text,
+                        DsManzana = txtManzana.Text,
+                        DsParcela = txtParcela.Text,
+                        DsDireccion = txtDireccion.Text,
+                        DsNumeroPlano = txtNumeroPlano.Text,
+                        DsObservaciones = txtObservaciones.Text,
+                        MaxRegistros = _maxRegistrosResultado
+                    };
+
+                    resultado = _apiCliente!.BuscarPlanosConsultaAsync(filtroApi).GetAwaiter().GetResult()
+                        .Select(d => new PlanoConsulta
+                        {
+                            CdResultado = d.CdResultado,
+                            CdLote = d.CdLote,
+                            CdEstadoLote = d.CdEstadoLote,
+                            DsEstadoLote = d.DsEstadoLote,
+                            DsDescripcionLote = d.DsDescripcionLote,
+                            DsEntrega = d.DsEntrega,
+                            DsCarpeta = d.DsCarpeta,
+                            CdEstadoControl = d.CdEstadoControl,
+                            DsEstadoControl = d.DsEstadoControl,
+                            CdArchivoPagina = d.CdArchivoPagina,
+                            CdCategoriaPlano = d.CdCategoriaPlano,
+                            DsCategoriaPlano = d.DsCategoriaPlano,
+                            CdTipoPlano = d.CdTipoPlano,
+                            DsTipoPlano = d.DsTipoPlano,
+                            DsExpediente = d.DsExpediente,
+                            DsSeccion = d.DsSeccion,
+                            DsManzana = d.DsManzana,
+                            DsParcela = d.DsParcela,
+                            DsDireccion = d.DsDireccion,
+                            DsNumeroPlano = d.DsNumeroPlano,
+                            DsObservaciones = d.DsObservaciones,
+                            DsNombreArchivoOriginal = d.DsNombreArchivoOriginal,
+                            DsNombreArchivoPagina = d.DsNombreArchivoPagina,
+                            NuPagina = d.NuPagina
+                        })
+                        .ToList();
+                }
+                else
+                {
+                    var filtro = new PlanoConsultaFiltro
+                    {
+                        CdLote = cdLoteFiltro,
+                        CdEstadoLote = ObtenerCodigoSeleccionado(cboEstadoLote),
+                        DsDescripcionLote = txtDescripcionLote.Text,
+                        DsEntrega = txtEntrega.Text,
+                        DsCarpeta = txtCarpeta.Text,
+                        CdEstadoControl = ObtenerCodigoSeleccionado(cboEstadoControl),
+                        CdCategoriaPlano = ObtenerCodigoSeleccionado(cboCategoriaPlano),
+                        CdTipoPlano = ObtenerCodigoSeleccionado(cboTipoPlano),
+                        DsExpediente = txtExpediente.Text,
+                        DsSeccion = txtSeccion.Text,
+                        DsManzana = txtManzana.Text,
+                        DsParcela = txtParcela.Text,
+                        DsDireccion = txtDireccion.Text,
+                        DsNumeroPlano = txtNumeroPlano.Text,
+                        DsObservaciones = txtObservaciones.Text,
+                        MaxRegistros = _maxRegistrosResultado
+                    };
+
+                    var dal = new PlanoConsultaDAL();
+                    resultado = dal.Consultar(filtro);
+                }
 
                 dgvPlanos.DataSource = null;
                 dgvPlanos.DataSource = resultado;
