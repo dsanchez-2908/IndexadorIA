@@ -1104,12 +1104,22 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private void btnGuardarControlada_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(txtParcela.Text)
-                && txtParcela.Text.Trim().Length != 3 && txtParcela.Text.Trim().Length != 4)
+                && txtParcela.Text.Split('.', StringSplitOptions.None).Length > 1)
             {
                 MessageBox.Show(
-                    "Si la parcela tiene letra o mas de una parcela, se debe guardar como casos especiales",
+                    "Si la parcela tiene mas de un termino (separado por \".\"), se debe guardar como casos especiales",
                     "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && txtDireccion.Text.Contains("CALLE", StringComparison.OrdinalIgnoreCase))
+            {
+                var confirmacionCalle = MessageBox.Show(
+                    "El campo Dirección contiene la palabra \"CALLE\". ¿Desea guardar igualmente?",
+                    "Dirección inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionCalle != DialogResult.Yes)
+                    return;
             }
 
             GuardarControl(ResultadoIA.EstadosControl.Controlado, "guardar y marcar como controlada");
@@ -1117,12 +1127,23 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void btnGuardarCasosEspeciales_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length <= 4)
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text)
+                && txtParcela.Text.Split('.', StringSplitOptions.None).Length <= 1)
             {
                 MessageBox.Show(
-                    "Si la parcela tiene 4 caracteres o menos, se debe guardar como normal (Guardar y Marcar Controlada).",
+                    "Si la parcela tiene un solo termino, se debe guardar como normal (Guardar y Marcar Controlada).",
                     "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtDireccion.Text) && txtDireccion.Text.Contains("CALLE", StringComparison.OrdinalIgnoreCase))
+            {
+                var confirmacionCalle = MessageBox.Show(
+                    "El campo Dirección contiene la palabra \"CALLE\". ¿Desea guardar igualmente?",
+                    "Dirección inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionCalle != DialogResult.Yes)
+                    return;
             }
 
             GuardarControl(ResultadoIA.EstadosControl.CasosEspeciales, "guardar como casos especiales");
@@ -1183,28 +1204,37 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtSeccion.Text) && txtSeccion.Text.Trim().Length < 3)
+            bool seccionValida = ValidarSeccion(txtSeccion.Text.Trim(), out string mensajeErrorSeccion);
+            if (!string.IsNullOrWhiteSpace(txtSeccion.Text) && !seccionValida)
             {
-                MessageBox.Show(
-                    "El campo Sección debe tener 3 o más caracteres.",
-                    "Sección inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                var confirmacionSeccion = MessageBox.Show(
+                    $"El campo Sección no tiene un formato válido: {mensajeErrorSeccion}\n\n¿Desea guardar igualmente?",
+                    "Sección inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionSeccion != DialogResult.Yes)
+                    return;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtManzana.Text) && txtManzana.Text.Trim().Length < 3)
+            bool manzanaValida = ValidarManzana(txtManzana.Text.Trim(), out string manzanaNormalizada, out string mensajeErrorManzana);
+            if (!string.IsNullOrWhiteSpace(txtManzana.Text) && !manzanaValida)
             {
-                MessageBox.Show(
-                    "El campo Manzana debe tener 3 o más caracteres.",
-                    "Manzana inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                var confirmacionManzana = MessageBox.Show(
+                    $"El campo Manzana no tiene un formato válido: {mensajeErrorManzana}\n\n¿Desea guardar igualmente?",
+                    "Manzana inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionManzana != DialogResult.Yes)
+                    return;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && txtParcela.Text.Trim().Length < 3)
+            bool parcelaValida = ValidarParcela(txtParcela.Text.Trim(), out string parcelaNormalizada, out string mensajeErrorParcela);
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && !parcelaValida)
             {
-                MessageBox.Show(
-                    "El campo Parcela debe tener 3 o más caracteres.",
-                    "Parcela inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                var confirmacionParcela = MessageBox.Show(
+                    $"El campo Parcela no tiene un formato válido: {mensajeErrorParcela}\n\n¿Desea guardar igualmente?",
+                    "Parcela inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionParcela != DialogResult.Yes)
+                    return;
             }
 
             if (string.IsNullOrWhiteSpace(txtExpedienteAnio.Text)
@@ -1248,9 +1278,9 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                 resultado.CdTipoPlano = cboTipoPlanoDetalle.SelectedValue is int cdTipoPlano && cdTipoPlano != 0 ? cdTipoPlano : null;
                 resultado.DsNumeroPlano = txtNumeroPlano.Text;
                 resultado.DsExpediente = dsExpedienteArmado;
-                resultado.DsSeccion = string.IsNullOrWhiteSpace(txtSeccion.Text) ? txtSeccion.Text : txtSeccion.Text.Replace("-", ".");
-                resultado.DsManzana = string.IsNullOrWhiteSpace(txtManzana.Text) ? txtManzana.Text : txtManzana.Text.Replace("-", ".");
-                resultado.DsParcela = string.IsNullOrWhiteSpace(txtParcela.Text) ? txtParcela.Text : txtParcela.Text.Replace("-", ".");
+                resultado.DsSeccion = string.IsNullOrWhiteSpace(txtSeccion.Text) ? txtSeccion.Text : txtSeccion.Text.Trim().Replace("-", ".");
+                resultado.DsManzana = string.IsNullOrWhiteSpace(txtManzana.Text) ? txtManzana.Text : (manzanaValida ? manzanaNormalizada : txtManzana.Text.Trim().Replace("-", "."));
+                resultado.DsParcela = string.IsNullOrWhiteSpace(txtParcela.Text) ? txtParcela.Text : (parcelaValida ? parcelaNormalizada : txtParcela.Text.Trim().Replace("-", "."));
                 resultado.DsDireccion = txtDireccion.Text;
 
                 _ultimaSeccion = txtSeccion.Text;
@@ -1366,9 +1396,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         /// <summary>
         /// Divide la direccion por espacios y, para cada valor que sea texto (sin digitos)
-        /// de mas de 4 caracteres, verifica si existe como nombre de calle en TV_CALLES
-        /// (cacheado en _nombresCalles). Devuelve true si al menos uno de esos valores no
-        /// existe en el listado, para advertir al usuario sobre una posible calle mal ingresada.
+        /// de mas de 4 caracteres, verifica si aparece como parte (LIKE/Contains) de algun
+        /// nombre de calle cacheado en _nombresCalles (TV_CALLES.nom_mapa), ya que los nombres
+        /// de calle suelen tener varias palabras (ej. "CONCEPCION ARENAL"). Devuelve true si al
+        /// menos uno de esos valores no aparece en ninguna calle, para advertir al usuario sobre
+        /// una posible calle mal ingresada.
         /// </summary>
         private bool ContieneCalleDesconocida(string direccion)
         {
@@ -1377,11 +1409,167 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             foreach (var valor in valores)
             {
                 bool esTexto = valor.All(c => !char.IsDigit(c));
-                if (esTexto && valor.Length > 4 && !_nombresCalles.Contains(valor))
+                if (esTexto && valor.Length > 4 && !_nombresCalles.Any(nombreCalle => nombreCalle.Contains(valor, StringComparison.OrdinalIgnoreCase)))
                     return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Valida el campo Sección: si no está vacío, debe tener exactamente 3 caracteres,
+        /// no puede contener letras ni espacios, y su valor numérico debe estar entre 0 y 99.
+        /// </summary>
+        internal static bool ValidarSeccion(string texto, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+
+            if (texto.Any(char.IsWhiteSpace))
+            {
+                mensajeError = "No puede contener espacios.";
+                return false;
+            }
+
+            if (texto.Length != 3)
+            {
+                mensajeError = "Debe tener exactamente 3 caracteres.";
+                return false;
+            }
+
+            if (!texto.All(char.IsDigit))
+            {
+                mensajeError = "No puede contener letras.";
+                return false;
+            }
+
+            int valor = int.Parse(texto);
+            if (valor < 0 || valor > 99)
+            {
+                mensajeError = "El valor numérico debe estar entre 0 y 99.";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Valida el campo Manzana: si no está vacío, se parsea por "." y cada término debe
+        /// tener 3 números solos (ej. 002) o 3 números seguidos de una letra (ej. 002B, se
+        /// normaliza a mayúscula). El valor numérico de cada término debe estar entre 0 y 272.
+        /// </summary>
+        internal static bool ValidarManzana(string texto, out string textoNormalizado, out string mensajeError)
+        {
+            textoNormalizado = texto;
+            mensajeError = string.Empty;
+
+            var terminos = texto.Split('.', StringSplitOptions.None);
+            var normalizados = new List<string>();
+
+            foreach (var terminoOriginal in terminos)
+            {
+                string termino = terminoOriginal.Trim();
+
+                if (termino.Length == 3 && termino.All(char.IsDigit))
+                {
+                    if (!int.TryParse(termino, out int valor) || valor < 0 || valor > 272)
+                    {
+                        mensajeError = $"El término \"{terminoOriginal}\" debe tener un valor numérico entre 000 y 272.";
+                        return false;
+                    }
+
+                    normalizados.Add(termino);
+                    continue;
+                }
+
+                if (termino.Length == 4 && termino[..3].All(char.IsDigit) && char.IsLetter(termino[3]))
+                {
+                    string digitos = termino[..3];
+                    if (!int.TryParse(digitos, out int valor) || valor < 0 || valor > 272)
+                    {
+                        mensajeError = $"El término \"{terminoOriginal}\" debe tener un valor numérico entre 000 y 272.";
+                        return false;
+                    }
+
+                    normalizados.Add(digitos + char.ToUpperInvariant(termino[3]));
+                    continue;
+                }
+
+                mensajeError = $"El término \"{terminoOriginal}\" no tiene un formato válido (3 números, opcionalmente seguidos de una letra).";
+                return false;
+            }
+
+            textoNormalizado = string.Join(".", normalizados);
+            return true;
+        }
+
+        /// <summary>
+        /// Valida el campo Parcela: si no está vacío, se parsea por "." y cada término debe
+        /// tener 3 números solos (ej. 002) o 3 números seguidos de una letra (ej. 002c, se
+        /// normaliza a minúscula). El valor numérico de cada término debe estar entre 0 y 272.
+        /// Casos especiales: si la letra final es "ll", el término se compone de 2 números y
+        /// "ll" en minúscula (ej. 01ll); si los 3 números son "000" y hay una letra final,
+        /// esa letra se normaliza a mayúscula (ej. 000A).
+        /// </summary>
+        internal static bool ValidarParcela(string texto, out string textoNormalizado, out string mensajeError)
+        {
+            textoNormalizado = texto;
+            mensajeError = string.Empty;
+
+            var terminos = texto.Split('.', StringSplitOptions.None);
+            var normalizados = new List<string>();
+
+            foreach (var terminoOriginal in terminos)
+            {
+                string termino = terminoOriginal.Trim();
+
+                if (termino.Length == 4 && termino[..2].All(char.IsDigit) && termino[2..].Equals("ll", StringComparison.OrdinalIgnoreCase))
+                {
+                    string digitosLl = termino[..2];
+                    if (!int.TryParse(digitosLl, out int valorLl) || valorLl < 0 || valorLl > 99)
+                    {
+                        mensajeError = $"El término \"{terminoOriginal}\" (caso especial \"ll\") debe tener un número entre 00 y 99.";
+                        return false;
+                    }
+
+                    normalizados.Add(digitosLl + "ll");
+                    continue;
+                }
+
+                if (termino.Length == 3 && termino.All(char.IsDigit))
+                {
+                    if (!int.TryParse(termino, out int valor) || valor < 0 || valor > 272)
+                    {
+                        mensajeError = $"El término \"{terminoOriginal}\" debe tener un valor numérico entre 000 y 272.";
+                        return false;
+                    }
+
+                    normalizados.Add(termino);
+                    continue;
+                }
+
+                if (termino.Length == 4 && termino[..3].All(char.IsDigit) && char.IsLetter(termino[3]))
+                {
+                    string digitos = termino[..3];
+                    if (!int.TryParse(digitos, out int valor) || valor < 0 || valor > 272)
+                    {
+                        mensajeError = $"El término \"{terminoOriginal}\" debe tener un valor numérico entre 000 y 272.";
+                        return false;
+                    }
+
+                    char letra = digitos == "000"
+                        ? char.ToUpperInvariant(termino[3])
+                        : char.ToLowerInvariant(termino[3]);
+
+                    normalizados.Add(digitos + letra);
+                    continue;
+                }
+
+                mensajeError = $"El término \"{terminoOriginal}\" no tiene un formato válido (3 números, opcionalmente seguidos de una letra, o 2 números seguidos de \"ll\").";
+                return false;
+            }
+
+            textoNormalizado = string.Join(".", normalizados);
+            return true;
         }
 
         /// <summary>

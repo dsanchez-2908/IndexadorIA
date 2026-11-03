@@ -201,7 +201,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void ActualizarTotalizador()
         {
-            lblTotalizadorLotes.Text = $"Total: {_lotesActuales.Count}";
+            int lotesSeleccionados = _lotesActuales.Count(l => l.SnSeleccionado);
+            int planosSeleccionados = _lotesActuales.Where(l => l.SnSeleccionado).Sum(l => l.NuCantidadPlanos);
+
+            lblTotalizadorLotes.Text =
+                $"Total: {_lotesActuales.Count}    |    Lotes seleccionados: {lotesSeleccionados}    |    Planos seleccionados: {planosSeleccionados}";
         }
 
         private void rbFiltro_CheckedChanged(object sender, EventArgs e)
@@ -217,6 +221,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             if (e.RowIndex >= 0 && dgvLotes.Columns[e.ColumnIndex].Name == "snSeleccionado")
             {
                 dgvLotes.EndEdit();
+            }
+        }
+
+        private void dgvLotes_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && dgvLotes.Columns[e.ColumnIndex].Name == "snSeleccionado")
+            {
+                ActualizarTotalizador();
             }
         }
 

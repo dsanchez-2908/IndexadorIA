@@ -214,7 +214,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         private void ActualizarTotalizador()
         {
-            lblTotalizadorLotes.Text = $"Total: {_lotesActuales.Count}";
+            int lotesSeleccionados = _lotesActuales.Count(l => l.Seleccionado);
+            int planosSeleccionados = _lotesActuales.Where(l => l.Seleccionado).Sum(l => l.NuCantidadArchivos);
+
+            lblTotalizadorLotes.Text =
+                $"Total: {_lotesActuales.Count}    |    Lotes seleccionados: {lotesSeleccionados}    |    Planos seleccionados: {planosSeleccionados}";
         }
 
         private void chkFiltrarFecha_CheckedChanged(object sender, EventArgs e)
@@ -242,6 +246,14 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             if (e.RowIndex >= 0 && dgvLotes.Columns[e.ColumnIndex].Name == "chkSeleccionado")
             {
                 dgvLotes.EndEdit();
+            }
+        }
+
+        private void dgvLotes_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && dgvLotes.Columns[e.ColumnIndex].Name == "chkSeleccionado")
+            {
+                ActualizarTotalizador();
             }
         }
 
@@ -329,6 +341,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             _indiceSeleccion10 = 0;
             dgvLotes.Refresh();
+            ActualizarTotalizador();
         }
 
         private void btnDeseleccionarTodo_Click(object sender, EventArgs e)
@@ -340,6 +353,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             _indiceSeleccion10 = 0;
             dgvLotes.Refresh();
+            ActualizarTotalizador();
         }
 
         private void btnSeleccionar10_Click(object sender, EventArgs e)
@@ -362,6 +376,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
             _indiceSeleccion10 += cantidad;
             dgvLotes.Refresh();
+            ActualizarTotalizador();
         }
     }
 }

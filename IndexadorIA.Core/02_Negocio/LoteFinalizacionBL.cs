@@ -102,6 +102,152 @@ namespace IndexadorIA.Negocio
         }
 
         /// <summary>
+        /// Control 0: recorre los registros en estado Controlado y valida el formato de
+        /// Expediente, Sección, Manzana, Parcela y Número de Plano. Los registros que no
+        /// cumplan alguna de estas validaciones se marcan como "Datos Inconsistentes"
+        /// (cdEstadoControl = 7) tanto en memoria como en la base de datos, pero el proceso
+        /// de finalización continúa normalmente con el resto de los controles.
+        /// </summary>
+        public void MarcarRegistrosInconsistentes(List<FilaFinalizacion> filas, int cdUsuario)
+        {
+            foreach (var fila in filas)
+            {
+                if (!EsControlable(fila.Resultado))
+                    continue;
+
+                if (EsRegistroConsistente(fila.Resultado))
+                    continue;
+
+                _resultadoIADAL.ActualizarEstadoControl(
+                    fila.Resultado.CdResultado,
+                    ResultadoIA.EstadosControl.DatosInconsistentes,
+                    snModificaDatos: null,
+                    cdUsuarioControl: cdUsuario);
+
+                fila.Resultado.CdEstadoControl = ResultadoIA.EstadosControl.DatosInconsistentes;
+            }
+        }
+
+        private static bool EsRegistroConsistente(ResultadoIA resultado)
+        {
+            if (!string.IsNullOrWhiteSpace(resultado.DsExpediente))
+            {
+                int longitudExpediente = resultado.DsExpediente.Trim().Length;
+                if (longitudExpediente < 27 || longitudExpediente > 29)
+                    return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(resultado.DsSeccion) && !ValidarSeccion(resultado.DsSeccion.Trim()))
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(resultado.DsManzana) && !ValidarManzana(resultado.DsManzana.Trim()))
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(resultado.DsParcela) && !ValidarParcela(resultado.DsParcela.Trim()))
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(resultado.DsNumeroPlano) && resultado.DsNumeroPlano.Trim().Length < 11)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Valida el campo Sección: debe tener exactamente 3 caracteres numéricos, sin
+        /// espacios, con un valor entre 0 y 99.
+        /// </summary>
+        private static bool ValidarSeccion(string texto)
+        {
+            if (texto.Any(char.IsWhiteSpace))
+                return false;
+
+            if (texto.Length != 3 || !texto.All(char.IsDigit))
+                return false;
+
+            int valor = int.Parse(texto);
+            return valor >= 0 && valor <= 99;
+        }
+
+        /// <summary>
+        /// Valida el campo Manzana: se parsea por "." y cada término debe tener 3 números
+        /// solos (ej. 002) o 3 números seguidos de una letra (ej. 002B), con un valor
+        /// numérico entre 0 y 272.
+        /// </summary>
+        private static bool ValidarManzana(string texto)
+        {
+            var terminos = texto.Split('.', StringSplitOptions.None);
+
+            foreach (var terminoOriginal in terminos)
+            {
+                string termino = terminoOriginal.Trim();
+
+                if (termino.Length == 3 && termino.All(char.IsDigit))
+                {
+                    if (!int.TryParse(termino, out int valor) || valor < 0 || valor > 272)
+                        return false;
+
+                    continue;
+                }
+
+                if (termino.Length == 4 && termino[..3].All(char.IsDigit) && char.IsLetter(termino[3]))
+                {
+                    if (!int.TryParse(termino[..3], out int valor) || valor < 0 || valor > 272)
+                        return false;
+
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Valida el campo Parcela: se parsea por "." y cada término debe tener 3 números
+        /// solos (ej. 002) o 3 números seguidos de una letra (ej. 002c), con un valor
+        /// numérico entre 0 y 272. Casos especiales: letra final "ll" (2 números + "ll") y
+        /// 3 números "000" seguidos de letra.
+        /// </summary>
+        private static bool ValidarParcela(string texto)
+        {
+            var terminos = texto.Split('.', StringSplitOptions.None);
+
+            foreach (var terminoOriginal in terminos)
+            {
+                string termino = terminoOriginal.Trim();
+
+                if (termino.Length == 4 && termino[..2].All(char.IsDigit) && termino[2..].Equals("ll", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!int.TryParse(termino[..2], out int valorLl) || valorLl < 0 || valorLl > 99)
+                        return false;
+
+                    continue;
+                }
+
+                if (termino.Length == 3 && termino.All(char.IsDigit))
+                {
+                    if (!int.TryParse(termino, out int valor) || valor < 0 || valor > 95)
+                        return false;
+
+                    continue;
+                }
+
+                if (termino.Length == 4 && termino[..3].All(char.IsDigit) && char.IsLetter(termino[3]))
+                {
+                    if (!int.TryParse(termino[..3], out int valor) || valor < 0 || valor > 95)
+                        return false;
+
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Control 1: valida que los registros en estado Controlado tengan completos los
         /// campos obligatorios: Categoría, Tipo de Plano, Sección, Manzana, Parcela y
         /// Dirección. Los registros en estado Pendiente de Control (aun no auditados) NO

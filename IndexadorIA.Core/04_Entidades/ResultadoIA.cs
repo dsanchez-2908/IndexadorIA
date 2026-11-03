@@ -62,6 +62,7 @@ namespace IndexadorIA.Entidades
             public const int DatosIlegibles = 4;
             public const int CasosEspeciales = 5;
             public const int ParcelasMultiples = 6;
+            public const int DatosInconsistentes = 7;
         }
     }
 }

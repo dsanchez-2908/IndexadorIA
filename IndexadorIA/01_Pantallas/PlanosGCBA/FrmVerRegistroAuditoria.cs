@@ -152,6 +152,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             CargarNumeroPlanoEnCampos(_registro.DsNumeroPlano);
             txtObservaciones.Text = _registro.DsObservaciones ?? string.Empty;
             cboEstado.SelectedValue = _registro.CdEstadoControl;
+            ActualizarBotonesPorEstado();
 
             lblNombreArchivoOriginal.Text = $"Archivo original: {_registro.DsNombreArchivoOriginal ?? "-"}";
 
@@ -614,6 +615,71 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
 
         #endregion
 
+        private void btnSmpControlado_Click(object sender, EventArgs e)
+        {
+            AgregarMarcaObservaciones("SMP CONTROLADO - AUDITADO");
+        }
+
+        private void btnImagenesBlanco_Click(object sender, EventArgs e)
+        {
+            AgregarMarcaObservaciones("IMAGENES BLANCO - AUDITADO");
+        }
+
+        private void btnNoPlano_Click(object sender, EventArgs e)
+        {
+            AgregarMarcaObservaciones("NO PERTENECE A UN PLANO - AUDITADO");
+        }
+
+        private void btnImagenCortada_Click(object sender, EventArgs e)
+        {
+            AgregarMarcaObservaciones("IMAGEN CORTADA - AUDITADO");
+        }
+
+        private void btnFaltaDireccion_Click(object sender, EventArgs e)
+        {
+            AgregarMarcaObservaciones("FALTA DIRECCION - AUDITADO");
+        }
+
+        private void btnFaltaSmp_Click(object sender, EventArgs e)
+        {
+            AgregarMarcaObservaciones("FALTA SMP - AUDITADO");
+        }
+
+        private void AgregarMarcaObservaciones(string texto)
+        {
+            string marca = $"[{texto}]";
+
+            if (string.IsNullOrWhiteSpace(txtObservaciones.Text))
+            {
+                txtObservaciones.Text = marca;
+            }
+            else if (!txtObservaciones.Text.Contains(marca, StringComparison.OrdinalIgnoreCase))
+            {
+                txtObservaciones.Text = txtObservaciones.Text.TrimEnd() + Environment.NewLine + marca;
+            }
+
+            txtObservaciones.SelectionStart = txtObservaciones.Text.Length;
+        }
+
+        private void cboEstado_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarBotonesPorEstado();
+        }
+
+        private void ActualizarBotonesPorEstado()
+        {
+            int? cdEstadoControl = cboEstado.SelectedValue is int cdEstado ? cdEstado : null;
+
+            btnImagenesBlanco.Visible = cdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible;
+            btnNoPlano.Visible = cdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible;
+            btnFaltaDireccion.Visible = cdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles;
+            btnFaltaSmp.Visible = cdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles;
+            btnImagenCortada.Visible = cdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible
+                || cdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles;
+            btnSmpControlado.Visible = cdEstadoControl == ResultadoIA.EstadosControl.Controlado
+                || cdEstadoControl == ResultadoIA.EstadosControl.DatosInconsistentes;
+        }
+
         private void btnGuardar_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtExpedienteAnio.Text)
@@ -628,20 +694,49 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     return;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtSeccion.Text) && txtSeccion.Text.Trim().Length < 3)
+            bool seccionValida = FrmVerLote.ValidarSeccion(txtSeccion.Text.Trim(), out string mensajeErrorSeccion);
+            if (!string.IsNullOrWhiteSpace(txtSeccion.Text) && !seccionValida)
             {
-                MessageBox.Show(
-                    "El campo Sección debe tener 3 o más caracteres.",
-                    "Sección inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                var confirmacionSeccion = MessageBox.Show(
+                    $"El campo Sección no tiene un formato válido: {mensajeErrorSeccion}\n\n¿Desea guardar igualmente?",
+                    "Sección inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionSeccion != DialogResult.Yes)
+                    return;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtManzana.Text) && txtManzana.Text.Trim().Length < 3)
+            bool manzanaValida = FrmVerLote.ValidarManzana(txtManzana.Text.Trim(), out string manzanaNormalizada, out string mensajeErrorManzana);
+            if (!string.IsNullOrWhiteSpace(txtManzana.Text) && !manzanaValida)
             {
-                MessageBox.Show(
-                    "El campo Manzana debe tener 3 o más caracteres.",
-                    "Manzana inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                var confirmacionManzana = MessageBox.Show(
+                    $"El campo Manzana no tiene un formato válido: {mensajeErrorManzana}\n\n¿Desea guardar igualmente?",
+                    "Manzana inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionManzana != DialogResult.Yes)
+                    return;
+            }
+
+            bool parcelaValida = FrmVerLote.ValidarParcela(txtParcela.Text.Trim(), out string parcelaNormalizada, out string mensajeErrorParcela);
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text) && !parcelaValida)
+            {
+                var confirmacionParcela = MessageBox.Show(
+                    $"El campo Parcela no tiene un formato válido: {mensajeErrorParcela}\n\n¿Desea guardar igualmente?",
+                    "Parcela inválida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionParcela != DialogResult.Yes)
+                    return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtParcela.Text)
+                && txtParcela.Text.Trim().Split('.', StringSplitOptions.None).Length > 1
+                && !(cboEstado.SelectedValue is int cdEstadoControlParcela && cdEstadoControlParcela == ResultadoIA.EstadosControl.CasosEspeciales))
+            {
+                var confirmacionCasosEspeciales = MessageBox.Show(
+                    "La Parcela tiene más de un término, por lo que corresponde el estado \"Casos Especiales\".\n\n¿Desea guardar igualmente con el estado seleccionado?",
+                    "Parcela con múltiples términos", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (confirmacionCasosEspeciales != DialogResult.Yes)
+                    return;
             }
 
             if (!string.IsNullOrWhiteSpace(txtNumeroPlanoNumero.Text) && txtNumeroPlanoNumero.Text.Trim().Length != 4)
@@ -683,8 +778,8 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                     CdTipoPlano = cboTipoPlano.SelectedValue is int cdTipoPlano && cdTipoPlano != 0 ? cdTipoPlano : null,
                     DsExpediente = ArmarExpedienteDesdeCampos(),
                     DsSeccion = string.IsNullOrWhiteSpace(txtSeccion.Text) ? null : txtSeccion.Text.Trim(),
-                    DsManzana = string.IsNullOrWhiteSpace(txtManzana.Text) ? null : txtManzana.Text.Trim(),
-                    DsParcela = string.IsNullOrWhiteSpace(txtParcela.Text) ? null : txtParcela.Text.Trim(),
+                    DsManzana = string.IsNullOrWhiteSpace(txtManzana.Text) ? null : (manzanaValida ? manzanaNormalizada : txtManzana.Text.Trim()),
+                    DsParcela = string.IsNullOrWhiteSpace(txtParcela.Text) ? null : (parcelaValida ? parcelaNormalizada : txtParcela.Text.Trim()),
                     DsDireccion = string.IsNullOrWhiteSpace(txtDireccion.Text) ? null : txtDireccion.Text.Trim(),
                     DsNumeroPlano = ArmarNumeroPlanoDesdeCampos()
                 };

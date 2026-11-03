@@ -57,6 +57,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lstPosiblesErrores = new ListBox();
             panelBotones = new Panel();
             btnGuardar = new Button();
+            btnSmpControlado = new Button();
+            btnImagenesBlanco = new Button();
+            btnNoPlano = new Button();
+            btnImagenCortada = new Button();
+            btnFaltaDireccion = new Button();
+            btnFaltaSmp = new Button();
             btnCerrar = new Button();
             panelDerecho = new Panel();
             panelImagenScroll = new Panel();
@@ -520,6 +526,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             cboEstado.Name = "cboEstado";
             cboEstado.Size = new Size(380, 23);
             cboEstado.TabIndex = 19;
+            cboEstado.SelectedIndexChanged += cboEstado_SelectedIndexChanged;
             // 
             // lblPosiblesErrores
             // 
@@ -547,25 +554,121 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             // panelBotones
             // 
             panelBotones.BackColor = Color.FromArgb(45, 45, 48);
+            panelBotones.Controls.Add(btnImagenesBlanco);
+            panelBotones.Controls.Add(btnNoPlano);
+            panelBotones.Controls.Add(btnImagenCortada);
+            panelBotones.Controls.Add(btnFaltaDireccion);
+            panelBotones.Controls.Add(btnFaltaSmp);
+            panelBotones.Controls.Add(btnSmpControlado);
             panelBotones.Controls.Add(btnGuardar);
             panelBotones.Controls.Add(btnCerrar);
             panelBotones.Dock = DockStyle.Bottom;
-            panelBotones.Location = new Point(0, 644);
+            panelBotones.Location = new Point(0, 598);
             panelBotones.Margin = new Padding(3, 2, 3, 2);
             panelBotones.Name = "panelBotones";
-            panelBotones.Size = new Size(430, 46);
+            panelBotones.Size = new Size(430, 92);
             panelBotones.TabIndex = 1;
+            // 
+            // btnImagenesBlanco
+            // 
+            btnImagenesBlanco.BackColor = Color.FromArgb(0, 90, 150);
+            btnImagenesBlanco.FlatStyle = FlatStyle.Flat;
+            btnImagenesBlanco.ForeColor = Color.White;
+            btnImagenesBlanco.Location = new Point(8, 8);
+            btnImagenesBlanco.Margin = new Padding(3, 2, 3, 2);
+            btnImagenesBlanco.Name = "btnImagenesBlanco";
+            btnImagenesBlanco.Size = new Size(130, 30);
+            btnImagenesBlanco.TabIndex = 0;
+            btnImagenesBlanco.Text = "Imágenes Blanco";
+            btnImagenesBlanco.UseVisualStyleBackColor = false;
+            btnImagenesBlanco.Visible = false;
+            btnImagenesBlanco.Click += btnImagenesBlanco_Click;
+            // 
+            // btnNoPlano
+            // 
+            btnNoPlano.BackColor = Color.FromArgb(0, 90, 150);
+            btnNoPlano.FlatStyle = FlatStyle.Flat;
+            btnNoPlano.ForeColor = Color.White;
+            btnNoPlano.Location = new Point(150, 8);
+            btnNoPlano.Margin = new Padding(3, 2, 3, 2);
+            btnNoPlano.Name = "btnNoPlano";
+            btnNoPlano.Size = new Size(130, 30);
+            btnNoPlano.TabIndex = 1;
+            btnNoPlano.Text = "No plano";
+            btnNoPlano.UseVisualStyleBackColor = false;
+            btnNoPlano.Visible = false;
+            btnNoPlano.Click += btnNoPlano_Click;
+            // 
+            // btnImagenCortada
+            // 
+            btnImagenCortada.BackColor = Color.FromArgb(0, 90, 150);
+            btnImagenCortada.FlatStyle = FlatStyle.Flat;
+            btnImagenCortada.ForeColor = Color.White;
+            btnImagenCortada.Location = new Point(292, 8);
+            btnImagenCortada.Margin = new Padding(3, 2, 3, 2);
+            btnImagenCortada.Name = "btnImagenCortada";
+            btnImagenCortada.Size = new Size(130, 30);
+            btnImagenCortada.TabIndex = 2;
+            btnImagenCortada.Text = "Imagen Cortada";
+            btnImagenCortada.UseVisualStyleBackColor = false;
+            btnImagenCortada.Visible = false;
+            btnImagenCortada.Click += btnImagenCortada_Click;
+            // 
+            // btnFaltaDireccion
+            // 
+            btnFaltaDireccion.BackColor = Color.FromArgb(0, 90, 150);
+            btnFaltaDireccion.FlatStyle = FlatStyle.Flat;
+            btnFaltaDireccion.ForeColor = Color.White;
+            btnFaltaDireccion.Location = new Point(8, 8);
+            btnFaltaDireccion.Margin = new Padding(3, 2, 3, 2);
+            btnFaltaDireccion.Name = "btnFaltaDireccion";
+            btnFaltaDireccion.Size = new Size(130, 30);
+            btnFaltaDireccion.TabIndex = 3;
+            btnFaltaDireccion.Text = "Falta Dirección";
+            btnFaltaDireccion.UseVisualStyleBackColor = false;
+            btnFaltaDireccion.Visible = false;
+            btnFaltaDireccion.Click += btnFaltaDireccion_Click;
+            // 
+            // btnFaltaSmp
+            // 
+            btnFaltaSmp.BackColor = Color.FromArgb(0, 90, 150);
+            btnFaltaSmp.FlatStyle = FlatStyle.Flat;
+            btnFaltaSmp.ForeColor = Color.White;
+            btnFaltaSmp.Location = new Point(150, 8);
+            btnFaltaSmp.Margin = new Padding(3, 2, 3, 2);
+            btnFaltaSmp.Name = "btnFaltaSmp";
+            btnFaltaSmp.Size = new Size(130, 30);
+            btnFaltaSmp.TabIndex = 4;
+            btnFaltaSmp.Text = "Falta SMP";
+            btnFaltaSmp.UseVisualStyleBackColor = false;
+            btnFaltaSmp.Visible = false;
+            btnFaltaSmp.Click += btnFaltaSmp_Click;
+            // 
+            // btnSmpControlado
+            // 
+            btnSmpControlado.BackColor = Color.FromArgb(0, 90, 150);
+            btnSmpControlado.FlatStyle = FlatStyle.Flat;
+            btnSmpControlado.ForeColor = Color.White;
+            btnSmpControlado.Location = new Point(8, 8);
+            btnSmpControlado.Margin = new Padding(3, 2, 3, 2);
+            btnSmpControlado.Name = "btnSmpControlado";
+            btnSmpControlado.Size = new Size(130, 30);
+            btnSmpControlado.TabIndex = 5;
+            btnSmpControlado.Text = "SMP CONTROLADO";
+            btnSmpControlado.UseVisualStyleBackColor = false;
+            btnSmpControlado.Visible = false;
+            btnSmpControlado.Click += btnSmpControlado_Click;
             // 
             // btnGuardar
             // 
             btnGuardar.BackColor = Color.FromArgb(0, 150, 80);
             btnGuardar.FlatStyle = FlatStyle.Flat;
             btnGuardar.ForeColor = Color.White;
-            btnGuardar.Location = new Point(150, 8);
+            btnGuardar.Location = new Point(8, 46);
             btnGuardar.Margin = new Padding(3, 2, 3, 2);
             btnGuardar.Name = "btnGuardar";
             btnGuardar.Size = new Size(120, 30);
-            btnGuardar.TabIndex = 0;
+            btnGuardar.TabIndex = 6;
             btnGuardar.Text = "Guardar";
             btnGuardar.UseVisualStyleBackColor = false;
             btnGuardar.Click += btnGuardar_Click;
@@ -575,11 +678,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnCerrar.BackColor = Color.FromArgb(150, 40, 40);
             btnCerrar.FlatStyle = FlatStyle.Flat;
             btnCerrar.ForeColor = Color.White;
-            btnCerrar.Location = new Point(290, 8);
+            btnCerrar.Location = new Point(290, 46);
             btnCerrar.Margin = new Padding(3, 2, 3, 2);
             btnCerrar.Name = "btnCerrar";
             btnCerrar.Size = new Size(120, 30);
-            btnCerrar.TabIndex = 1;
+            btnCerrar.TabIndex = 7;
             btnCerrar.Text = "Cerrar";
             btnCerrar.UseVisualStyleBackColor = false;
             btnCerrar.Click += btnCerrar_Click;
@@ -812,6 +915,12 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Panel panelBotones;
         private Button btnCerrar;
         private Button btnGuardar;
+        private Button btnSmpControlado;
+        private Button btnImagenesBlanco;
+        private Button btnNoPlano;
+        private Button btnImagenCortada;
+        private Button btnFaltaDireccion;
+        private Button btnFaltaSmp;
         private Panel panelDerecho;
         private Panel panelImagenScroll;
         private PictureBox pictureBoxImagen;

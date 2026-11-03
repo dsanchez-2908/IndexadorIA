@@ -232,6 +232,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             dgvLotes.TabIndex = 0;
             dgvLotes.CellContentClick += dgvLotes_CellContentClick;
             dgvLotes.CellDoubleClick += dgvLotes_CellDoubleClick;
+            dgvLotes.CellValueChanged += dgvLotes_CellValueChanged;
             // 
             // lblTotalizadorLotes
             // 

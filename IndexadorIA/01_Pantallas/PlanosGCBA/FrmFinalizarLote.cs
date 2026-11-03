@@ -313,6 +313,11 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                             continue;
                         }
 
+                        // Control 0: marca como "Datos Inconsistentes" (cdEstadoControl = 7) los
+                        // registros Controlados cuyo Expediente/Sección/Manzana/Parcela/Número
+                        // de Plano no cumplan el formato esperado; el proceso continúa igual.
+                        loteFinalizacionBL.MarcarRegistrosInconsistentes(filas, cdUsuario);
+
                         // Control 1: campos obligatorios (solo aplica a registros Controlados)
                         var faltantes = loteFinalizacionBL.ValidarCamposObligatorios(filas);
                         if (faltantes.Count > 0)
