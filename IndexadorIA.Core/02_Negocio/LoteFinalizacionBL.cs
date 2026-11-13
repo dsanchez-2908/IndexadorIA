@@ -45,7 +45,7 @@ namespace IndexadorIA.Negocio
         /// <summary>
         /// Nombre de la subcarpeta donde se mueven los archivos ilegibles.
         /// </summary>
-        public const string CarpetaIlegibles = "Planos ILEGIBLES";
+        public const string CarpetaIlegibles = "Planos Ilegibles";
 
         /// <summary>
         /// Nombre de la carpeta raiz, dentro de la carpeta base de la entrega, donde se

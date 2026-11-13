@@ -420,15 +420,15 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             var archivosPorPagina = loteDAL.ObtenerArchivosPaginasPorLote(cdLote)
                 .ToDictionary(a => a.CdArchivoPagina, a => a);
 
-            // Solo se envían los registros que efectivamente fueron procesados en la
-            // finalización del lote y clasificados como "Planos Procesados"
-            // (Controlado). Los casos ilegibles (Página Ilegible, Datos Ilegibles) se
-            // excluyen temporalmente del envío a pedido del usuario (se retomarán más
-            // adelante), y los registros en otros estados (Pendiente de Control, Casos
-            // Especiales, Parcelas Múltiples) no tienen PDF final ni
-            // dsNombreArchivoFinal, y deben ignorarse aquí igual que en FrmFinalizarLote.
+            // Se envían los registros finalizados: Controlado (Planos Procesados) y los
+            // ilegibles (Página Ilegible, Datos Ilegibles) que van a "Planos Ilegibles".
+            // Los registros en otros estados (Pendiente de Control, Casos Especiales,
+            // Parcelas Múltiples) no tienen PDF final ni dsNombreArchivoFinal, y deben
+            // ignorarse aquí igual que en FrmFinalizarLote.
             return resultados
-                .Where(r => r.CdEstadoControl == ResultadoIA.EstadosControl.Controlado)
+                .Where(r => r.CdEstadoControl == ResultadoIA.EstadosControl.Controlado
+                    || r.CdEstadoControl == ResultadoIA.EstadosControl.PaginaIlegible
+                    || r.CdEstadoControl == ResultadoIA.EstadosControl.DatosIlegibles)
                 .Where(r => archivosPorPagina.ContainsKey(r.CdArchivoPagina))
                 .Select(r => new LoteEnvioBL.FilaEnvio
                 {
