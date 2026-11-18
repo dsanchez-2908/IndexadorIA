@@ -280,6 +280,9 @@ namespace IndexadorIA.Pantallas.Consultas
                     resultado = dal.Consultar(filtro);
                 }
 
+                if (chkFueraDeRango.Checked)
+                    resultado = resultado.Where(EstaFueraDeRango).ToList();
+
                 dgvPlanos.DataSource = null;
                 dgvPlanos.DataSource = resultado;
 
@@ -297,6 +300,20 @@ namespace IndexadorIA.Pantallas.Consultas
                 MessageBox.Show($"Error al buscar planos: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private static bool EstaFueraDeRango(PlanoConsulta plano)
+        {
+            if (!string.IsNullOrWhiteSpace(plano.DsSeccion) && !LoteFinalizacionBL.ValidarSeccion(plano.DsSeccion.Trim()))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(plano.DsManzana) && !LoteFinalizacionBL.ValidarManzana(plano.DsManzana.Trim()))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(plano.DsParcela) && !LoteFinalizacionBL.ValidarParcela(plano.DsParcela.Trim()))
+                return true;
+
+            return false;
         }
 
         private void ActualizarContadorRegistros()
@@ -326,6 +343,7 @@ namespace IndexadorIA.Pantallas.Consultas
             cboEstadoControl.SelectedIndex = 0;
             cboCategoriaPlano.SelectedIndex = 0;
             cboTipoPlano.SelectedIndex = 0;
+            chkFueraDeRango.Checked = false;
 
             dgvPlanos.DataSource = null;
             ActualizarContadorRegistros();

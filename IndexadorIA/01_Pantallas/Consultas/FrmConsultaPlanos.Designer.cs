@@ -53,6 +53,7 @@ namespace IndexadorIA.Pantallas.Consultas
             txtDescripcionLote = new TextBox();
             btnBuscar = new Button();
             btnLimpiar = new Button();
+            chkFueraDeRango = new CheckBox();
             groupBoxGrilla = new GroupBox();
             dgvPlanos = new DataGridView();
             panelAcciones = new Panel();
@@ -102,6 +103,7 @@ namespace IndexadorIA.Pantallas.Consultas
             groupBoxFiltros.Controls.Add(txtDescripcionLote);
             groupBoxFiltros.Controls.Add(btnBuscar);
             groupBoxFiltros.Controls.Add(btnLimpiar);
+            groupBoxFiltros.Controls.Add(chkFueraDeRango);
             groupBoxFiltros.Dock = DockStyle.Top;
             groupBoxFiltros.ForeColor = Color.White;
             groupBoxFiltros.Location = new Point(0, 0);
@@ -419,6 +421,17 @@ namespace IndexadorIA.Pantallas.Consultas
             btnLimpiar.UseVisualStyleBackColor = false;
             btnLimpiar.Click += btnLimpiar_Click;
             // 
+            // chkFueraDeRango
+            // 
+            chkFueraDeRango.AutoSize = true;
+            chkFueraDeRango.ForeColor = Color.Silver;
+            chkFueraDeRango.Location = new Point(781, 225);
+            chkFueraDeRango.Name = "chkFueraDeRango";
+            chkFueraDeRango.Size = new Size(100, 19);
+            chkFueraDeRango.TabIndex = 32;
+            chkFueraDeRango.Text = "Fuera de Rango";
+            chkFueraDeRango.UseVisualStyleBackColor = true;
+            // 
             // groupBoxGrilla
             // 
             groupBoxGrilla.BackColor = Color.FromArgb(45, 45, 48);
@@ -610,6 +623,7 @@ namespace IndexadorIA.Pantallas.Consultas
         private TextBox txtDescripcionLote;
         private Button btnBuscar;
         private Button btnLimpiar;
+        private CheckBox chkFueraDeRango;
         private GroupBox groupBoxGrilla;
         private DataGridView dgvPlanos;
         private Panel panelAcciones;

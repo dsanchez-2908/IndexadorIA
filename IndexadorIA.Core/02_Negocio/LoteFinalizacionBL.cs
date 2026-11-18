@@ -156,7 +156,7 @@ namespace IndexadorIA.Negocio
         /// Valida el campo Sección: debe tener exactamente 3 caracteres numéricos, sin
         /// espacios, con un valor entre 0 y 99.
         /// </summary>
-        private static bool ValidarSeccion(string texto)
+        public static bool ValidarSeccion(string texto)
         {
             if (texto.Any(char.IsWhiteSpace))
                 return false;
@@ -173,7 +173,7 @@ namespace IndexadorIA.Negocio
         /// solos (ej. 002) o 3 números seguidos de una letra (ej. 002B), con un valor
         /// numérico entre 0 y 272.
         /// </summary>
-        private static bool ValidarManzana(string texto)
+        public static bool ValidarManzana(string texto)
         {
             var terminos = texto.Split('.', StringSplitOptions.None);
 
@@ -209,7 +209,7 @@ namespace IndexadorIA.Negocio
         /// numérico entre 0 y 272. Casos especiales: letra final "ll" (2 números + "ll") y
         /// 3 números "000" seguidos de letra.
         /// </summary>
-        private static bool ValidarParcela(string texto)
+        public static bool ValidarParcela(string texto)
         {
             var terminos = texto.Split('.', StringSplitOptions.None);
 
@@ -227,7 +227,7 @@ namespace IndexadorIA.Negocio
 
                 if (termino.Length == 3 && termino.All(char.IsDigit))
                 {
-                    if (!int.TryParse(termino, out int valor) || valor < 0 || valor > 95)
+                    if (!int.TryParse(termino, out int valor) || valor < 0 || valor > 99)
                         return false;
 
                     continue;
@@ -235,7 +235,7 @@ namespace IndexadorIA.Negocio
 
                 if (termino.Length == 4 && termino[..3].All(char.IsDigit) && char.IsLetter(termino[3]))
                 {
-                    if (!int.TryParse(termino[..3], out int valor) || valor < 0 || valor > 95)
+                    if (!int.TryParse(termino[..3], out int valor) || valor < 0 || valor > 99)
                         return false;
 
                     continue;

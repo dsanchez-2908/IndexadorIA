@@ -21,10 +21,13 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private float _factorZoom = 1.0f;
         private ResultadoIA? _valoresOriginalesResultado;
         private readonly ApiClienteServicio? _apiCliente;
+        private static bool _copiarSmpDireccionRecordado = true;
 
         public FrmVerRegistroAuditoria(RegistroAuditoria registro)
         {
             InitializeComponent();
+            chkCopiarSmpDireccion.Checked = _copiarSmpDireccionRecordado;
+            chkCopiarSmpDireccion.CheckedChanged += (s, e) => _copiarSmpDireccionRecordado = chkCopiarSmpDireccion.Checked;
             _registro = registro;
             _apiCliente = SesionApi.ModoRemoto ? new ApiClienteServicio() : null;
         }
@@ -828,7 +831,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         }).GetAwaiter().GetResult();
                     }
 
-                    if (cambioDireccion && !string.IsNullOrWhiteSpace(resultado.DsExpediente))
+                    if (chkCopiarSmpDireccion.Checked && cambioDireccion && !string.IsNullOrWhiteSpace(resultado.DsExpediente))
                     {
                         _apiCliente!.PropagarDireccionAuditoriaAsync(resultado.CdResultado, new PropagarDireccionApiRequestDto
                         {
@@ -850,7 +853,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
                         resultadoDAL.ActualizarEstadoControl(_registro.CdResultado, cdEstadoControlFinal, null, cdUsuario, dsObservaciones);
                     }
 
-                    if (cambioDireccion && !string.IsNullOrWhiteSpace(resultado.DsExpediente))
+                    if (chkCopiarSmpDireccion.Checked && cambioDireccion && !string.IsNullOrWhiteSpace(resultado.DsExpediente))
                     {
                         resultadoDAL.ActualizarDireccionPorExpedienteEnLote(
                             _registro.CdLote, resultado.DsExpediente, resultado.CdResultado, resultado.DsDireccion, cdUsuario);

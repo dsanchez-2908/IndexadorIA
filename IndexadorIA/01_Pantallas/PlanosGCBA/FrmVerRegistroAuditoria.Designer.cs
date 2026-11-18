@@ -57,6 +57,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             lstPosiblesErrores = new ListBox();
             panelBotones = new Panel();
             btnGuardar = new Button();
+            chkCopiarSmpDireccion = new CheckBox();
             btnSmpControlado = new Button();
             btnImagenesBlanco = new Button();
             btnNoPlano = new Button();
@@ -561,6 +562,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             panelBotones.Controls.Add(btnFaltaSmp);
             panelBotones.Controls.Add(btnSmpControlado);
             panelBotones.Controls.Add(btnGuardar);
+            panelBotones.Controls.Add(chkCopiarSmpDireccion);
             panelBotones.Controls.Add(btnCerrar);
             panelBotones.Dock = DockStyle.Bottom;
             panelBotones.Location = new Point(0, 598);
@@ -672,6 +674,19 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
             btnGuardar.Text = "Guardar";
             btnGuardar.UseVisualStyleBackColor = false;
             btnGuardar.Click += btnGuardar_Click;
+            // 
+            // chkCopiarSmpDireccion
+            // 
+            chkCopiarSmpDireccion.AutoSize = true;
+            chkCopiarSmpDireccion.Checked = true;
+            chkCopiarSmpDireccion.CheckState = CheckState.Checked;
+            chkCopiarSmpDireccion.ForeColor = Color.Silver;
+            chkCopiarSmpDireccion.Location = new Point(134, 52);
+            chkCopiarSmpDireccion.Name = "chkCopiarSmpDireccion";
+            chkCopiarSmpDireccion.Size = new Size(150, 19);
+            chkCopiarSmpDireccion.TabIndex = 8;
+            chkCopiarSmpDireccion.Text = "Copiar SMP y Dirección";
+            chkCopiarSmpDireccion.UseVisualStyleBackColor = true;
             // 
             // btnCerrar
             // 
@@ -915,6 +930,7 @@ namespace IndexadorIA.Pantallas.PlanosGCBA
         private Panel panelBotones;
         private Button btnCerrar;
         private Button btnGuardar;
+        private CheckBox chkCopiarSmpDireccion;
         private Button btnSmpControlado;
         private Button btnImagenesBlanco;
         private Button btnNoPlano;
