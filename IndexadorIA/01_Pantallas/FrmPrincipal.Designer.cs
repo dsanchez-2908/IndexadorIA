@@ -31,6 +31,11 @@ namespace IndexadorIA.Pantallas
             menuAuditar = new ToolStripMenuItem();
             menuFinalizarLote = new ToolStripMenuItem();
             menuEnvio = new ToolStripMenuItem();
+            menuFinalizacionPlanos = new ToolStripMenuItem();
+            menuValidadorApiSmp = new ToolStripMenuItem();
+            menuCrearLotesFinal = new ToolStripMenuItem();
+            menuControlFinal = new ToolStripMenuItem();
+            menuMonitorLotesFinales = new ToolStripMenuItem();
             menuConsultas = new ToolStripMenuItem();
             menuPlanos = new ToolStripMenuItem();
             menuReportes = new ToolStripMenuItem();
@@ -62,7 +67,7 @@ namespace IndexadorIA.Pantallas
             // 
             menuStrip.BackColor = Color.FromArgb(45, 45, 48);
             menuStrip.ImageScalingSize = new Size(20, 20);
-            menuStrip.Items.AddRange(new ToolStripItem[] { menuLotes, menuPlanosGCBA, menuConsultas, menuReportes, menuConfiguracion });
+            menuStrip.Items.AddRange(new ToolStripItem[] { menuLotes, menuPlanosGCBA, menuFinalizacionPlanos, menuConsultas, menuReportes, menuConfiguracion });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
             menuStrip.Padding = new Padding(5, 2, 0, 2);
@@ -204,6 +209,51 @@ namespace IndexadorIA.Pantallas
             menuEnvio.Size = new Size(244, 24);
             menuEnvio.Text = "Envio";
             menuEnvio.Click += menuEnvio_Click;
+            // 
+            // menuFinalizacionPlanos
+            // 
+            menuFinalizacionPlanos.DropDownItems.AddRange(new ToolStripItem[] { menuValidadorApiSmp, menuCrearLotesFinal, menuControlFinal, menuMonitorLotesFinales });
+            menuFinalizacionPlanos.Font = new Font("Segoe UI", 10F);
+            menuFinalizacionPlanos.ForeColor = Color.White;
+            menuFinalizacionPlanos.Name = "menuFinalizacionPlanos";
+            menuFinalizacionPlanos.Size = new Size(153, 23);
+            menuFinalizacionPlanos.Text = "Finalización de Planos";
+            // 
+            // menuValidadorApiSmp
+            // 
+            menuValidadorApiSmp.BackColor = Color.FromArgb(45, 45, 48);
+            menuValidadorApiSmp.ForeColor = Color.White;
+            menuValidadorApiSmp.Name = "menuValidadorApiSmp";
+            menuValidadorApiSmp.Size = new Size(229, 24);
+            menuValidadorApiSmp.Text = "Validador API SMP";
+            menuValidadorApiSmp.Click += menuValidadorApiSmp_Click;
+            // 
+            // menuCrearLotesFinal
+            // 
+            menuCrearLotesFinal.BackColor = Color.FromArgb(45, 45, 48);
+            menuCrearLotesFinal.ForeColor = Color.White;
+            menuCrearLotesFinal.Name = "menuCrearLotesFinal";
+            menuCrearLotesFinal.Size = new Size(229, 24);
+            menuCrearLotesFinal.Text = "Crear Lotes Final";
+            menuCrearLotesFinal.Click += menuCrearLotesFinal_Click;
+            // 
+            // menuControlFinal
+            // 
+            menuControlFinal.BackColor = Color.FromArgb(45, 45, 48);
+            menuControlFinal.ForeColor = Color.White;
+            menuControlFinal.Name = "menuControlFinal";
+            menuControlFinal.Size = new Size(229, 24);
+            menuControlFinal.Text = "Control Final";
+            menuControlFinal.Click += menuControlFinal_Click;
+            // 
+            // menuMonitorLotesFinales
+            // 
+            menuMonitorLotesFinales.BackColor = Color.FromArgb(45, 45, 48);
+            menuMonitorLotesFinales.ForeColor = Color.White;
+            menuMonitorLotesFinales.Name = "menuMonitorLotesFinales";
+            menuMonitorLotesFinales.Size = new Size(229, 24);
+            menuMonitorLotesFinales.Text = "Monitor de Lotes Finales";
+            menuMonitorLotesFinales.Click += menuMonitorLotesFinales_Click;
             // 
             // menuConsultas
             // 
@@ -420,7 +470,7 @@ namespace IndexadorIA.Pantallas
             Margin = new Padding(3, 2, 3, 2);
             Name = "FrmPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "IndexadorIA - Sistema de Indexación con IA (v20261118)";
+            Text = "IndexadorIA - Sistema de Indexación con IA (v20261123)";
             WindowState = FormWindowState.Maximized;
             FormClosing += FrmPrincipal_FormClosing;
             Load += FrmPrincipal_Load;
@@ -449,6 +499,11 @@ namespace IndexadorIA.Pantallas
         private ToolStripMenuItem menuLotes;
         private ToolStripMenuItem menuMonitorLotes;
         private ToolStripMenuItem menuMonitorAuditoria;
+        private ToolStripMenuItem menuFinalizacionPlanos;
+        private ToolStripMenuItem menuValidadorApiSmp;
+        private ToolStripMenuItem menuCrearLotesFinal;
+        private ToolStripMenuItem menuMonitorLotesFinales;
+        private ToolStripMenuItem menuControlFinal;
         private ToolStripMenuItem menuConsultas;
         private ToolStripMenuItem menuPlanos;
         private ToolStripMenuItem menuReportes;

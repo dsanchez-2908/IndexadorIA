@@ -1,6 +1,7 @@
 using IndexadorIA.Negocio;
 using IndexadorIA.Negocio.Api;
 using IndexadorIA.Pantallas.Configuracion;
+using IndexadorIA.Pantallas.FinalizacionPlanos;
 using IndexadorIA.Pantallas.PlanosGCBA;
 using IndexadorIA.Pantallas.Reportes;
 using ConfiguracionCore = IndexadorIA.Datos.Configuracion;
@@ -86,6 +87,7 @@ namespace IndexadorIA.Pantallas
                 // menú nuevo que se agregue a futuro a nivel del menuStrip queda oculto por defecto).
                 // "Consultas / Planos" si tiene soporte remoto via API, por lo que queda visible.
                 menuReportes.Visible = false;
+                menuFinalizacionPlanos.Visible = false;
 
                 // En "Planos de GCBA" solo deja visible "Control y Finalización" y "Auditar"
                 menuIngresoArchivos.Visible = false;
@@ -116,6 +118,15 @@ namespace IndexadorIA.Pantallas
 
             // "Estado Proyecto Planos" solo debe estar disponible para usuarios con rol ADMIN.
             menuEstadoProyecto.Visible = esAdmin;
+
+            // "Validador API SMP" es local (usa BD directa + SQLite) y solo para ADMIN.
+            // "Control Final" es local por ahora (el modo remoto via API se incorpora despues).
+            bool esDataEntry = string.Equals(SesionActual.UsuarioActual.CdRol, "DATAENTRY", StringComparison.OrdinalIgnoreCase);
+            menuFinalizacionPlanos.Visible = (esAdmin || esDataEntry) && !SesionApi.ModoRemoto;
+            menuValidadorApiSmp.Visible = esAdmin;
+            menuCrearLotesFinal.Visible = esAdmin;
+            menuMonitorLotesFinales.Visible = esAdmin;
+            menuControlFinal.Visible = esAdmin || esDataEntry;
 
             // "Planos para enviar" solo debe estar disponible para usuarios con rol ADMIN.
             menuPlanosParaEnviar.Visible = esAdmin;
@@ -202,6 +213,26 @@ namespace IndexadorIA.Pantallas
         private void menuMonitorAuditoria_Click(object sender, EventArgs e)
         {
             AbrirFormularioEnPanel(new PlanosGCBA.FrmMonitorAuditoria());
+        }
+
+        private void menuMonitorLotesFinales_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmMonitorLotesFinales());
+        }
+
+        private void menuControlFinal_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmControlFinal());
+        }
+
+        private void menuCrearLotesFinal_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmCrearLotesFinal());
+        }
+
+        private void menuValidadorApiSmp_Click(object sender, EventArgs e)
+        {
+            AbrirFormularioEnPanel(new FrmValidadorApiSmp());
         }
 
         private void menuPlanos_Click(object sender, EventArgs e)
