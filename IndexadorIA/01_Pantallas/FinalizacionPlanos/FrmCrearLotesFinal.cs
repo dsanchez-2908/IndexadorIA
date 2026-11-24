@@ -122,7 +122,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
         private void ActualizarTotalizador()
         {
-            lblTotalizador.Text = $"Seleccionados: {_datos.Count(d => d.Seleccionado):N0} de {_datos.Count:N0}";
+            lblTotalizador.Text = $"Seleccionados: {_datos.Count(d => d.Seleccionado):N0} de {_datos.Count:N0}  |  Paginas/planos: {_datos.Where(d => d.Seleccionado).Sum(d => d.NuPaginas):N0}";
         }
 
         private void Asignar()

@@ -590,16 +590,15 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             if (_paginas.Count == 0) { Close(); return; }
 
             var r = MessageBox.Show(
-                $"Se generaran los PDF finales para las {_paginas.Count} paginas restantes (un archivo por categoria, tipo y expediente).\r\n¿Continuar?",
+                $"Se generaran los PDF finales para las {_paginas.Count} paginas restantes (un archivo por cada registro de la grilla).\r\n¿Continuar?",
                 "Finalizar Plano", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (r != DialogResult.Yes) return;
 
             if (!Guardar()) return;
 
             var grupos = _paginas
-                .GroupBy(p => (p.CdCategoriaPlano, p.CdTipoPlano, Norm(p.DsExpediente), p.EsIlegible))
-                .Select(g => g.OrderBy(p => p.NuPagina).ToList())
-                .OrderBy(g => g[0].NuPagina)
+                .OrderBy(p => p.NuPagina)
+                .Select(p => new List<PaginaFinalDto> { p })
                 .ToList();
 
             var errores = new List<string>();

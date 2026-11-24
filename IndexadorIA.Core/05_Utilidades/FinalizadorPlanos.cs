@@ -47,7 +47,7 @@ namespace IndexadorIA.Utilidades
 
                 try
                 {
-                    AgregarLineaCsv(rutaCsv, carpeta, nombreArchivoOriginal, nombre, paginas);
+                    AgregarLineaCsv(rutaCsv, rutaArchivoOriginal, nombreArchivoOriginal, nombre, paginas);
                 }
                 catch
                 {
@@ -146,7 +146,19 @@ namespace IndexadorIA.Utilidades
             }
         }
 
-        private static void AgregarLineaCsv(string rutaCsv, string carpeta, string nombreOriginal, string nombreNuevo,
+        private const int SegmentosRaizOmitidos = 4;
+
+        /// <summary>Quita la raiz (P:\PROYECTOS ACTIVOS\DGROC\PLANOS - DGROC) y el nombre del archivo madre: \6ta entrega\PARTE 4\</summary>
+        private static string RutaRelativaMadre(string rutaArchivoMadre)
+        {
+            string? dir = Path.GetDirectoryName(rutaArchivoMadre);
+            if (string.IsNullOrEmpty(dir)) return string.Empty;
+            var partes = dir.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Skip(SegmentosRaizOmitidos);
+            string rel = string.Join("\\", partes);
+            return rel.Length == 0 ? "\\" : "\\" + rel + "\\";
+        }
+
+        private static void AgregarLineaCsv(string rutaCsv, string rutaMadre, string nombreOriginal, string nombreNuevo,
             IReadOnlyList<PaginaFinalDto> paginas)
         {
             var m = paginas[0];
@@ -156,7 +168,7 @@ namespace IndexadorIA.Utilidades
 
             var campos = new[]
             {
-                carpeta, nombreOriginal, nombreNuevo, m.DsCategoria, m.DsTipo, m.DsAcronimo,
+                RutaRelativaMadre(rutaMadre), nombreOriginal, nombreNuevo, m.DsCategoria, m.DsTipo, m.DsAcronimo,
                 m.DsDireccion, m.DsSeccion, m.DsManzana, m.DsParcela, m.DsExpediente, m.DsNumeroPlano, observaciones
             };
 
