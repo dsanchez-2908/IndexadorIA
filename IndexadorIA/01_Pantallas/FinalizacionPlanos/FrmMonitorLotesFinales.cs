@@ -1,3 +1,4 @@
+﻿using IndexadorIA.Negocio.Api;
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 
@@ -53,7 +54,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             try
             {
-                var datos = _dal.ObtenerResumenPorUsuario();
+                var datos = SesionApi.ModoRemoto
+                    ? Task.Run(() => new IndexadorIA.Negocio.Api.ApiClienteServicio().ObtenerResumenMonitorFinalAsync()).GetAwaiter().GetResult()
+                    : _dal.ObtenerResumenPorUsuario();
                 dgv.DataSource = datos;
                 lblTotal.Text = $"Total: {datos.Count}";
             }

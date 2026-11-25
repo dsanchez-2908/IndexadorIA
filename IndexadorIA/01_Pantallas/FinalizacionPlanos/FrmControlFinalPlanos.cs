@@ -1,8 +1,10 @@
+﻿using IndexadorIA.Negocio.Api;
 using System.ComponentModel;
 using System.Diagnostics;
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 using IndexadorIA.Utilidades;
 
 namespace IndexadorIA.Pantallas.FinalizacionPlanos
@@ -27,6 +29,8 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         private readonly Label lblInfo = new() { AutoSize = true, Padding = new Padding(12, 8, 0, 0), ForeColor = Color.Gainsboro };
 
         private readonly Button btnGuardar = new() { Text = "Guardar registro seleccionado" };
+        private readonly Button btnExpedienteMadre = new() { Text = "E", Width = 30, Dock = DockStyle.Left };
+        private readonly Button btnSmpDireccionApi = new() { Text = "SMP y DIRECCION DESDE API" };
         private readonly Button btnCopiarDirecciones = new() { Text = "Copiar Direcciones de la API a todas las paginas" };
         private readonly Button btnUnificar = new() { Text = "Unificar Planos" };
         private readonly Button btnActualizarSmp = new() { Text = "Actualizar SMP" };
@@ -63,7 +67,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             _archivo = archivo;
 
             string carpeta = Path.GetDirectoryName(archivo.DsRutaCompleta) ?? archivo.DsRutaCompleta;
-            Text = $"Control Final – {archivo.DsNombreArchivo} ({carpeta}{Path.DirectorySeparatorChar})";
+            Text = $"Control Final â€“ {archivo.DsNombreArchivo} ({carpeta}{Path.DirectorySeparatorChar})";
             WindowState = FormWindowState.Maximized;
             StartPosition = FormStartPosition.CenterParent;
             EstiloOscuro.Formulario(this);
@@ -78,7 +82,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
         private void ConstruirInterfaz()
         {
-            foreach (var b in new[] { btnGuardar, btnCopiarDirecciones, btnUnificar, btnZoomMas, btnZoomMenos, btnZoomAjustar, btnZoom100 })
+            foreach (var b in new[] { btnGuardar, btnExpedienteMadre, btnSmpDireccionApi, btnCopiarDirecciones, btnUnificar, btnZoomMas, btnZoomMenos, btnZoomAjustar, btnZoom100 })
                 EstiloOscuro.Boton(b);
             EstiloOscuro.Boton(btnActualizarSmp, Color.FromArgb(170, 110, 20));
             EstiloOscuro.Boton(btnFinalizar, EstiloOscuro.Verde);
@@ -125,12 +129,29 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             Fila("Categoria:", cboCategoria);
             Fila("Tipo:", cboTipo);
             Fila("Expediente:", txtExpediente);
+            int filaExp = editor.RowCount - 1;
+            var lblExp = editor.GetControlFromPosition(0, filaExp)!;
+            editor.Controls.Remove(lblExp);
+            btnExpedienteMadre.Dock = DockStyle.None;
+            btnExpedienteMadre.Size = new Size(28, 26);
+            btnExpedienteMadre.Margin = new Padding(0, 2, 4, 2);
+            var panelEtiquetaExp = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Anchor = AnchorStyles.Left, Margin = new Padding(0) };
+            panelEtiquetaExp.Controls.Add(btnExpedienteMadre);
+            panelEtiquetaExp.Controls.Add(lblExp);
+            editor.Controls.Add(panelEtiquetaExp, 0, filaExp);
             Fila("Seccion:", txtSeccion);
             Fila("Manzana:", txtManzana);
             Fila("Parcela:", txtParcela);
             Fila("Direccion:", txtDireccion);
             Fila("Nro. Plano:", txtNumeroPlano);
             Fila("Observaciones:", txtObservaciones);
+            btnSmpDireccionApi.Dock = DockStyle.Fill;
+            btnSmpDireccionApi.AutoSize = false;
+            btnSmpDireccionApi.Height = 32;
+            editor.RowCount++;
+            editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            editor.Controls.Add(btnSmpDireccionApi, 0, editor.RowCount - 1);
+            editor.SetColumnSpan(btnSmpDireccionApi, 2);
             btnGuardar.Dock = DockStyle.Fill;
             btnGuardar.AutoSize = false;
             btnGuardar.Height = 32;
@@ -186,6 +207,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             panelGrilla.Controls.Add(gbGrilla);
             var contenedor = new Panel { Dock = DockStyle.Fill };
             contenedor.Controls.Add(inferior);
+            var divisor = new Splitter { Dock = DockStyle.Top, Height = 6, BackColor = Color.FromArgb(70, 70, 70), MinExtra = 150, MinSize = 60 };
+            divisor.SplitterMoved += (_, _) => _alturaGrillaManual = true;
+            contenedor.Controls.Add(divisor);
             contenedor.Controls.Add(panelGrilla);
 
             Controls.Add(contenedor);
@@ -231,6 +255,8 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             picVisor.ZoomCambiado += (_, _) => lblZoom.Text = $"Zoom: {picVisor.ZoomPorcentaje}%";
             Resize += (_, _) => AjustarAlturaGrilla();
             btnGuardar.Click += (_, _) => GuardarActual();
+            btnExpedienteMadre.Click += (_, _) => PonerExpedienteMadre();
+            btnSmpDireccionApi.Click += (_, _) => AgregarObservacionApi();
             btnCopiarDirecciones.Click += (_, _) => CopiarDirecciones();
             btnUnificar.Click += (_, _) => Unificar();
             btnActualizarSmp.Click += (_, _) => ActualizarSmp();
@@ -239,13 +265,37 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             picVisor.DoubleClick += (_, _) => AbrirPdfExterno();
         }
 
+        private static T Remoto<T>(Func<IndexadorIA.Negocio.Api.ApiClienteServicio, Task<T>> f) =>
+            Task.Run(() => f(new IndexadorIA.Negocio.Api.ApiClienteServicio())).GetAwaiter().GetResult();
+
+        private static void Remoto(Func<IndexadorIA.Negocio.Api.ApiClienteServicio, Task> f) =>
+            Task.Run(() => f(new IndexadorIA.Negocio.Api.ApiClienteServicio())).GetAwaiter().GetResult();
+
+        private string ObtenerRutaPdfLocal(PaginaFinalDto p)
+        {
+            if (!SesionApi.ModoRemoto) return p.DsRutaPagina;
+            byte[] bytes = Remoto(a => a.ObtenerPdfPaginaFinalAsync(_lote.CdLoteFinal, _archivo.CdArchivo, p.CdArchivoPagina));
+            string ruta = Path.Combine(Path.GetTempPath(), $"IndexadorIA_final_{p.CdArchivoPagina}.pdf");
+            File.WriteAllBytes(ruta, bytes);
+            return ruta;
+        }
+
         private void Inicializar()
         {
             try
             {
-                _categorias = new CategoriaPlanoDAL().ObtenerTodos();
-                _tiposTodos = new TipoPlanoDAL().ObtenerTodos();
-                _estados = _dal.ObtenerEstadosControl();
+                if (SesionApi.ModoRemoto)
+                {
+                    _categorias = Remoto(a => a.ObtenerCategoriasPlanoAsync()).Select(c => new CategoriaPlano { CdCategoriaPlano = c.CdCategoriaPlano, DsCategoriaPlano = c.DsCategoriaPlano }).ToList();
+                    _tiposTodos = Remoto(a => a.ObtenerTiposPlanoAsync()).Select(t => new TipoPlano { CdTipoPlano = t.CdTipoPlano, CdCategoriaPlano = t.CdCategoriaPlano, DsTipoPlano = t.DsTipoPlano }).ToList();
+                    _estados = Remoto(a => a.ObtenerEstadosControlFinalAsync());
+                }
+                else
+                {
+                    _categorias = new CategoriaPlanoDAL().ObtenerTodos();
+                    _tiposTodos = new TipoPlanoDAL().ObtenerTodos();
+                    _estados = _dal.ObtenerEstadosControl();
+                }
                 _cargando = true;
                 cboEstado.DisplayMember = nameof(EstadoControlItem.Descripcion);
                 cboEstado.DataSource = _estados;
@@ -265,7 +315,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
         private void CargarPaginas()
         {
-            _paginas = new BindingList<PaginaFinalDto>(_dal.ObtenerPaginas(_archivo.CdArchivo));
+            _paginas = new BindingList<PaginaFinalDto>(SesionApi.ModoRemoto
+                            ? Remoto(a => a.ObtenerPaginasFinalAsync(_lote.CdLoteFinal, _archivo.CdArchivo))
+                            : _dal.ObtenerPaginas(_archivo.CdArchivo));
             dgv.DataSource = _paginas;
             ActualizarInfo();
             AjustarAlturaGrilla();
@@ -289,12 +341,16 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         }
 
         /// <summary>La grilla ocupa solo lo necesario para sus filas; el resto del espacio es para el visor.</summary>
+        private bool _alturaGrillaManual;
+
+        /// <summary>Ajusta la altura al contenido hasta que el usuario mueve el divisor.</summary>
         private void AjustarAlturaGrilla()
         {
+            if (_alturaGrillaManual) return;
             int filas = Math.Max(_paginas.Count, 1);
             int alturaFilas = dgv.ColumnHeadersHeight + filas * dgv.RowTemplate.Height + 4;
-            int deseada = alturaFilas + 28;
-            int maxima = Math.Max(120, (int)(ClientSize.Height * 0.4));
+            int deseada = alturaFilas + 40;
+            int maxima = Math.Max(120, (int)(ClientSize.Height * 0.5));
             panelGrilla.Height = Math.Clamp(deseada, 90, maxima);
         }
 
@@ -356,7 +412,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
                 _cargando = false;
             }
 
-            MostrarPdf(p.DsRutaPagina);
+            MostrarPdf(p);
             MostrarApi(p.CdResultado);
         }
 
@@ -428,14 +484,15 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             if (idx >= 0) dgv.InvalidateRow(idx);
         }
 
-        private void MostrarPdf(string ruta)
+        private void MostrarPdf(PaginaFinalDto pag)
         {
             picVisor.Imagen = null;
             _bitmap?.Dispose();
             _bitmap = null;
-            if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta)) return;
             try
             {
+                string ruta = ObtenerRutaPdfLocal(pag);
+                if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta)) return;
                 _bitmap = ProcesamientoImagenes.ConvertirPDFaBitmap(ruta, 200);
                 picVisor.Imagen = _bitmap;
             }
@@ -448,15 +505,21 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         private void AbrirPdfExterno()
         {
             var p = Actual;
-            if (p == null || !File.Exists(p.DsRutaPagina)) return;
-            Process.Start(new ProcessStartInfo(p.DsRutaPagina) { UseShellExecute = true });
+            if (p == null) return;
+            string ruta;
+            try { ruta = ObtenerRutaPdfLocal(p); }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (!File.Exists(ruta)) return;
+            Process.Start(new ProcessStartInfo(ruta) { UseShellExecute = true });
         }
 
         private void MostrarApi(int cdResultado)
         {
             try
             {
-                var v = _dal.ObtenerValidacionSmp(cdResultado);
+                var v = SesionApi.ModoRemoto
+                    ? Remoto(a => a.ObtenerValidacionSmpFinalAsync(cdResultado))
+                    : _dal.ObtenerValidacionSmp(cdResultado);
                 if (v == null)
                 {
                     dgvApi.DataSource = null;
@@ -487,7 +550,8 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             try
             {
                 dgv.EndEdit();
-                _dal.GuardarPagina(p, SesionActual.UsuarioActual!.CdUsuario);
+                if (SesionApi.ModoRemoto) Remoto(a => a.GuardarPaginasFinalAsync(_lote.CdLoteFinal, new[] { p }));
+                else _dal.GuardarPagina(p, SesionActual.UsuarioActual!.CdUsuario);
                 p.Modificado = false;
                 MessageBox.Show($"Pagina {p.NuPagina} guardada.", "Listo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -497,16 +561,19 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             }
         }
 
-        /// <summary>Guarda todas las paginas con cambios pendientes (uso interno antes de unificar/finalizar/cerrar).</summary>
+        /// <summary>Guarda todas
         private bool Guardar()
         {
             try
             {
                 dgv.EndEdit();
                 int cdUsuario = SesionActual.UsuarioActual!.CdUsuario;
-                foreach (var p in _paginas.Where(x => x.Modificado))
+                var modificadas = _paginas.Where(x => x.Modificado).ToList();
+                if (SesionApi.ModoRemoto && modificadas.Count > 0)
+                    Remoto(a => a.GuardarPaginasFinalAsync(_lote.CdLoteFinal, modificadas));
+                foreach (var p in modificadas)
                 {
-                    _dal.GuardarPagina(p, cdUsuario);
+                    if (!SesionApi.ModoRemoto) _dal.GuardarPagina(p, cdUsuario);
                     p.Modificado = false;
                 }
                 return true;
@@ -584,13 +651,34 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             DespuesDeGenerar();
         }
 
+        private void PonerExpedienteMadre()
+        {
+            string nombre = _archivo.DsNombreArchivo;
+            if (string.IsNullOrWhiteSpace(nombre)) return;
+
+            string[] partes = Path.GetFileNameWithoutExtension(nombre).Split('-', StringSplitOptions.None);
+            if (!IndexadorIA.Pantallas.PlanosGCBA.FrmVerLote.TryParsearExpedienteDeArchivo(partes, out _, out string anio, out string numero, out string reparticion))
+                return;
+
+            if (int.TryParse(numero, out int n)) numero = n.ToString("D8");
+            txtExpediente.Text = $"EX-{anio}-{numero}-GCABA-{reparticion}";
+        }
+
+        private void AgregarObservacionApi()
+        {
+            const string marca = "[SMP y DIRECCION CARGADO DESDE LA API]";
+            string actual = txtObservaciones.Text.Trim();
+            if (actual.Contains(marca)) return;
+            txtObservaciones.Text = actual.Length == 0 ? marca : actual + " " + marca;
+        }
+
         private void FinalizarPlano()
         {
             dgv.EndEdit();
             if (_paginas.Count == 0) { Close(); return; }
 
             var r = MessageBox.Show(
-                $"Se generaran los PDF finales para las {_paginas.Count} paginas restantes (un archivo por cada registro de la grilla).\r\n¿Continuar?",
+                $"Se generaran los PDF finales para las {_paginas.Count} paginas restantes (un archivo por cada registro de la grilla).\r\nÂ¿Continuar?",
                 "Finalizar Plano", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (r != DialogResult.Yes) return;
 
@@ -625,6 +713,27 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
                 error = "Falta la categoria de plano.";
                 return false;
             }
+            if (SesionApi.ModoRemoto)
+            {
+                try
+                {
+                    Cursor = Cursors.WaitCursor;
+                    var ids = grupo.Select(p => p.CdArchivoPagina).ToList();
+                    Remoto(a => a.FinalizarPlanoFinalAsync(_lote.CdLoteFinal, _archivo.CdArchivo, ids));
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                    return false;
+                }
+                finally
+                {
+                    Cursor = Cursors.Default;
+                }
+                foreach (var p in grupo) _paginas.Remove(p);
+                return true;
+            }
+
             var sinPdf = grupo.FirstOrDefault(p => !File.Exists(p.DsRutaPagina));
             if (sinPdf != null)
             {
@@ -672,14 +781,15 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             if (_paginas.Count == 0) return;
             var r = MessageBox.Show(
                 "El archivo original se devolvera para volver a consultar la API SMP (con los datos de seccion, manzana y parcela guardados) " +
-                "y volvera a la pantalla de creacion de lotes.\r\n¿Continuar?",
+                "y volvera a la pantalla de creacion de lotes.\r\nÂ¿Continuar?",
                 "Actualizar SMP", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (r != DialogResult.Yes) return;
 
             if (!Guardar()) return;
             try
             {
-                _dal.DevolverParaActualizarSmp(_lote.CdLoteFinal, _archivo.CdArchivo);
+                if (SesionApi.ModoRemoto) Remoto(a => a.DevolverParaSmpFinalAsync(_lote.CdLoteFinal, _archivo.CdArchivo));
+                else _dal.DevolverParaActualizarSmp(_lote.CdLoteFinal, _archivo.CdArchivo);
                 MessageBox.Show("Archivo devuelto para actualizar SMP. Ejecute el Validador API SMP y luego cree un nuevo lote.",
                     "Actualizar SMP", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DialogResult = DialogResult.OK;
@@ -695,7 +805,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             if (!e.Cancel && DialogResult != DialogResult.OK && _paginas.Any(p => p.Modificado))
             {
-                var r = MessageBox.Show("Hay cambios sin guardar. ¿Guardarlos antes de cerrar?", "Control Final",
+                var r = MessageBox.Show("Hay cambios sin guardar. Â¿Guardarlos antes de cerrar?", "Control Final",
                     MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 if (r == DialogResult.Cancel) { e.Cancel = true; return; }
                 if (r == DialogResult.Yes && !Guardar()) { e.Cancel = true; return; }

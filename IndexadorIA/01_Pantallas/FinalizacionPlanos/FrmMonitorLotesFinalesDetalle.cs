@@ -1,3 +1,4 @@
+﻿using IndexadorIA.Negocio.Api;
 using System.ComponentModel;
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
@@ -45,7 +46,15 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
             EstiloOscuro.Grilla(dgv);
             dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgv.Columns.Add(new DataGridViewCheckBoxColumn { DataPropertyName = nameof(FilaLote.Seleccionado), HeaderText = "", FillWeight = 5 });
+            dgv.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                DataPropertyName = nameof(FilaLote.Seleccionado),
+                HeaderText = "",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 40,
+                MinimumWidth = 40,
+                Resizable = DataGridViewTriState.False
+            });
             dgv.Columns.Add(Col(nameof(FilaLote.DsNombreLote), "Lote"));
             dgv.Columns.Add(Col(nameof(FilaLote.DsEstadoLote), "Estado"));
             dgv.Columns.Add(Col(nameof(FilaLote.NuArchivos), "Archivos"));
@@ -86,7 +95,10 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
         private void CargarUsuarios()
         {
-            var usuarios = new UsuarioDAL().ObtenerTodos().Where(u => u.CdUsuario != _cdUsuario).ToList();
+            var todos = SesionApi.ModoRemoto
+                ? Task.Run(() => new IndexadorIA.Negocio.Api.ApiClienteServicio().ObtenerUsuariosMonitorFinalAsync()).GetAwaiter().GetResult()
+                : new UsuarioDAL().ObtenerTodos();
+            var usuarios = todos.Where(u => u.CdUsuario != _cdUsuario).ToList();
             cboUsuarios.DisplayMember = "DsUsuario";
             cboUsuarios.ValueMember = "CdUsuario";
             cboUsuarios.DataSource = usuarios;
@@ -97,7 +109,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             try
             {
-                var lotes = _dal.ObtenerLotesPorUsuario(_cdUsuario);
+                var lotes = SesionApi.ModoRemoto
+                    ? Task.Run(() => new IndexadorIA.Negocio.Api.ApiClienteServicio().ObtenerLotesFinalesPorUsuarioAsync(_cdUsuario)).GetAwaiter().GetResult()
+                    : _dal.ObtenerLotesPorUsuario(_cdUsuario);
                 if (chkSoloAsignados.Checked) lotes = lotes.Where(l => l.CdEstadoLote == 1).ToList();
                 _filas = new BindingList<FilaLote>(lotes.Select(l => new FilaLote { Lote = l }).ToList());
                 dgv.DataSource = _filas;
@@ -154,13 +168,18 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
                 return;
             }
 
-            var r = MessageBox.Show($"Se reasignaran {marcados.Count} lote(s) de {_dsUsuario} a {cboUsuarios.Text}. ¿Continuar?",
+            var r = MessageBox.Show($"Se reasignaran {marcados.Count} lote(s) de {_dsUsuario} a {cboUsuarios.Text}. Â¿Continuar?",
                 "Reasignar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (r != DialogResult.Yes) return;
 
             try
             {
-                int n = _dal.Reasignar(marcados.Select(f => f.Lote.CdLoteFinal).ToList(), cdNuevo);
+                var cdLotes = marcados.Select(f => f.Lote.CdLoteFinal).ToList();
+                int n = cdLotes.Count;
+                if (SesionApi.ModoRemoto)
+                    Task.Run(() => new IndexadorIA.Negocio.Api.ApiClienteServicio().ReasignarLotesFinalesAsync(cdLotes, cdNuevo)).GetAwaiter().GetResult();
+                else
+                    n = _dal.Reasignar(cdLotes, cdNuevo);
                 MessageBox.Show($"Lotes reasignados: {n}.", "Listo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Cargar();
             }
@@ -193,7 +212,12 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
             Load += (_, _) =>
             {
-                try { dgv.DataSource = new LoteFinalControlDAL().ObtenerArchivosDeLote(lote.CdLoteFinal); }
+                try
+                {
+                    dgv.DataSource = SesionApi.ModoRemoto
+                        ? Task.Run(() => new IndexadorIA.Negocio.Api.ApiClienteServicio().ObtenerArchivosMonitorFinalAsync(lote.CdLoteFinal)).GetAwaiter().GetResult()
+                        : new LoteFinalControlDAL().ObtenerArchivosDeLote(lote.CdLoteFinal);
+                }
                 catch (Exception ex) { MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             };
         }

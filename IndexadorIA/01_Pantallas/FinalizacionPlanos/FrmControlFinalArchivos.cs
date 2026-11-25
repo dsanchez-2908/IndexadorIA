@@ -1,4 +1,5 @@
 using IndexadorIA.Datos;
+using IndexadorIA.Negocio.Api;
 using IndexadorIA.Entidades;
 
 namespace IndexadorIA.Pantallas.FinalizacionPlanos
@@ -55,7 +56,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             try
             {
-                _todos = _dal.ObtenerArchivosDeLote(_lote.CdLoteFinal);
+                _todos = SesionApi.ModoRemoto
+                    ? Task.Run(() => new ApiClienteServicio().ObtenerArchivosLoteFinalAsync(_lote.CdLoteFinal)).GetAwaiter().GetResult()
+                    : _dal.ObtenerArchivosDeLote(_lote.CdLoteFinal);
                 Filtrar();
             }
             catch (Exception ex)

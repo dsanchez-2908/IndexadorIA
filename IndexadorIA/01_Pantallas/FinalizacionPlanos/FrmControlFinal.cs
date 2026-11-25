@@ -1,6 +1,7 @@
 using IndexadorIA.Datos;
 using IndexadorIA.Entidades;
 using IndexadorIA.Negocio;
+using IndexadorIA.Negocio.Api;
 
 namespace IndexadorIA.Pantallas.FinalizacionPlanos
 {
@@ -53,7 +54,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             try
             {
-                var lotes = _dal.ObtenerLotesDeUsuario(SesionActual.UsuarioActual!.CdUsuario);
+                var lotes = SesionApi.ModoRemoto
+                    ? Task.Run(() => new IndexadorIA.Negocio.Api.ApiClienteServicio().ObtenerMisLotesFinalesAsync()).GetAwaiter().GetResult()
+                    : _dal.ObtenerLotesDeUsuario(SesionActual.UsuarioActual!.CdUsuario);
                 dgv.DataSource = lotes;
                 lblTotal.Text = $"Lotes asignados: {lotes.Count:N0}";
             }

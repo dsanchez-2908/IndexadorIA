@@ -87,7 +87,6 @@ namespace IndexadorIA.Pantallas
                 // menú nuevo que se agregue a futuro a nivel del menuStrip queda oculto por defecto).
                 // "Consultas / Planos" si tiene soporte remoto via API, por lo que queda visible.
                 menuReportes.Visible = false;
-                menuFinalizacionPlanos.Visible = false;
 
                 // En "Planos de GCBA" solo deja visible "Control y Finalización" y "Auditar"
                 menuIngresoArchivos.Visible = false;
@@ -122,9 +121,9 @@ namespace IndexadorIA.Pantallas
             // "Validador API SMP" es local (usa BD directa + SQLite) y solo para ADMIN.
             // "Control Final" es local por ahora (el modo remoto via API se incorpora despues).
             bool esDataEntry = string.Equals(SesionActual.UsuarioActual.CdRol, "DATAENTRY", StringComparison.OrdinalIgnoreCase);
-            menuFinalizacionPlanos.Visible = (esAdmin || esDataEntry) && !SesionApi.ModoRemoto;
-            menuValidadorApiSmp.Visible = esAdmin;
-            menuCrearLotesFinal.Visible = esAdmin;
+            menuFinalizacionPlanos.Visible = esAdmin || esDataEntry;
+            menuValidadorApiSmp.Visible = esAdmin && !SesionApi.ModoRemoto;
+            menuCrearLotesFinal.Visible = esAdmin && !SesionApi.ModoRemoto;
             menuMonitorLotesFinales.Visible = esAdmin;
             menuControlFinal.Visible = esAdmin || esDataEntry;
 

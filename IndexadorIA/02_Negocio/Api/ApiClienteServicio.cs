@@ -228,6 +228,92 @@ namespace IndexadorIA.Negocio.Api
                 throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
         }
 
+        #region Finalizacion de Planos (api/lotes-finales)
+
+        private async Task<T> GetFinalAsync<T>(string url) where T : new()
+        {
+            AplicarToken();
+            HttpResponseMessage respuesta = await _httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+            return await respuesta.Content.ReadFromJsonAsync<T>().ConfigureAwait(false) ?? new T();
+        }
+
+        private async Task EnviarFinalAsync(HttpMethod metodo, string url, object? cuerpo = null)
+        {
+            AplicarToken();
+            using var req = new HttpRequestMessage(metodo, url);
+            if (cuerpo != null) req.Content = JsonContent.Create(cuerpo);
+            HttpResponseMessage respuesta = await _httpClient.SendAsync(req).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+        }
+
+        public Task<List<LoteFinalDto>> ObtenerMisLotesFinalesAsync() => GetFinalAsync<List<LoteFinalDto>>("api/lotes-finales/mis-lotes");
+
+        public Task<List<ArchivoLoteFinalDto>> ObtenerArchivosLoteFinalAsync(int cdLoteFinal) =>
+            GetFinalAsync<List<ArchivoLoteFinalDto>>($"api/lotes-finales/{cdLoteFinal}/archivos");
+
+        public Task<List<EstadoControlItem>> ObtenerEstadosControlFinalAsync() =>
+            GetFinalAsync<List<EstadoControlItem>>("api/lotes-finales/estados-control");
+
+        public Task<List<PaginaFinalDto>> ObtenerPaginasFinalAsync(int cdLoteFinal, int cdArchivo) =>
+            GetFinalAsync<List<PaginaFinalDto>>($"api/lotes-finales/{cdLoteFinal}/archivos/{cdArchivo}/paginas");
+
+        public async Task<byte[]> ObtenerPdfPaginaFinalAsync(int cdLoteFinal, int cdArchivo, int cdArchivoPagina)
+        {
+            AplicarToken();
+            HttpResponseMessage respuesta = await _httpClient.GetAsync($"api/lotes-finales/{cdLoteFinal}/archivos/{cdArchivo}/paginas/{cdArchivoPagina}/pdf").ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+            return await respuesta.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        }
+
+        public async Task<SmpValidacion?> ObtenerValidacionSmpFinalAsync(int cdResultado)
+        {
+            AplicarToken();
+            HttpResponseMessage respuesta = await _httpClient.GetAsync($"api/lotes-finales/resultados/{cdResultado}/validacion-smp").ConfigureAwait(false);
+            if (respuesta.StatusCode == System.Net.HttpStatusCode.NoContent) return null;
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+            return await respuesta.Content.ReadFromJsonAsync<SmpValidacion>().ConfigureAwait(false);
+        }
+
+        public Task GuardarPaginasFinalAsync(int cdLoteFinal, IEnumerable<PaginaFinalDto> paginas) =>
+            EnviarFinalAsync(HttpMethod.Put, $"api/lotes-finales/{cdLoteFinal}/paginas", new { Paginas = paginas.ToList() });
+
+        public async Task<string> FinalizarPlanoFinalAsync(int cdLoteFinal, int cdArchivo, IEnumerable<int> cdArchivoPaginas)
+        {
+            AplicarToken();
+            HttpResponseMessage respuesta = await _httpClient.PostAsJsonAsync(
+                $"api/lotes-finales/{cdLoteFinal}/archivos/{cdArchivo}/finalizar-plano",
+                new { CdArchivoPaginas = cdArchivoPaginas.ToList() }).ConfigureAwait(false);
+            if (!respuesta.IsSuccessStatusCode)
+                throw new ApiException(await ObtenerMensajeErrorAsync(respuesta).ConfigureAwait(false));
+            var r = await respuesta.Content.ReadFromJsonAsync<Dictionary<string, string>>().ConfigureAwait(false);
+            return r != null && r.TryGetValue("nombreNuevo", out var n) ? n : string.Empty;
+        }
+
+        public Task DevolverParaSmpFinalAsync(int cdLoteFinal, int cdArchivo) =>
+            EnviarFinalAsync(HttpMethod.Put, $"api/lotes-finales/{cdLoteFinal}/archivos/{cdArchivo}/devolver-smp");
+
+        public Task<List<MonitorLoteFinalUsuarioDto>> ObtenerResumenMonitorFinalAsync() =>
+            GetFinalAsync<List<MonitorLoteFinalUsuarioDto>>("api/lotes-finales/monitor/resumen");
+
+        public Task<List<LoteFinalDto>> ObtenerLotesFinalesPorUsuarioAsync(int cdUsuario) =>
+            GetFinalAsync<List<LoteFinalDto>>($"api/lotes-finales/monitor/usuarios/{cdUsuario}/lotes");
+
+        public Task<List<ArchivoLoteFinalDto>> ObtenerArchivosMonitorFinalAsync(int cdLoteFinal) =>
+            GetFinalAsync<List<ArchivoLoteFinalDto>>($"api/lotes-finales/monitor/lotes/{cdLoteFinal}/archivos");
+
+        public Task<List<Usuario>> ObtenerUsuariosMonitorFinalAsync() =>
+            GetFinalAsync<List<Usuario>>("api/lotes-finales/monitor/usuarios");
+
+        public Task ReasignarLotesFinalesAsync(IEnumerable<int> cdLotes, int cdUsuarioNuevo) =>
+            EnviarFinalAsync(HttpMethod.Put, "api/lotes-finales/monitor/reasignar", new { CdLotes = cdLotes.ToList(), CdUsuarioNuevo = cdUsuarioNuevo });
+
+        #endregion
+
         /// <summary>
         /// Llama a GET /api/combos/categorias-plano.
         /// </summary>
