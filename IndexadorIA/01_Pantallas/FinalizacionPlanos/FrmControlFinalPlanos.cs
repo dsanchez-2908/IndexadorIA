@@ -31,8 +31,8 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         private readonly Button btnGuardar = new() { Text = "Guardar registro seleccionado" };
         private readonly Button btnExpedienteMadre = new() { Text = "E", Width = 30, Dock = DockStyle.Left };
         private readonly Button btnSmpDireccionApi = new() { Text = "SMP y DIRECCION DESDE API" };
-        private readonly Button btnCopiarDirecciones = new() { Text = "Copiar Direcciones de la API a todas las paginas" };
-        private readonly Button btnUnificar = new() { Text = "Unificar Planos" };
+        private readonly Button btnNoEsPlano = new() { Text = "NO es un plano" };
+        private readonly Button btnCopiarDirecciones = new() { Text = "Copiar Direcciones de la API a todas las paginas" };        private readonly Button btnUnificar = new() { Text = "Unificar Planos" };
         private readonly Button btnActualizarSmp = new() { Text = "Actualizar SMP" };
         private readonly Button btnFinalizar = new() { Text = "Finalizar Plano" };
         private readonly Button btnCerrar = new() { Text = "Cerrar" };
@@ -82,8 +82,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
         private void ConstruirInterfaz()
         {
-            foreach (var b in new[] { btnGuardar, btnExpedienteMadre, btnSmpDireccionApi, btnCopiarDirecciones, btnUnificar, btnZoomMas, btnZoomMenos, btnZoomAjustar, btnZoom100 })
-                EstiloOscuro.Boton(b);
+            foreach (var b in new[] { btnGuardar, btnExpedienteMadre, btnSmpDireccionApi, btnNoEsPlano, btnCopiarDirecciones, btnUnificar, btnZoomMas, btnZoomMenos, btnZoomAjustar, btnZoom100 })                EstiloOscuro.Boton(b);
             EstiloOscuro.Boton(btnActualizarSmp, Color.FromArgb(170, 110, 20));
             EstiloOscuro.Boton(btnFinalizar, EstiloOscuro.Verde);
             EstiloOscuro.Boton(btnCerrar, EstiloOscuro.Rojo);
@@ -152,6 +151,13 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             editor.Controls.Add(btnSmpDireccionApi, 0, editor.RowCount - 1);
             editor.SetColumnSpan(btnSmpDireccionApi, 2);
+            btnNoEsPlano.Dock = DockStyle.Fill;
+            btnNoEsPlano.AutoSize = false;
+            btnNoEsPlano.Height = 32;
+            editor.RowCount++;
+            editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            editor.Controls.Add(btnNoEsPlano, 0, editor.RowCount - 1);
+            editor.SetColumnSpan(btnNoEsPlano, 2);
             btnGuardar.Dock = DockStyle.Fill;
             btnGuardar.AutoSize = false;
             btnGuardar.Height = 32;
@@ -257,6 +263,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             btnGuardar.Click += (_, _) => GuardarActual();
             btnExpedienteMadre.Click += (_, _) => PonerExpedienteMadre();
             btnSmpDireccionApi.Click += (_, _) => AgregarObservacionApi();
+            btnNoEsPlano.Click += (_, _) => AgregarObservacionNoEsPlano();
             btnCopiarDirecciones.Click += (_, _) => CopiarDirecciones();
             btnUnificar.Click += (_, _) => Unificar();
             btnActualizarSmp.Click += (_, _) => ActualizarSmp();
@@ -672,6 +679,14 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             txtObservaciones.Text = actual.Length == 0 ? marca : actual + " " + marca;
         }
 
+        private void AgregarObservacionNoEsPlano()
+        {
+            const string marca = "[NO ES UN PLANO]";
+            string actual = txtObservaciones.Text.Trim();
+            if (actual.Contains(marca)) return;
+            txtObservaciones.Text = actual.Length == 0 ? marca : actual + " " + marca;
+        }
+
         private void FinalizarPlano()
         {
             dgv.EndEdit();
@@ -708,7 +723,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             error = null;
             var m = grupo[0];
-            if (!m.CdCategoriaPlano.HasValue)
+            if (m.CdEstadoControl != 3 && !m.CdCategoriaPlano.HasValue)
             {
                 error = "Falta la categoria de plano.";
                 return false;

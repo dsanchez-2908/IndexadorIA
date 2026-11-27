@@ -132,7 +132,7 @@ namespace IndexadorIA.Api.Controllers
                 return BadRequest(new { mensaje = "Alguna pagina no existe o ya fue finalizada." });
 
             var m = grupo[0];
-            if (!m.CdCategoriaPlano.HasValue) return BadRequest(new { mensaje = "Falta la categoria de plano." });
+            if (m.CdEstadoControl != 3 && !m.CdCategoriaPlano.HasValue) return BadRequest(new { mensaje = "Falta la categoria de plano." });
 
             foreach (var p in grupo) p.DsRutaPagina = ResolverRutaFisica(p.DsRutaPagina);
             var sinPdf = grupo.FirstOrDefault(p => !System.IO.File.Exists(p.DsRutaPagina));
