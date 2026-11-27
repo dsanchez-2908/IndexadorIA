@@ -79,9 +79,10 @@ namespace IndexadorIA.Negocio
                         fallas++;
                         if (fallas >= MaxFallasConsecutivas)
                         {
+                            string causa = ex.Message + (ex.InnerException != null ? " -> " + ex.InnerException.Message : string.Empty);
                             throw new InvalidOperationException(
                                 "Se interrumpio por fallas consecutivas de conexion con la API. " +
-                                "Verifique la VPN (FortiClient). Lo procesado quedo guardado.", ex);
+                                $"Detalle: {causa}\r\nSMP: {p.DsSmp}\r\nVerifique la VPN (FortiClient). Lo procesado quedo guardado.", ex);
                         }
                     }
                 }

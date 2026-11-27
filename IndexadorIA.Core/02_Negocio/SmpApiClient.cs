@@ -9,7 +9,15 @@ namespace IndexadorIA.Negocio
     {
         public const string UrlBaseDefault = "http://mdu01-webpdi.spdgiur.gcba.gov.ar/wfs/api_smp/?smp=";
 
-        private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
+        private static readonly HttpClient Http = CrearHttp();
+
+        private static HttpClient CrearHttp()
+        {
+            var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("PostmanRuntime/7.39.0");
+            http.DefaultRequestHeaders.Accept.ParseAdd("*/*");
+            return http;
+        }
 
         private readonly string _urlBase;
 
