@@ -24,6 +24,9 @@ namespace IndexadorIA.Entidades
         public int NuPendientes { get; set; }
         public int NuFinalizados { get; set; }
         public int NuDevueltosSmp { get; set; }
+        public int NuPaginas { get; set; }
+        public int NuPaginasFinalizadas { get; set; }
+        public int NuPaginasPendientes => NuPaginas - NuPaginasFinalizadas;
     }
 
     /// <summary>Estado de control (TD_ESTADOS, proceso CONTROL) para el combo del Control Final.</summary>

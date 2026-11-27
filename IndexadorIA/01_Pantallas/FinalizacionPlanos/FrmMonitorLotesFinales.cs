@@ -29,6 +29,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             dgv.Columns.Add(Col("NuPendientes", "Pendientes"));
             dgv.Columns.Add(Col("NuFinalizados", "Finalizados"));
             dgv.Columns.Add(Col("NuDevueltosSmp", "Devueltos SMP"));
+            dgv.Columns.Add(Col("NuPaginas", "Total Planos"));
+            dgv.Columns.Add(Col("NuPaginasPendientes", "Planos Pendientes"));
+            dgv.Columns.Add(Col("NuPaginasFinalizadas", "Planos Finalizados"));
 
             EstiloOscuro.Boton(btnVer);
             EstiloOscuro.Boton(btnActualizar);

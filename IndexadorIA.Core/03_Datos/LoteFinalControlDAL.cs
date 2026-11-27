@@ -17,7 +17,16 @@ SELECT u.cdUsuario, u.dsUsuario,
        COUNT(a.cdLoteFinalArchivo),
        SUM(CASE WHEN a.cdEstado = 1 THEN 1 ELSE 0 END),
        SUM(CASE WHEN a.cdEstado = 2 THEN 1 ELSE 0 END),
-       SUM(CASE WHEN a.cdEstado = 3 THEN 1 ELSE 0 END)
+       SUM(CASE WHEN a.cdEstado = 3 THEN 1 ELSE 0 END),
+       (SELECT COUNT(*) FROM TD_LOTE_FINAL l2
+          JOIN TD_LOTE_FINAL_ARCHIVOS a2 ON a2.cdLoteFinal = l2.cdLoteFinal
+          JOIN TD_ARCHIVOS_PAGINAS p2 ON p2.cdArchivoOriginal = a2.cdArchivoOriginal
+          WHERE l2.cdUsuarioAsignado = u.cdUsuario),
+       (SELECT COUNT(*) FROM TD_LOTE_FINAL l3
+          JOIN TD_LOTE_FINAL_ARCHIVOS a3 ON a3.cdLoteFinal = l3.cdLoteFinal
+          JOIN TD_ARCHIVOS_PAGINAS p3 ON p3.cdArchivoOriginal = a3.cdArchivoOriginal
+          WHERE l3.cdUsuarioAsignado = u.cdUsuario
+            AND EXISTS (SELECT 1 FROM TD_LOTE_FINAL_PAGINAS f3 WHERE f3.cdArchivoPagina = p3.cdArchivoPagina))
 FROM TD_LOTE_FINAL l
 JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
 LEFT JOIN TD_LOTE_FINAL_ARCHIVOS a ON a.cdLoteFinal = l.cdLoteFinal
@@ -39,7 +48,9 @@ ORDER BY u.dsUsuario";
                     NuArchivos = rd.GetInt32(4),
                     NuPendientes = rd.IsDBNull(5) ? 0 : rd.GetInt32(5),
                     NuFinalizados = rd.IsDBNull(6) ? 0 : rd.GetInt32(6),
-                    NuDevueltosSmp = rd.IsDBNull(7) ? 0 : rd.GetInt32(7)
+                    NuDevueltosSmp = rd.IsDBNull(7) ? 0 : rd.GetInt32(7),
+                    NuPaginas = rd.GetInt32(8),
+                    NuPaginasFinalizadas = rd.GetInt32(9)
                 });
             }
             return lista;
@@ -52,7 +63,12 @@ ORDER BY u.dsUsuario";
 SELECT l.cdLoteFinal, l.dsNombreLote, l.cdUsuarioAsignado, u.dsUsuario, l.cdEstadoLote, l.nuCantidadArchivos,
        (SELECT COUNT(*) FROM TD_LOTE_FINAL_ARCHIVOS a WHERE a.cdLoteFinal = l.cdLoteFinal AND a.cdEstado = 1),
        (SELECT COUNT(*) FROM TD_LOTE_FINAL_ARCHIVOS a WHERE a.cdLoteFinal = l.cdLoteFinal AND a.cdEstado = 2),
-       l.feAlta
+       l.feAlta,
+       (SELECT COUNT(*) FROM TD_LOTE_FINAL_ARCHIVOS a JOIN TD_ARCHIVOS_PAGINAS p ON p.cdArchivoOriginal = a.cdArchivoOriginal
+         WHERE a.cdLoteFinal = l.cdLoteFinal),
+       (SELECT COUNT(*) FROM TD_LOTE_FINAL_ARCHIVOS a JOIN TD_ARCHIVOS_PAGINAS p ON p.cdArchivoOriginal = a.cdArchivoOriginal
+         WHERE a.cdLoteFinal = l.cdLoteFinal
+           AND EXISTS (SELECT 1 FROM TD_LOTE_FINAL_PAGINAS f WHERE f.cdArchivoPagina = p.cdArchivoPagina))
 FROM TD_LOTE_FINAL l
 JOIN TD_USUARIOS u ON u.cdUsuario = l.cdUsuarioAsignado
 WHERE l.cdUsuarioAsignado = @u
@@ -75,13 +91,15 @@ ORDER BY l.cdLoteFinal DESC";
                     NuArchivos = rd.GetInt32(5),
                     NuPendientes = rd.GetInt32(6),
                     NuFinalizados = rd.GetInt32(7),
-                    FeAlta = rd.GetDateTime(8)
+                    FeAlta = rd.GetDateTime(8),
+                    NuPaginas = rd.GetInt32(9),
+                    NuPaginasFinalizadas = rd.GetInt32(10)
                 });
             }
             return lista;
         }
 
-        /// <summary>Reasigna lotes asignados (no finalizados) a otro usuario. Devuelve la cantidad reasignada.</summary>
+        /// <summary>Reasigna
         public int Reasignar(IReadOnlyCollection<int> cdLotes, int cdUsuarioNuevo)
         {
             int total = 0;

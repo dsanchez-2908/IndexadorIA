@@ -32,6 +32,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         private readonly Button btnExpedienteMadre = new() { Text = "E", Width = 30, Dock = DockStyle.Left };
         private readonly Button btnSmpDireccionApi = new() { Text = "SMP y DIRECCION DESDE API" };
         private readonly Button btnNoEsPlano = new() { Text = "NO es un plano" };
+        private readonly Button btnCopiarHermanos = new() { Text = "Copiar de Hermanos", Visible = false };
         private readonly Button btnCopiarDirecciones = new() { Text = "Copiar Direcciones de la API a todas las paginas" };        private readonly Button btnUnificar = new() { Text = "Unificar Planos" };
         private readonly Button btnActualizarSmp = new() { Text = "Actualizar SMP" };
         private readonly Button btnFinalizar = new() { Text = "Finalizar Plano" };
@@ -82,8 +83,8 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
 
         private void ConstruirInterfaz()
         {
-            foreach (var b in new[] { btnGuardar, btnExpedienteMadre, btnSmpDireccionApi, btnNoEsPlano, btnCopiarDirecciones, btnUnificar, btnZoomMas, btnZoomMenos, btnZoomAjustar, btnZoom100 })                EstiloOscuro.Boton(b);
-            EstiloOscuro.Boton(btnActualizarSmp, Color.FromArgb(170, 110, 20));
+            foreach (var b in new[] { btnGuardar, btnExpedienteMadre, btnSmpDireccionApi, btnNoEsPlano, btnCopiarHermanos, btnCopiarDirecciones, btnUnificar, btnZoomMas, btnZoomMenos, btnZoomAjustar, btnZoom100 })
+                EstiloOscuro.Boton(b);            EstiloOscuro.Boton(btnActualizarSmp, Color.FromArgb(170, 110, 20));
             EstiloOscuro.Boton(btnFinalizar, EstiloOscuro.Verde);
             EstiloOscuro.Boton(btnCerrar, EstiloOscuro.Rojo);
 
@@ -158,6 +159,13 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             editor.Controls.Add(btnNoEsPlano, 0, editor.RowCount - 1);
             editor.SetColumnSpan(btnNoEsPlano, 2);
+            btnCopiarHermanos.Dock = DockStyle.Fill;
+            btnCopiarHermanos.AutoSize = false;
+            btnCopiarHermanos.Height = 32;
+            editor.RowCount++;
+            editor.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            editor.Controls.Add(btnCopiarHermanos, 0, editor.RowCount - 1);
+            editor.SetColumnSpan(btnCopiarHermanos, 2);
             btnGuardar.Dock = DockStyle.Fill;
             btnGuardar.AutoSize = false;
             btnGuardar.Height = 32;
@@ -264,6 +272,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             btnExpedienteMadre.Click += (_, _) => PonerExpedienteMadre();
             btnSmpDireccionApi.Click += (_, _) => AgregarObservacionApi();
             btnNoEsPlano.Click += (_, _) => AgregarObservacionNoEsPlano();
+            btnCopiarHermanos.Click += (_, _) => CopiarDeHermanos();
             btnCopiarDirecciones.Click += (_, _) => CopiarDirecciones();
             btnUnificar.Click += (_, _) => Unificar();
             btnActualizarSmp.Click += (_, _) => ActualizarSmp();
@@ -419,8 +428,14 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
                 _cargando = false;
             }
 
+            ActualizarBotonHermanos();
             MostrarPdf(p);
             MostrarApi(p.CdResultado);
+        }
+
+        private void ActualizarBotonHermanos()
+        {
+            btnCopiarHermanos.Visible = Actual?.CdEstadoControl == 1;
         }
 
         private void CargarTipos(int? cdCategoria)
@@ -441,6 +456,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             p.CdEstadoControl = est.Codigo;
             p.DsEstadoControl = est.Descripcion;
             Modificar(p);
+            ActualizarBotonHermanos();
         }
 
         private void AlElegirCategoria()
@@ -554,6 +570,12 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             var p = Actual;
             if (p == null) return;
+            if (p.CdEstadoControl == 1)
+            {
+                MessageBox.Show("El registro todavia esta en estado de control 1. Controle los datos contra la imagen y cambie manualmente el estado que corresponda antes de guardar.",
+                    "Atencion", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             try
             {
                 dgv.EndEdit();
@@ -641,6 +663,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
                 MessageBox.Show("Marque al menos dos paginas para unificar.", "Atencion", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            if (AdvertirEstadoUno(marcadas)) return;
             if (marcadas.Select(Clave).Distinct().Count() > 1)
             {
                 MessageBox.Show("No se pueden unificar: las paginas marcadas tienen distinta categoria, tipo, expediente, " +
@@ -679,6 +702,61 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             txtObservaciones.Text = actual.Length == 0 ? marca : actual + " " + marca;
         }
 
+        private static bool AdvertirEstadoUno(IEnumerable<PaginaFinalDto> paginas)
+        {
+            var enUno = paginas.Where(p => p.CdEstadoControl == 1).OrderBy(p => p.NuPagina).Select(p => p.NuPagina).ToList();
+            if (enUno.Count == 0) return false;
+            MessageBox.Show($"Hay paginas en estado de control 1 (pag. {string.Join(", ", enUno)}). Controle los datos contra la imagen y cambie manualmente el estado antes de continuar.",
+                "Atencion", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return true;
+        }
+
+        private void CopiarDeHermanos()
+        {
+            var p = Actual;
+            if (p == null) return;
+            var h = _paginas.Where(x => x != p && x.CdCategoriaPlano.HasValue && x.CdEstadoControl != 1).OrderBy(x => x.NuPagina).FirstOrDefault()
+                    ?? _paginas.FirstOrDefault(x => x != p && x.CdCategoriaPlano.HasValue);
+            if (h == null)
+            {
+                MessageBox.Show("No hay otra pagina con datos para copiar.", "Atencion", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            p.CdCategoriaPlano = h.CdCategoriaPlano;
+            p.DsCategoria = h.DsCategoria;
+            p.CdTipoPlano = h.CdTipoPlano;
+            p.DsTipo = h.DsTipo;
+            p.DsAcronimo = h.DsAcronimo;
+            p.DsExpediente = h.DsExpediente;
+            p.DsSeccion = h.DsSeccion;
+            p.DsManzana = h.DsManzana;
+            p.DsParcela = h.DsParcela;
+            p.DsDireccion = h.DsDireccion;
+            p.DsNumeroPlano = h.DsNumeroPlano;
+            Modificar(p);
+
+            _cargando = true;
+            try
+            {
+                cboCategoria.SelectedItem = _categorias.FirstOrDefault(c => c.CdCategoriaPlano == p.CdCategoriaPlano);
+                CargarTipos(p.CdCategoriaPlano);
+                cboTipo.SelectedItem = (cboTipo.DataSource as List<TipoPlano>)?.FirstOrDefault(t => t.CdTipoPlano == p.CdTipoPlano);
+                txtExpediente.Text = p.DsExpediente;
+                txtSeccion.Text = p.DsSeccion;
+                txtManzana.Text = p.DsManzana;
+                txtParcela.Text = p.DsParcela;
+                txtDireccion.Text = p.DsDireccion;
+                txtNumeroPlano.Text = p.DsNumeroPlano;
+            }
+            finally
+            {
+                _cargando = false;
+            }
+            MessageBox.Show($"Datos copiados de la pagina {h.NuPagina}. Controlelos contra la imagen y cambie el estado manualmente.",
+                "Copiar de Hermanos", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
         private void AgregarObservacionNoEsPlano()
         {
             const string marca = "[NO ES UN PLANO]";
@@ -691,6 +769,7 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
         {
             dgv.EndEdit();
             if (_paginas.Count == 0) { Close(); return; }
+            if (AdvertirEstadoUno(_paginas)) return;
 
             var r = MessageBox.Show(
                 $"Se generaran los PDF finales para las {_paginas.Count} paginas restantes (un archivo por cada registro de la grilla).\r\nÂ¿Continuar?",

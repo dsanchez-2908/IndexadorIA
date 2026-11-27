@@ -23,6 +23,9 @@ namespace IndexadorIA.Entidades
         public int NuArchivos { get; set; }
         public int NuPendientes { get; set; }
         public int NuFinalizados { get; set; }
+        public int NuPaginas { get; set; }
+        public int NuPaginasFinalizadas { get; set; }
+        public int NuPaginasPendientes => NuPaginas - NuPaginasFinalizadas;
         public DateTime FeAlta { get; set; }
     }
 }

@@ -17,6 +17,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             public int NuArchivos => Lote.NuArchivos;
             public int NuPendientes => Lote.NuPendientes;
             public int NuFinalizados => Lote.NuFinalizados;
+            public int NuPaginas => Lote.NuPaginas;
+            public int NuPaginasPendientes => Lote.NuPaginasPendientes;
+            public int NuPaginasFinalizadas => Lote.NuPaginasFinalizadas;
             public DateTime FeAlta => Lote.FeAlta;
         }
 
@@ -60,6 +63,9 @@ namespace IndexadorIA.Pantallas.FinalizacionPlanos
             dgv.Columns.Add(Col(nameof(FilaLote.NuArchivos), "Archivos"));
             dgv.Columns.Add(Col(nameof(FilaLote.NuPendientes), "Pendientes"));
             dgv.Columns.Add(Col(nameof(FilaLote.NuFinalizados), "Finalizados"));
+            dgv.Columns.Add(Col(nameof(FilaLote.NuPaginas), "Total Planos"));
+            dgv.Columns.Add(Col(nameof(FilaLote.NuPaginasPendientes), "Planos Pendientes"));
+            dgv.Columns.Add(Col(nameof(FilaLote.NuPaginasFinalizadas), "Planos Finalizados"));
             dgv.Columns.Add(Col(nameof(FilaLote.FeAlta), "Fecha alta"));
 
             foreach (var b in new[] { btnSelTodo, btnDeselTodo, btnVerArchivos, btnReasignar }) EstiloOscuro.Boton(b);
